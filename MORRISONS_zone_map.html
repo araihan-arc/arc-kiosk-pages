@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Find it in store</title>
+<style>
+ *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+   font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+ html,body{height:100%;background:#eef2f0;overflow:hidden}
+ .top{background:linear-gradient(135deg,#00733b,#01532c);color:#fff;padding:15px 20px 13px}
+ .top .t{font-size:14px;opacity:.88}
+ .top .p{font-size:25px;font-weight:800;line-height:1.15;margin-top:2px}
+ .chip{display:inline-flex;align-items:center;gap:9px;margin-top:10px;background:#ffc300;color:#11331f;
+   padding:7px 15px;border-radius:999px;font-weight:800;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+ .chip .d{font-weight:600;font-size:13px;opacity:.78}
+ .wrap{position:absolute;left:0;right:0;top:126px;bottom:60px;display:flex;align-items:center;justify-content:center;
+   overflow:hidden;padding:8px}
+ .canvas{position:relative;width:100%;max-width:100%;aspect-ratio:1536/1024}
+ .canvas img{width:100%;height:100%;object-fit:contain;display:block;border-radius:14px}
+ .ov{position:absolute;inset:0}
+ .ov svg{width:100%;height:100%;display:block}
+ .pin{position:absolute;transform:translate(-50%,-100%);pointer-events:none}
+ .bub{display:inline-block;padding:8px 15px;border-radius:999px;color:#fff;font-weight:800;font-size:15px;
+   white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+ .stem{width:3px;margin:0 auto;background:currentColor}
+ .dot{width:17px;height:17px;border-radius:50%;border:3px solid #fff;margin:0 auto;
+   box-shadow:0 3px 9px rgba(0,0,0,.4)}
+ .halo{position:absolute;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+   animation:pulse 2.2s ease-out infinite}
+ @keyframes pulse{0%{transform:translate(-50%,-50%) scale(.75);opacity:.55}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
+ .foot{position:absolute;left:0;right:0;bottom:0;height:60px;background:#fff;border-top:1px solid #dfe7e2;
+   display:flex;align-items:center;gap:20px;padding:0 20px;font-size:14px;color:#2f3f38;font-weight:700}
+ .k{display:flex;align-items:center;gap:8px}
+ .sw{width:15px;height:15px;border-radius:50%}
+ .note{position:absolute;right:12px;top:132px;background:rgba(17,51,31,.72);color:#fff;font-size:11px;
+   padding:5px 10px;border-radius:7px;letter-spacing:.3px}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="t">Morrisons Pontefract &middot; here is where to find it</div>
+  <div class="p" id="prodLbl">Pepsi Max 2l</div>
+  <div class="chip"><span id="zoneLbl">Soft Drinks</span><span class="d" id="hintLbl"></span></div>
+</div>
+<div class="wrap"><div class="canvas" id="cv">
+  <img id="bg" alt="Store layout" src="https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1789559997844_9p00vh.png">
+  <div class="ov"><svg id="ov" viewBox="0 0 1000 667" preserveAspectRatio="none"></svg></div>
+</div></div>
+<div class="note">Illustrative layout</div>
+<div class="foot">
+  <div class="k"><span class="sw" style="background:#1565ff"></span>You are here</div>
+  <div class="k"><span class="sw" style="background:#e02424"></span>Your item</div>
+  <div class="k"><span class="sw" style="background:#00a651"></span>Walk this way</div>
+</div>
+<script>
+(function(){
+// zona: koordinat persen pada ilustrasi
+var Z={
+ produce   :{x:19,y:38,n:'Fruit & Veg',           h:'front left, in the wooden crates'},
+ bakery    :{x:30,y:13,n:'Oven Fresh Bakery',     h:'back left corner'},
+ butcher   :{x:53,y:13,n:'Market Street',         h:'along the back wall'},
+ grocery   :{x:47,y:37,n:'Food Cupboard',         h:'the middle aisles'},
+ frozen    :{x:67,y:40,n:'Frozen Food',           h:'the chest freezers, centre right'},
+ chilled   :{x:61,y:32,n:'Milk Cheese & Chilled', h:'the chilled cabinets'},
+ household :{x:79,y:38,n:'Household & Cleaning',  h:'right-hand aisles'},
+ toiletries:{x:87,y:42,n:'Toiletries & Beauty',   h:'far right, by the pharmacy'},
+ baby      :{x:90,y:33,n:'Baby & Toddler',        h:'far right, past toiletries'},
+ cafe      :{x:86,y:82,n:'The Cafe',              h:'front right'},
+ checkouts :{x:45,y:68,n:'Checkouts',             h:'across the front'}
+};
+var q=new URLSearchParams(location.search);
+var zk=(q.get('zone')||'grocery').toLowerCase();
+var z=Z[zk]||Z.grocery;
+var prod=q.get('product')||'Pepsi Max 2l';
+document.getElementById('prodLbl').textContent=prod;
+document.getElementById('zoneLbl').textContent=z.n;
+document.getElementById('hintLbl').textContent=z.h;
+document.title=prod;
+
+var KI={x:41,y:87};          // posisi kios, dekat pintu masuk
+var cv=document.getElementById('cv'), ov=document.getElementById('ov');
+var NS='http://www.w3.org/2000/svg';
+function mk(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
+function P(p){return [p.x*10, p.y*6.67];}   // persen -> viewBox 1000x667
+
+// rute: keluar dari kios, menyusur koridor depan, lalu naik ke zona
+var a=P(KI), b=P(z), midY=Math.min(a[1]-40, 470);
+var d='M '+a[0]+' '+a[1]+' C '+a[0]+' '+(a[1]-70)+', '+b[0]+' '+(midY+40)+', '+b[0]+' '+b[1];
+ov.appendChild(mk('path',{d:d,fill:'none',stroke:'#00a651','stroke-width':14,opacity:.28,'stroke-linecap':'round'}));
+ov.appendChild(mk('path',{d:d,fill:'none',stroke:'#00a651','stroke-width':7,'stroke-linecap':'round',
+  'stroke-dasharray':'2 18'}));
+
+function pin(p,col,txt,h){
+  var halo=document.createElement('div');
+  halo.className='halo';
+  halo.style.cssText+='left:'+p.x+'%;top:'+p.y+'%;width:70px;height:70px;background:'+col;
+  cv.appendChild(halo);
+  var el=document.createElement('div');
+  el.className='pin'; el.style.left=p.x+'%'; el.style.top=p.y+'%'; el.style.color=col;
+  el.innerHTML='<div class="bub" style="background:'+col+'">'+txt+'</div>'+
+               '<div class="stem" style="height:'+h+'px"></div>'+
+               '<div class="dot" style="background:'+col+'"></div>';
+  cv.appendChild(el);
+}
+pin(z,'#e02424',prod.length>24?prod.slice(0,23)+'…':prod,34);
+pin(KI,'#1565ff','You are here',28);
+})();
+</script>
+</body>
+</html>
