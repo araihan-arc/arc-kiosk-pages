@@ -7,23 +7,24 @@
 <style>
  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
- html,body{height:100%;background:#eef2ef;overflow:hidden}
- .top{background:linear-gradient(135deg,#00733b,#015c30);color:#fff;padding:16px 20px 14px}
- .top .t{font-size:15px;letter-spacing:.3px;opacity:.9}
- .top .p{font-size:26px;font-weight:800;line-height:1.15;margin-top:3px}
- .chip{display:inline-flex;align-items:center;gap:9px;margin-top:11px;background:#ffc300;color:#11331f;
-   padding:8px 16px;border-radius:999px;font-weight:800;font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
- .chip .d{font-weight:600;font-size:14px;opacity:.8}
- .mapwrap{position:absolute;left:0;right:0;top:132px;bottom:64px;overflow:hidden;touch-action:none}
+ html,body{height:100%;background:#e8eef0;overflow:hidden}
+ .top{background:linear-gradient(135deg,#00733b,#01532c);color:#fff;padding:15px 20px 13px}
+ .top .t{font-size:14px;opacity:.88;letter-spacing:.3px}
+ .top .p{font-size:25px;font-weight:800;line-height:1.15;margin-top:2px}
+ .chip{display:inline-flex;align-items:center;gap:9px;margin-top:10px;background:#ffc300;color:#11331f;
+   padding:7px 15px;border-radius:999px;font-weight:800;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+ .chip .d{font-weight:600;font-size:13px;opacity:.78}
+ .mapwrap{position:absolute;left:0;right:0;top:126px;bottom:58px;overflow:hidden;touch-action:none;
+   background:radial-gradient(ellipse at 50% 40%,#f4f8f6 0%,#dfe8e6 100%)}
  svg{width:100%;height:100%;display:block}
- .foot{position:absolute;left:0;right:0;bottom:0;height:64px;background:#fff;border-top:1px solid #dfe7e2;
-   display:flex;align-items:center;gap:20px;padding:0 20px;font-size:14px;color:#3a4d44;font-weight:600}
- .k{display:flex;align-items:center;gap:8px}
- .sw{width:14px;height:14px;border-radius:50%}
- .btns{position:absolute;right:16px;bottom:80px;display:flex;flex-direction:column;gap:9px}
- .b{width:48px;height:48px;border-radius:50%;border:0;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.2);
-   font-size:22px;font-weight:600;color:#11331f}
- .b.sm{font-size:12px;font-weight:800}
+ .foot{position:absolute;left:0;right:0;bottom:0;height:58px;background:#fff;border-top:1px solid #dfe7e2;
+   display:flex;align-items:center;gap:18px;padding:0 18px;font-size:13.5px;color:#3a4d44;font-weight:600}
+ .k{display:flex;align-items:center;gap:7px}
+ .sw{width:13px;height:13px;border-radius:50%}
+ .btns{position:absolute;right:14px;bottom:72px;display:flex;flex-direction:column;gap:8px}
+ .b{width:46px;height:46px;border-radius:50%;border:0;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.22);
+   font-size:21px;font-weight:600;color:#11331f}
+ .b.sm{font-size:11.5px;font-weight:800}
 </style>
 </head>
 <body>
@@ -32,11 +33,11 @@
   <div class="p" id="prodLbl">Pepsi Max 2l</div>
   <div class="chip"><span id="aisleLbl">Aisle 3</span><span class="d" id="deptLbl"></span></div>
 </div>
-<div class="mapwrap"><svg id="map" viewBox="0 0 820 1180" preserveAspectRatio="xMidYMid meet"></svg></div>
+<div class="mapwrap"><svg id="map" viewBox="0 0 1500 1080" preserveAspectRatio="xMidYMid meet"></svg></div>
 <div class="foot">
   <div class="k"><span class="sw" style="background:#1565ff"></span>You are here</div>
-  <div class="k"><span class="sw" style="background:#d62828"></span>Your item</div>
-  <div class="k"><span class="sw" style="background:#00733b"></span>Walk this way</div>
+  <div class="k"><span class="sw" style="background:#e02424"></span>Your item</div>
+  <div class="k"><span class="sw" style="background:#00a651"></span>Walk this way</div>
 </div>
 <div class="btns"><button class="b" id="zin">+</button><button class="b" id="zout">&minus;</button><button class="b sm" id="zfit">FIT</button></div>
 <script>
@@ -44,93 +45,145 @@
 var q=new URLSearchParams(location.search);
 var aisle=Math.max(1,Math.min(25,parseInt(q.get('aisle')||'3',10)));
 var prod=q.get('product')||'Pepsi Max 2l';
-
-var DEPT={1:['Fruit & Veg','#63b344'],2:['Oven Fresh Bakery','#d99a3e'],3:['Market Street','#c85a5a'],
-4:['Salad Bar & Food to Go','#e0913f'],5:['Milk Cheese & Chilled','#5aa9d6'],6:['Fresh Meat & Poultry','#b5484f'],
-7:['Fish & Seafood','#4e9fc4'],8:['Frozen Food','#6fb9de'],9:['Desserts','#dd8fb0'],10:['World Foods','#c7a13e'],
-11:['Crisps & Snacks','#d1a64e'],12:['Biscuits & Cereal','#cfa152'],13:['Tins Cans & Packets','#c9a24a'],
-14:['Cooking & Sauces','#c99a55'],15:['Rice Pasta & Pulses','#c3a05c'],16:['Free From & Dietary','#4fb3a0'],
-17:['Soft Drinks & Water','#4a90d9'],18:['Beer Wines & Spirits','#8a6cc4'],19:['Household & Cleaning','#9b7bd0'],
-20:['Toiletries & Beauty','#c07bc4'],21:['Baby & Toddler','#e290b4'],22:['Pet Shop','#a9895f'],
-23:['Home & Garden','#7fa08c'],24:['Toys & Clothing','#7f97bd'],25:['Cards Books & Stationery','#93a3b8']};
-
-var d=DEPT[aisle]||['','#8a9a92'];
+var DEPT={1:['Fruit & Veg','#5fae3f'],2:['Oven Fresh Bakery','#d59a3c'],3:['Market Street','#c05555'],
+4:['Salad Bar & Food to Go','#dd8c3a'],5:['Milk Cheese & Chilled','#4f9fcf'],6:['Fresh Meat & Poultry','#b0464d'],
+7:['Fish & Seafood','#4694bb'],8:['Frozen Food','#6ab4da'],9:['Desserts','#d886ab'],10:['World Foods','#c39a38'],
+11:['Crisps & Snacks','#cb9f48'],12:['Biscuits & Cereal','#c99b4c'],13:['Tins Cans & Packets','#c49a45'],
+14:['Cooking & Sauces','#c4934f'],15:['Rice Pasta & Pulses','#bd9956'],16:['Free From & Dietary','#48ac99'],
+17:['Soft Drinks & Water','#4288d2'],18:['Beer Wines & Spirits','#8264bd'],19:['Household & Cleaning','#9473c9'],
+20:['Toiletries & Beauty','#b873bd'],21:['Baby & Toddler','#dd88ad'],22:['Pet Shop','#a28158'],
+23:['Home & Garden','#789a85'],24:['Toys & Clothing','#7890b6'],25:['Cards Books & Stationery','#8c9cb1']};
+var d=DEPT[aisle];
 document.getElementById('prodLbl').textContent=prod;
 document.getElementById('aisleLbl').textContent='Aisle '+aisle;
 document.getElementById('deptLbl').textContent=d[0];
 document.title=prod;
 
 var NS='http://www.w3.org/2000/svg',svg=document.getElementById('map');
-function el(n,a,txt){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);
-  if(txt!==undefined)e.textContent=txt;return e;}
-function shade(hex,f){var n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;
-  r=Math.round(r+(255-r)*f);g=Math.round(g+(255-g)*f);b=Math.round(b+(255-b)*f);
-  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function el(n,a,t){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);
+ if(t!==undefined)e.textContent=t;return e;}
+var G=el('g',{}); svg.appendChild(G);
+function add(e){G.appendChild(e);return e;}
 
-var defs=el('defs');
-defs.appendChild((function(){var f=el('filter',{id:'sh',x:'-30%',y:'-30%',width:'170%',height:'170%'});
- f.appendChild(el('feDropShadow',{dx:0,dy:3,stdDeviation:4,'flood-color':'#0b2d1c','flood-opacity':'.22'}));return f;})());
-defs.appendChild((function(){var f=el('filter',{id:'pin',x:'-60%',y:'-60%',width:'220%',height:'220%'});
- f.appendChild(el('feDropShadow',{dx:0,dy:4,stdDeviation:5,'flood-color':'#000','flood-opacity':'.35'}));return f;})());
-svg.appendChild(defs);
+// --- proyeksi isometrik
+var K=0.8660254, OX=760, OY=120, S=1.0;
+function iso(x,y,z){return [OX+(x-y)*K*S, OY+((x+y)*0.5-(z||0))*S];}
+function pts(a){return a.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');}
+function mix(hex,f){var n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;
+ if(f>0){r+=(255-r)*f;g+=(255-g)*f;b+=(255-b)*f;}else{r*=(1+f);g*=(1+f);b*=(1+f);}
+ return '#'+((1<<24)+((r|0)<<16)+((g|0)<<8)+(b|0)).toString(16).slice(1);}
 
-// ---- lantai toko
-svg.appendChild(el('rect',{x:24,y:20,width:772,height:1130,rx:26,fill:'#fbfaf6',stroke:'#dfe7e2','stroke-width':2,filter:'url(#sh)'}));
-svg.appendChild(el('rect',{x:24,y:20,width:772,height:1130,rx:26,fill:'none',stroke:'#eef2ef','stroke-width':10}));
-
-// ---- Market Street lengkung di atas
-var msY=54;
-svg.appendChild(el('path',{d:'M 56 '+(msY+70)+' Q 410 '+(msY-18)+' 764 '+(msY+70)+' L 764 '+(msY+96)+' Q 410 '+(msY+10)+' 56 '+(msY+96)+' Z',
-  fill:'#f3dede',stroke:'#e2bcbc','stroke-width':1.5}));
-svg.appendChild(el('text',{x:410,y:msY+58,'text-anchor':'middle','font-size':19,'font-weight':'800',fill:'#a54a4a'},'MARKET STREET'));
-svg.appendChild(el('text',{x:410,y:msY+80,'text-anchor':'middle','font-size':14,fill:'#b06a6a'},'butcher  ·  fishmonger  ·  deli  ·  oven fresh'));
-
-// ---- lorong horizontal
-var top=182, h=27, gap=8.4, xL=112, xR=712;
-function ay(i){return top+(i-1)*(h+gap);}
-for(var i=1;i<=25;i++){
-  var Y=ay(i), c=(DEPT[i]||['','#95a5a0'])[1], on=(i===aisle);
-  svg.appendChild(el('rect',{x:xL,y:Y,width:xR-xL,height:h,rx:9,
-    fill:on?c:shade(c,.72),stroke:on?shade(c,-0):shade(c,.45),'stroke-width':on?2.5:1,
-    filter:on?'url(#sh)':''}));
-  svg.appendChild(el('rect',{x:xL+4,y:Y+3,width:xR-xL-8,height:7,rx:3.5,fill:'#fff',opacity:on?.38:.55}));
-  svg.appendChild(el('text',{x:xL-14,y:Y+19,'text-anchor':'end','font-size':on?20:15,
-    'font-weight':on?'800':'700',fill:on?c:'#9aa8a2'},i));
-  svg.appendChild(el('text',{x:xL+16,y:Y+19,'font-size':on?15:12.5,'font-weight':on?'800':'600',
-    fill:on?'#20321f':'#7d8d86'},(DEPT[i]||[''])[0]));
+// kotak 3D
+function box(x0,y0,x1,y1,h,col,glow){
+ var T=[iso(x0,y0,h),iso(x1,y0,h),iso(x1,y1,h),iso(x0,y1,h)];
+ var R=[iso(x1,y0,h),iso(x1,y1,h),iso(x1,y1,0),iso(x1,y0,0)];
+ var F=[iso(x0,y1,h),iso(x1,y1,h),iso(x1,y1,0),iso(x0,y1,0)];
+ if(glow) add(el('polygon',{points:pts([iso(x0-9,y0-9,0),iso(x1+9,y0-9,0),iso(x1+9,y1+9,0),iso(x0-9,y1+9,0)]),
+   fill:col,opacity:.22}));
+ add(el('polygon',{points:pts(F),fill:mix(col,-0.42),stroke:mix(col,-0.55),'stroke-width':1}));
+ add(el('polygon',{points:pts(R),fill:mix(col,-0.22),stroke:mix(col,-0.42),'stroke-width':1}));
+ add(el('polygon',{points:pts(T),fill:mix(col,0.16),stroke:mix(col,-0.2),'stroke-width':1.2}));
+ return T;
+}
+// teks miring mengikuti bidang atas
+function isoText(x,y,z,txt,size,fill,weight,anchor){
+ var p=iso(x,y,z);
+ var g=el('g',{transform:'translate('+p[0].toFixed(1)+','+p[1].toFixed(1)+') matrix('+K+',0.5,'+(-K)+',0.5,0,0)'});
+ g.appendChild(el('text',{x:0,y:0,'font-size':size,fill:fill,'font-weight':weight||'700',
+   'text-anchor':anchor||'middle','dominant-baseline':'middle'},txt));
+ add(g); return g;
 }
 
-// ---- kasir, pintu masuk, customer service
-var by=ay(25)+h+26;
-svg.appendChild(el('rect',{x:56,y:by,width:400,height:56,rx:12,fill:'#f0ead6',stroke:'#ddd3b4','stroke-width':1.5}));
-svg.appendChild(el('text',{x:256,y:by+34,'text-anchor':'middle','font-size':17,'font-weight':'700',fill:'#7d7143'},'Checkouts'));
-svg.appendChild(el('rect',{x:470,y:by,width:140,height:56,rx:12,fill:'#d9eee2',stroke:'#aed4c0','stroke-width':1.5}));
-svg.appendChild(el('text',{x:540,y:by+34,'text-anchor':'middle','font-size':17,'font-weight':'800',fill:'#2f7d55'},'Entrance'));
-svg.appendChild(el('rect',{x:624,y:by,width:140,height:56,rx:12,fill:'#d9eee2',stroke:'#aed4c0','stroke-width':1.5}));
-svg.appendChild(el('text',{x:694,y:by+26,'text-anchor':'middle','font-size':13,'font-weight':'700',fill:'#2f7d55'},'Customer'));
-svg.appendChild(el('text',{x:694,y:by+42,'text-anchor':'middle','font-size':13,'font-weight':'700',fill:'#2f7d55'},'Service'));
+// ---------- LANTAI
+var FX0=-70,FY0=-70,FX1=950,FY1=1180;
+add(el('polygon',{points:pts([iso(FX0,FY0),iso(FX1,FY0),iso(FX1,FY1),iso(FX0,FY1)]),
+ fill:'#f7f4ec',stroke:'#cfd8d2','stroke-width':2}));
+// ubin
+for(var t=FY0;t<=FY1;t+=60){add(el('line',{x1:iso(FX0,t)[0],y1:iso(FX0,t)[1],x2:iso(FX1,t)[0],y2:iso(FX1,t)[1],
+ stroke:'#e8e2d4','stroke-width':1}));}
+for(var t2=FX0;t2<=FX1;t2+=60){add(el('line',{x1:iso(t2,FY0)[0],y1:iso(t2,FY0)[1],x2:iso(t2,FY1)[0],y2:iso(t2,FY1)[1],
+ stroke:'#e8e2d4','stroke-width':1}));}
 
-// ---- rute: kios -> lorong lewat koridor kanan
-var KX=540, KY=by-6, DX=xR-42, DY=ay(aisle)+h/2, CORR=xR+28;
-var path='M '+KX+' '+KY+' L '+KX+' '+(by-20)+' L '+CORR+' '+(by-20)+' L '+CORR+' '+DY+' L '+DX+' '+DY;
-svg.appendChild(el('path',{d:path,fill:'none',stroke:'#00733b','stroke-width':7,'stroke-linecap':'round',
-  'stroke-linejoin':'round','stroke-dasharray':'1 15',opacity:'.9'}));
+// ---------- MARKET STREET di ujung belakang
+box(-40,-40,900,40,54,'#c05555');
+isoText(430,0,62,'MARKET  STREET',30,'#7d2f2f','800');
 
-// ---- pin tujuan
-svg.appendChild(el('circle',{cx:DX,cy:DY,r:15,fill:'#d62828',stroke:'#fff','stroke-width':4,filter:'url(#pin)'}));
-// ---- pin kios
-svg.appendChild(el('circle',{cx:KX,cy:KY,r:15,fill:'#1565ff',stroke:'#fff','stroke-width':4,filter:'url(#pin)'}));
-var yw=Math.min(190,Math.max(120,('You are here').length*9));
-svg.appendChild(el('rect',{x:KX-66,y:KY-52,width:132,height:32,rx:16,fill:'#1565ff',filter:'url(#pin)'}));
-svg.appendChild(el('text',{x:KX,y:KY-31,'text-anchor':'middle','font-size':15,'font-weight':'800',fill:'#fff'},'You are here'));
+// ---------- LORONG: memanjang ke arah y, ditumpuk ke arah x
+var AW=26, AG=9, X0=10, AY0=90, AY1=980, HGT=44;
+function ax(i){return X0+(i-1)*(AW+AG);}
+// rute digambar sebelum lorong supaya berada di lantai
+var TX=ax(aisle)+AW/2, KX=690, KY=1090;
+var route=[[KX,KY],[KX,1040],[TX,1040],[TX,AY1+22]];
+var rp=route.map(function(p){return iso(p[0],p[1],2);});
+add(el('polyline',{points:pts(rp),fill:'none',stroke:'#00a651','stroke-width':11,
+ 'stroke-linecap':'round','stroke-linejoin':'round',opacity:.35}));
+add(el('polyline',{points:pts(rp),fill:'none',stroke:'#00a651','stroke-width':7,
+ 'stroke-linecap':'round','stroke-linejoin':'round','stroke-dasharray':'1 20'}));
 
-// ---- zoom & geser
-var s=1,tx=0,ty=0,g=el('g');
-while(svg.childNodes.length>1){ if(svg.childNodes[1].tagName==='defs'){break;} g.appendChild(svg.childNodes[1]); }
-svg.appendChild(g);
-function ap(){g.setAttribute('transform','translate('+tx+','+ty+') scale('+s+')');}
-function zoom(f){var n=Math.max(1,Math.min(4,s*f));tx=410-(410-tx)*(n/s);ty=590-(590-ty)*(n/s);s=n;
-  if(s<=1.01){s=1;tx=0;ty=0;}ap();}
+for(var i=1;i<=25;i++){
+ var X=ax(i), on=(i===aisle), c=DEPT[i][1];
+ box(X,AY0,X+AW,AY1,on?HGT+10:HGT,on?c:mix(c,0.35),on);
+ // garis rak di permukaan atas
+ for(var s2=AY0+40;s2<AY1;s2+=56){
+   var a=iso(X+2,s2,(on?HGT+10:HGT)+0.5),b=iso(X+AW-2,s2,(on?HGT+10:HGT)+0.5);
+   add(el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'#000',opacity:on?.13:.09,'stroke-width':1.6}));
+ }
+ // papan nomor tergantung di ujung depan
+ isoText(X+AW/2,AY1+40,on?86:70,String(i),on?34:22,on?'#e02424':'#7f8d87','800');
+ if(on) isoText(X+AW/2+64,AY1+40,64,DEPT[i][0],19,'#3a4a42','700','start');
+}
+
+// ---------- KASIR
+for(var c2=0;c2<7;c2++){
+ var cx0=40+c2*84;
+ box(cx0,1020,cx0+54,1120,16,'#e8dfc4');
+ box(cx0,1020,cx0+54,1030,26,'#d8cba6');
+}
+isoText(250,1170,20,'CHECKOUTS',22,'#8a7d52','800');
+
+// ---------- PINTU MASUK + CUSTOMER SERVICE
+box(640,1120,780,1180,10,'#bfe3cd');
+isoText(710,1150,18,'ENTRANCE',19,'#2f7d55','800');
+box(800,1080,920,1180,34,'#a8d8bd');
+isoText(860,1130,44,'CUSTOMER',15,'#256b47','800');
+isoText(860,1160,44,'SERVICE',15,'#256b47','800');
+
+// ---------- troli dekat pintu
+for(var tr=0;tr<4;tr++){ box(600-tr*26,1128,600-tr*26+18,1172,20,'#b9c6c0'); }
+
+// ---------- tanaman
+function plant(px,py,sc){
+ sc=sc||1;
+ var b=iso(px,py,0), t1=iso(px,py,34*sc);
+ add(el('line',{x1:b[0],y1:b[1],x2:t1[0],y2:t1[1],stroke:'#6b5a3e','stroke-width':4*sc}));
+ add(el('ellipse',{cx:t1[0],cy:t1[1]-6*sc,rx:22*sc,ry:17*sc,fill:'#4f9a52'}));
+ add(el('ellipse',{cx:t1[0]-8*sc,cy:t1[1]-14*sc,rx:15*sc,ry:12*sc,fill:'#63b064'}));
+}
+plant(790,1060,1); plant(-30,1040,.9); plant(930,60,.9); plant(-40,120,.85);
+
+// ---------- PIN tujuan
+var pTop=iso(TX,(AY0+AY1)/2,HGT+10);
+add(el('line',{x1:pTop[0],y1:pTop[1],x2:pTop[0],y2:pTop[1]-118,stroke:'#e02424','stroke-width':4}));
+add(el('circle',{cx:pTop[0],cy:pTop[1],r:7,fill:'#e02424',opacity:.5}));
+var lw=Math.min(430,Math.max(190,prod.length*15+64));
+add(el('rect',{x:pTop[0]-lw/2,y:pTop[1]-168,width:lw,height:52,rx:26,fill:'#e02424'}));
+add(el('text',{x:pTop[0],y:pTop[1]-134,'text-anchor':'middle','font-size':25,'font-weight':'800',fill:'#fff'},
+  prod.length>26?prod.slice(0,25)+'…':prod));
+add(el('polygon',{points:(pTop[0]-11)+','+(pTop[1]-116)+' '+(pTop[0]+11)+','+(pTop[1]-116)+' '+pTop[0]+','+(pTop[1]-100),fill:'#e02424'}));
+
+// ---------- PIN kios
+var kTop=iso(KX,KY,0);
+add(el('line',{x1:kTop[0],y1:kTop[1],x2:kTop[0],y2:kTop[1]-96,stroke:'#1565ff','stroke-width':4}));
+add(el('ellipse',{cx:kTop[0],cy:kTop[1],rx:16,ry:9,fill:'#1565ff',opacity:.35}));
+add(el('rect',{x:kTop[0]-98,y:kTop[1]-146,width:196,height:48,rx:24,fill:'#1565ff'}));
+add(el('text',{x:kTop[0],y:kTop[1]-114,'text-anchor':'middle','font-size':23,'font-weight':'800',fill:'#fff'},'You are here'));
+add(el('polygon',{points:(kTop[0]-10)+','+(kTop[1]-98)+' '+(kTop[0]+10)+','+(kTop[1]-98)+' '+kTop[0]+','+(kTop[1]-84),fill:'#1565ff'}));
+
+// ---------- zoom & geser
+var s=1,tx=0,ty=0;
+function ap(){G.setAttribute('transform','translate('+tx+','+ty+') scale('+s+')');}
+function zoom(f){var n=Math.max(1,Math.min(4,s*f));tx=750-(750-tx)*(n/s);ty=540-(540-ty)*(n/s);s=n;
+ if(s<=1.01){s=1;tx=0;ty=0;}ap();}
 document.getElementById('zin').onclick=function(){zoom(1.5)};
 document.getElementById('zout').onclick=function(){zoom(1/1.5)};
 document.getElementById('zfit').onclick=function(){s=1;tx=0;ty=0;ap()};
