@@ -108,7 +108,7 @@ addEventListener('touchstart',resetIdle); addEventListener('click',resetIdle);
 function progress(){
  if(view===0){pb.style.width='0%'; st.textContent='Five short questions, about twenty seconds';}
  else if(view<=5){pb.style.width=(view/6*100)+'%'; st.textContent='Question '+view+' of 5';}
- else if(view===6){pb.style.width='92%'; st.textContent='Check your answers';}
+ else if(view===6){pb.style.width='92%'; st.textContent='Almost done, nothing has been sent yet';}
  else {pb.style.width='100%'; st.textContent='All done';}
 }
 
