@@ -21,12 +21,10 @@
  .pin{position:absolute;transform:translate(-50%,-100%)}
  .bub{display:inline-block;padding:7px 14px;border-radius:999px;color:#fff;font-weight:800;font-size:14px;
    white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.4)}
- .stem{width:3px;margin:0 auto}
- .dot{width:16px;height:16px;border-radius:50%;border:3px solid #fff;margin:0 auto;
-   box-shadow:0 3px 9px rgba(0,0,0,.45)}
  .halo{position:absolute;transform:translate(-50%,-50%);border-radius:50%;
    animation:pulse 2.2s ease-out infinite}
- @keyframes pulse{0%{transform:translate(-50%,-50%) scale(.7);opacity:.5}100%{transform:translate(-50%,-50%) scale(1.45);opacity:0}}
+ @keyframes pulse{0%{transform:translate(-50%,-50%) scale(.7);opacity:.5}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
+ @keyframes flow{to{stroke-dashoffset:-1000}}
  .foot{position:absolute;left:0;right:0;bottom:0;height:56px;background:#fff;border-top:1px solid #dfe7e2;
    display:flex;align-items:center;gap:18px;padding:0 18px;font-size:13.5px;color:#2f3f38;font-weight:700}
  .k{display:flex;align-items:center;gap:7px}
@@ -42,7 +40,7 @@
   <div class="chip"><span id="zoneLbl">Food Cupboard</span><span class="d" id="hintLbl"></span></div>
 </div>
 <div id="stage">
-  <img id="bg" alt="Store layout" src="https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1789559997844_9p00vh.png">
+  <img id="bg" alt="Store layout" src="https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/gen_1789564797369_eidhauao76p.png">
   <div id="layer"></div>
 </div>
 <div class="note">Illustrative layout</div>
@@ -53,41 +51,61 @@
 </div>
 <script>
 (function(){
+// Kios sudah tergambar di dalam ilustrasi. Titik ini hanya untuk menaruh gelembungnya.
+var KIOSK_HEAD={x:54.8,y:78.5};
+
 var Z={
- produce   :{x:17,y:46,n:'Fruit & Veg',           h:'front left, in the wooden crates'},
- bakery    :{x:31,y:14,n:'Oven Fresh Bakery',     h:'back left corner'},
- butcher   :{x:55,y:15,n:'Market Street',         h:'along the back wall'},
- grocery   :{x:46,y:40,n:'Food Cupboard',         h:'the middle aisles'},
- frozen    :{x:64,y:42,n:'Frozen Food',           h:'the chest freezers, centre right'},
- chilled   :{x:59,y:34,n:'Milk Cheese & Chilled', h:'the chilled cabinets'},
- household :{x:78,y:42,n:'Household & Cleaning',  h:'right-hand aisles'},
- toiletries:{x:86,y:45,n:'Toiletries & Beauty',   h:'far right, by the pharmacy'},
- baby      :{x:89,y:36,n:'Baby & Toddler',        h:'far right, past toiletries'},
- cafe      :{x:84,y:82,n:'The Cafe',              h:'front right'},
- checkouts :{x:44,y:70,n:'Checkouts',             h:'across the front'}
+ produce   :{n:'Fruit & Veg',                h:'front left, along the left-hand wall'},
+ bakery    :{n:'Oven Fresh Bakery',          h:'back left corner'},
+ butcher   :{n:'Market Street',              h:'along the back wall'},
+ grocery   :{n:'Food Cupboard & Drinks',     h:'the middle aisles'},
+ freefrom  :{n:'Free From & Dietary',        h:'middle aisles, right-hand end'},
+ frozen    :{n:'Frozen Food',                h:'the freezers, centre right'},
+ chilled   :{n:'Milk Cheese & Chilled',      h:'the chilled cabinets, centre right'},
+ household :{n:'Household & Cleaning',       h:'right-hand aisles'},
+ toiletries:{n:'Toiletries Health & Beauty', h:'far right'},
+ baby      :{n:'Baby & Toddler',             h:'far right, past toiletries'},
+ cafe      :{n:'The Cafe',                   h:'front right'},
+ checkouts :{n:'Checkouts',                  h:'across the front'}
 };
-var KI={x:55,y:82};                 // kios berdiri di lantai terbuka depan, di luar jalur kasir
+
+// Jalur jalan kaki, dihitung dari peta lantai ilustrasi pada grid 150x100.
+// Setiap langkah berdiri di ubin kosong: tidak menembus rak, kasir, atau dinding.
+var GW=150, GH=100;
+var PATH={
+produce:"85,89,7766666655445566667667666666666555444444454444444455444444445444444444544443333333333334444444454455666606606767777667676776767666",
+bakery:"85,89,77666666554455666676676666666665554444444544444444554444444454444444445444433333333333344444444544556666066067677776676767767677677667676767670000000",
+butcher:"85,89,776666665544556666766766666666655544444556667666667667667667667676676666666666",
+grocery:"85,89,7766666655445566667667666666666555444444454444444455444444445444444445555666666767676776776676766777677770000112223222",
+freefrom:"85,89,77666666554455666676676666666665554444455666766666766766766766760",
+frozen:"85,89,777766776666766676666666666555445556666666676667666766676670",
+chilled:"85,89,7777667766667666766666666766677666666666776666766666766670",
+household:"85,89,77776677666676667666666667777000000007776666666666766666667667666670",
+toiletries:"85,89,7777667766667666766666666777700000000700010000010000001000776666666666666666666666666666",
+baby:"85,89,777766776666766676666666677770000000070001000001000000100077666666666666666666666666666666666666677000002212222",
+cafe:"85,89,7777667766667666766666666777700001111",
+checkouts:"85,89,7766666655445566667667666666666555444444444444433322223222"
+};
+var DIRS=[[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+function decode(s){
+ var a=s.split(','), q=+a[0], r=+a[1], code=a[2], out=[[q,r]];
+ for(var i=0;i<code.length;i++){var d=DIRS[+code[i]]; if(!d)continue; q+=d[0]; r+=d[1]; out.push([q,r]);}
+ var pct=out.map(function(c){return {x:c[0]/GW*100, y:c[1]/GH*100};});
+ var thin=[]; for(var j=0;j<pct.length;j+=4) thin.push(pct[j]);
+ if(thin[thin.length-1]!==pct[pct.length-1]) thin.push(pct[pct.length-1]);
+ return thin;
+}
+
 var q=new URLSearchParams(location.search);
-var z=Z[(q.get('zone')||'grocery').toLowerCase()]||Z.grocery;
+var key=(q.get('zone')||'grocery').toLowerCase();
+if(!Z[key]||!PATH[key]) key='grocery';
+var z=Z[key];
 var prod=q.get('product')||'Pepsi Max 2l';
 document.getElementById('prodLbl').textContent=prod;
 document.getElementById('zoneLbl').textContent=z.n;
 document.getElementById('hintLbl').textContent=z.h;
 document.title=prod;
-
-var KIOSK='<svg width="62" height="80" viewBox="0 0 62 80" style="display:block;margin:0 auto;'+
- 'filter:drop-shadow(0 4px 7px rgba(0,0,0,.45))">'+
- '<ellipse cx="31" cy="76" rx="21" ry="5" fill="#0d2418" opacity=".3"/>'+
- '<rect x="22" y="52" width="18" height="22" rx="3" fill="#1f3d2c"/>'+
- '<rect x="13" y="70" width="36" height="7" rx="3.5" fill="#16301f"/>'+
- '<rect x="4" y="2" width="54" height="54" rx="7" fill="#22402f"/>'+
- '<rect x="8" y="6" width="46" height="46" rx="4" fill="#0d5c33"/>'+
- '<rect x="11" y="9" width="40" height="28" rx="2.5" fill="#eaf4ee"/>'+
- '<circle cx="22" cy="20" r="5" fill="#0d5c33" opacity=".32"/>'+
- '<rect x="30" y="15" width="17" height="3.4" rx="1.7" fill="#0d5c33" opacity=".32"/>'+
- '<rect x="30" y="21" width="12" height="3.4" rx="1.7" fill="#0d5c33" opacity=".32"/>'+
- '<rect x="15" y="41" width="32" height="7" rx="3.5" fill="#ffc300"/>'+
- '<circle cx="31" cy="4" r="2.2" fill="#7ee0a6"/></svg>';
+var PTS=decode(PATH[key]);
 
 var img=document.getElementById('bg'), layer=document.getElementById('layer'), stage=document.getElementById('stage');
 function rect(){
@@ -97,57 +115,64 @@ function rect(){
  return {l:(cw-w)/2, t:(ch-h)/2, w:w, h:h};
 }
 function draw(){
- var R=rect();
+ var R=rect(), u=R.h/100;
  var P=function(p){return {x:R.l+R.w*p.x/100, y:R.t+R.h*p.y/100};};
- var a=P(KI), b=P(z);
  layer.innerHTML='';
+
+ // --- jalur hijau mengikuti lantai kosong
+ var pts=PTS.map(P), a=pts[0], b=pts[pts.length-1];
+ var d='M '+a.x+' '+a.y;
+ for(var i=1;i<pts.length-1;i++){
+  var mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2;
+  d+=' Q '+pts[i].x+' '+pts[i].y+' '+mx+' '+my;
+ }
+ d+=' L '+b.x+' '+b.y;
  var ns='http://www.w3.org/2000/svg';
  var svg=document.createElementNS(ns,'svg'); svg.setAttribute('class','route');
- var d='M '+a.x+' '+a.y+' C '+a.x+' '+(a.y-R.h*.14)+', '+b.x+' '+(b.y+R.h*.20)+', '+b.x+' '+b.y;
- ['#00a651|'+(R.h*0.022)+'|0.26','#00a651|'+(R.h*0.011)+'|1'].forEach(function(cfg,i){
-  var p=cfg.split('|'), e=document.createElementNS(ns,'path');
-  e.setAttribute('d',d); e.setAttribute('fill','none'); e.setAttribute('stroke',p[0]);
-  e.setAttribute('stroke-width',p[1]); e.setAttribute('stroke-linecap','round');
-  e.setAttribute('opacity',p[2]);
-  if(i===1) e.setAttribute('stroke-dasharray','1 '+(R.h*0.028));
+ function stroke(col,w,op,dash,anim){
+  var e=document.createElementNS(ns,'path');
+  e.setAttribute('d',d); e.setAttribute('fill','none'); e.setAttribute('stroke',col);
+  e.setAttribute('stroke-width',w); e.setAttribute('stroke-linecap','round');
+  e.setAttribute('stroke-linejoin','round'); e.setAttribute('opacity',op);
+  if(dash) e.setAttribute('stroke-dasharray',dash);
+  if(anim) e.style.animation='flow 16s linear infinite';
   svg.appendChild(e);
- });
+ }
+ stroke('#ffffff', u*3.4, 0.55, null, false);
+ stroke('#00a651', u*2.4, 0.30, null, false);
+ stroke('#00a651', u*1.25, 1, (u*1.3)+' '+(u*2.6), true);
  layer.appendChild(svg);
 
- var halo=document.createElement('div');
- halo.className='halo';
- halo.style.cssText='left:'+b.x+'px;top:'+b.y+'px;width:64px;height:64px;background:#e02424';
- layer.appendChild(halo);
-
- function place(el,x,y){el.style.left=x+'px';el.style.top=y+'px';layer.appendChild(el);}
  function bubble(x,y,col,txt){
-  var b=document.createElement('div');
-  b.className='pin'; b.innerHTML='<div class="bub" style="background:'+col+'">'+txt+'</div>';
-  place(b,x,y); return b;
+  var el=document.createElement('div'); el.className='pin';
+  el.style.left=x+'px'; el.style.top=y+'px';
+  el.innerHTML='<div class="bub" style="background:'+col+'">'+txt+'</div>';
+  layer.appendChild(el);
  }
- function stemLine(x,y,h,col){
+ function stem(x,y,h,col){
   var l=document.createElement('div');
   l.style.cssText='position:absolute;width:3px;height:'+h+'px;background:'+col+
     ';left:'+x+'px;top:'+(y-h)+'px;transform:translateX(-50%);border-radius:2px';
   layer.appendChild(l);
  }
- // --- pin produk: titik di zona, gelembung di atasnya
- var iDot=document.createElement('div');
- iDot.style.cssText='position:absolute;width:16px;height:16px;border-radius:50%;background:#e02424;'+
+
+ // --- tujuan
+ var halo=document.createElement('div');
+ halo.className='halo';
+ halo.style.cssText='left:'+b.x+'px;top:'+b.y+'px;width:'+(u*7)+'px;height:'+(u*7)+'px;background:#e02424';
+ layer.appendChild(halo);
+ var dot=document.createElement('div');
+ dot.style.cssText='position:absolute;width:16px;height:16px;border-radius:50%;background:#e02424;'+
    'border:3px solid #fff;box-shadow:0 3px 9px rgba(0,0,0,.45);transform:translate(-50%,-50%);'+
    'left:'+b.x+'px;top:'+b.y+'px';
- layer.appendChild(iDot);
- stemLine(b.x,b.y-8,34,'#e02424');
- bubble(b.x,b.y-42,'#e02424',prod.length>24?prod.slice(0,23)+'…':prod);
+ layer.appendChild(dot);
+ stem(b.x, b.y-8, 34, '#e02424');
+ bubble(b.x, b.y-42, '#e02424', prod.length>26?prod.slice(0,25)+'…':prod);
 
- // --- kios: alasnya menyentuh lantai, gelembung jauh di atas kepala
- var KH=80;
- var k=document.createElement('div');
- k.style.cssText='position:absolute;transform:translate(-50%,-100%);left:'+a.x+'px;top:'+a.y+'px';
- k.innerHTML=KIOSK;
- layer.appendChild(k);
- stemLine(a.x,a.y-KH,16,'#1565ff');
- bubble(a.x,a.y-KH-16,'#1565ff','You are here');
+ // --- kios sudah tergambar, jadi hanya gelembungnya
+ var kh=P(KIOSK_HEAD);
+ stem(kh.x, kh.y, 16, '#1565ff');
+ bubble(kh.x, kh.y-16, '#1565ff', 'You are here');
 }
 if(img.complete&&img.naturalWidth) draw(); else img.onload=draw;
 addEventListener('resize',draw);
