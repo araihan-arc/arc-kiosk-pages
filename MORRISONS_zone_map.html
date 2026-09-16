@@ -14,9 +14,11 @@
  .chip{display:inline-flex;align-items:center;gap:9px;margin-top:10px;background:#ffc300;color:#11331f;
    padding:7px 15px;border-radius:999px;font-weight:800;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
  .chip .d{font-weight:600;font-size:13px;opacity:.78}
- .wrap{position:absolute;left:0;right:0;top:126px;bottom:60px;display:flex;align-items:center;justify-content:center;
-   overflow:hidden;padding:8px}
- .canvas{position:relative;width:100%;max-width:100%;aspect-ratio:1536/1024}
+ .wrap{position:absolute;left:0;right:0;top:126px;bottom:60px;display:grid;place-items:center;
+   overflow:hidden;padding:10px}
+ .canvas{position:relative;aspect-ratio:1536/1024;width:100%;max-width:100%;max-height:100%;
+   height:auto;margin:auto}
+ @supports not (aspect-ratio:1/1){.canvas{height:100%}}
  .canvas img{width:100%;height:100%;object-fit:contain;display:block;border-radius:14px}
  .ov{position:absolute;inset:0}
  .ov svg{width:100%;height:100%;display:block}
@@ -26,6 +28,7 @@
  .stem{width:3px;margin:0 auto;background:currentColor}
  .dot{width:17px;height:17px;border-radius:50%;border:3px solid #fff;margin:0 auto;
    box-shadow:0 3px 9px rgba(0,0,0,.4)}
+ .kiosk{display:block;margin:0 auto;filter:drop-shadow(0 5px 9px rgba(0,0,0,.45))}
  .halo{position:absolute;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
    animation:pulse 2.2s ease-out infinite}
  @keyframes pulse{0%{transform:translate(-50%,-50%) scale(.75);opacity:.55}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
@@ -78,7 +81,7 @@ document.getElementById('zoneLbl').textContent=z.n;
 document.getElementById('hintLbl').textContent=z.h;
 document.title=prod;
 
-var KI={x:41,y:87};          // posisi kios, dekat pintu masuk
+var KI={x:41,y:86};          // posisi kios, dekat pintu masuk
 var cv=document.getElementById('cv'), ov=document.getElementById('ov');
 var NS='http://www.w3.org/2000/svg';
 function mk(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
@@ -91,7 +94,20 @@ ov.appendChild(mk('path',{d:d,fill:'none',stroke:'#00a651','stroke-width':14,opa
 ov.appendChild(mk('path',{d:d,fill:'none',stroke:'#00a651','stroke-width':7,'stroke-linecap':'round',
   'stroke-dasharray':'2 18'}));
 
-function pin(p,col,txt,h){
+var KIOSK='<svg class="kiosk" width="74" height="96" viewBox="0 0 74 96">'+
+ '<ellipse cx="37" cy="90" rx="26" ry="6" fill="#000" opacity=".22"/>'+
+ '<rect x="26" y="62" width="22" height="26" rx="3" fill="#1f3d2c"/>'+
+ '<rect x="16" y="84" width="42" height="8" rx="4" fill="#162e21"/>'+
+ '<rect x="6" y="2" width="62" height="64" rx="8" fill="#22402f"/>'+
+ '<rect x="10" y="6" width="54" height="56" rx="5" fill="#0d5c33"/>'+
+ '<rect x="14" y="10" width="46" height="34" rx="3" fill="#e8f3ec"/>'+
+ '<circle cx="27" cy="24" r="6" fill="#0d5c33" opacity=".35"/>'+
+ '<rect x="36" y="18" width="20" height="4" rx="2" fill="#0d5c33" opacity=".35"/>'+
+ '<rect x="36" y="25" width="15" height="4" rx="2" fill="#0d5c33" opacity=".35"/>'+
+ '<rect x="18" y="48" width="38" height="9" rx="4.5" fill="#ffc300"/>'+
+ '<circle cx="37" cy="4" r="2.6" fill="#7ee0a6"/></svg>';
+
+function pin(p,col,txt,h,kiosk){
   var halo=document.createElement('div');
   halo.className='halo';
   halo.style.cssText+='left:'+p.x+'%;top:'+p.y+'%;width:70px;height:70px;background:'+col;
@@ -100,11 +116,11 @@ function pin(p,col,txt,h){
   el.className='pin'; el.style.left=p.x+'%'; el.style.top=p.y+'%'; el.style.color=col;
   el.innerHTML='<div class="bub" style="background:'+col+'">'+txt+'</div>'+
                '<div class="stem" style="height:'+h+'px"></div>'+
-               '<div class="dot" style="background:'+col+'"></div>';
+               (kiosk?KIOSK:'<div class="dot" style="background:'+col+'"></div>');
   cv.appendChild(el);
 }
 pin(z,'#e02424',prod.length>24?prod.slice(0,23)+'…':prod,34);
-pin(KI,'#1565ff','You are here',28);
+pin(KI,'#1565ff','You are here',18,true);
 })();
 </script>
 </body>
