@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>More Card Sign In</title>
+<style>
+ *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+   font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+ html,body{height:100%;background:#00733b;overflow:hidden}
+ .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+ .demo{position:fixed;top:0;left:0;right:0;background:#b3001b;color:#fff;font-size:13px;
+   letter-spacing:.6px;text-align:center;padding:7px 10px;font-weight:700}
+ .card{background:#eef4f1;border-radius:22px;padding:30px 26px 26px;width:100%;max-width:430px;
+   box-shadow:0 10px 40px rgba(0,0,0,.28);text-align:center}
+ h1{font-size:27px;color:#11331f;margin-bottom:6px}
+ .sub{font-size:15px;color:#4a5f53;margin-bottom:22px;line-height:1.45}
+ .dots{display:flex;gap:16px;justify-content:center;margin:6px 0 24px}
+ .dot{width:22px;height:22px;border-radius:50%;border:2.5px solid #7d9488;transition:.15s}
+ .dot.on{background:#00733b;border-color:#00733b;transform:scale(1.08)}
+ .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+ .k{height:62px;border:0;border-radius:14px;background:#fff;font-size:25px;font-weight:600;color:#11331f;
+   box-shadow:0 2px 5px rgba(0,0,0,.09)}
+ .k:active{background:#dbe6e0}
+ .k.go{background:#ffc300;color:#11331f;font-size:22px}
+ .k.del{font-size:19px;color:#4a5f53}
+ .msg{min-height:24px;margin-top:16px;font-size:15px;font-weight:600}
+ .ok{color:#00733b}.err{color:#b3001b}
+ .foot{margin-top:18px;font-size:13px;color:#4a5f53;line-height:1.5}
+ .res{text-align:left}
+ .res h2{font-size:23px;color:#11331f;margin-bottom:14px}
+ .row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #d5e0da;font-size:16px}
+ .row b{color:#00733b}
+ .out{margin-top:20px;width:100%;height:52px;border:0;border-radius:14px;background:#11331f;color:#fff;font-size:16px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="demo">DEMO DATA — INTERNAL WALKTHROUGH ONLY — NOT A REAL ACCOUNT</div>
+<div class="wrap"><div class="card" id="card">
+  <h1>Enter PIN to continue</h1>
+  <div class="sub">Please enter your 4-digit More Card PIN</div>
+  <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  <div class="pad">
+    <button class="k">1</button><button class="k">2</button><button class="k">3</button>
+    <button class="k">4</button><button class="k">5</button><button class="k">6</button>
+    <button class="k">7</button><button class="k">8</button><button class="k">9</button>
+    <button class="k del" data-a="del">&#9003;</button><button class="k">0</button>
+    <button class="k go" data-a="go">&#8629;</button>
+  </div>
+  <div class="msg" id="msg"></div>
+  <div class="foot">Don't have a PIN? Visit the Customer Service Desk for assistance.</div>
+</div></div>
+<script>
+(function(){
+ var ACC={'7781':{n:'Chris Bennett',p:4820,v:'4.82',f:0,o:3,note:'180 points from your next Fiver'},
+          '4416':{n:'Amara Okafor',p:11350,v:'11.35',f:2,o:3,note:'1350 points left after converting'}};
+ var pin='',card=document.getElementById('card'),msg=document.getElementById('msg');
+ function dots(){document.querySelectorAll('.dot').forEach(function(d,i){d.classList.toggle('on',i<pin.length);});}
+ function show(a){
+   card.innerHTML='<div class="res"><h2>Hello '+a.n+'</h2>'+
+    '<div class="row"><span>More Points</span><b>'+a.p.toLocaleString()+'</b></div>'+
+    '<div class="row"><span>Cash value</span><b>&pound;'+a.v+'</b></div>'+
+    '<div class="row"><span>Fivers ready</span><b>'+a.f+'</b></div>'+
+    '<div class="row"><span>Offers waiting</span><b>'+a.o+'</b></div>'+
+    '<div class="foot" style="margin-top:14px">'+a.note+'. Offers must be activated before they come off at the till.</div>'+
+    '<button class="out" id="out">Sign out</button></div>';
+   document.getElementById('out').onclick=function(){
+     try{if(window.ARC&&ARC.close)ARC.close();}catch(e){}
+     location.reload();
+   };
+ }
+ document.addEventListener('click',function(e){
+   var b=e.target.closest('.k'); if(!b)return;
+   var a=b.dataset.a;
+   if(a==='del'){pin=pin.slice(0,-1);msg.textContent='';dots();return;}
+   if(a==='go'){
+     if(ACC[pin]){msg.className='msg ok';msg.textContent='Signed in';setTimeout(function(){show(ACC[pin]);},380);}
+     else{msg.className='msg err';msg.textContent='PIN not recognised. Try 7781 or 4416 in demo mode.';pin='';dots();}
+     return;
+   }
+   if(pin.length<4){pin+=b.textContent.trim();dots();msg.textContent='';
+     if(pin.length===4){msg.className='msg';msg.textContent='Press the arrow to continue';}}
+ });
+})();
+</script>
+</body>
+</html>
