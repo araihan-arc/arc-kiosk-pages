@@ -66,7 +66,7 @@ var G=el('g',{}); svg.appendChild(G);
 function add(e){G.appendChild(e);return e;}
 
 // --- proyeksi isometrik
-var K=0.8660254, OX=760, OY=120, S=1.0;
+var K=0.8660254, OX=690, OY=170, S=0.76;
 function iso(x,y,z){return [OX+(x-y)*K*S, OY+((x+y)*0.5-(z||0))*S];}
 function pts(a){return a.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');}
 function mix(hex,f){var n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;
@@ -95,7 +95,7 @@ function isoText(x,y,z,txt,size,fill,weight,anchor){
 }
 
 // ---------- LANTAI
-var FX0=-70,FY0=-70,FX1=950,FY1=1180;
+var FX0=-70,FY0=-60,FX1=1120,FY1=900;
 add(el('polygon',{points:pts([iso(FX0,FY0),iso(FX1,FY0),iso(FX1,FY1),iso(FX0,FY1)]),
  fill:'#f7f4ec',stroke:'#cfd8d2','stroke-width':2}));
 // ubin
@@ -105,51 +105,51 @@ for(var t2=FX0;t2<=FX1;t2+=60){add(el('line',{x1:iso(t2,FY0)[0],y1:iso(t2,FY0)[1
  stroke:'#e8e2d4','stroke-width':1}));}
 
 // ---------- MARKET STREET di ujung belakang
-box(-40,-40,900,40,54,'#c05555');
-isoText(430,0,62,'MARKET  STREET',30,'#7d2f2f','800');
+box(-40,-30,1090,26,30,'#c05555');
+isoText(520,-2,38,'MARKET  STREET',26,'#fff','800');
 
 // ---------- LORONG: memanjang ke arah y, ditumpuk ke arah x
-var AW=26, AG=9, X0=10, AY0=90, AY1=980, HGT=44;
+var AW=30, AG=13, X0=10, AY0=70, AY1=620, HGT=40;
 function ax(i){return X0+(i-1)*(AW+AG);}
 // rute digambar sebelum lorong supaya berada di lantai
-var TX=ax(aisle)+AW/2, KX=690, KY=1090;
-var route=[[KX,KY],[KX,1040],[TX,1040],[TX,AY1+22]];
+var TX=ax(aisle)+AW/2, KX=840, KY=830;
+var route=[[KX,KY],[KX,730],[TX,730],[TX,AY1+26]];
 var rp=route.map(function(p){return iso(p[0],p[1],2);});
-add(el('polyline',{points:pts(rp),fill:'none',stroke:'#00a651','stroke-width':11,
+add(el('polyline',{points:pts(rp),fill:'none',stroke:'#00a651','stroke-width':15,
  'stroke-linecap':'round','stroke-linejoin':'round',opacity:.35}));
-add(el('polyline',{points:pts(rp),fill:'none',stroke:'#00a651','stroke-width':7,
- 'stroke-linecap':'round','stroke-linejoin':'round','stroke-dasharray':'1 20'}));
+add(el('polyline',{points:pts(rp),fill:'none',stroke:'#00a651','stroke-width':9,
+ 'stroke-linecap':'round','stroke-linejoin':'round','stroke-dasharray':'1 24'}));
 
 for(var i=1;i<=25;i++){
  var X=ax(i), on=(i===aisle), c=DEPT[i][1];
  box(X,AY0,X+AW,AY1,on?HGT+10:HGT,on?c:mix(c,0.35),on);
  // garis rak di permukaan atas
- for(var s2=AY0+40;s2<AY1;s2+=56){
+ for(var s2=AY0+34;s2<AY1;s2+=46){
    var a=iso(X+2,s2,(on?HGT+10:HGT)+0.5),b=iso(X+AW-2,s2,(on?HGT+10:HGT)+0.5);
    add(el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'#000',opacity:on?.13:.09,'stroke-width':1.6}));
  }
  // papan nomor tergantung di ujung depan
- isoText(X+AW/2,AY1+40,on?86:70,String(i),on?34:22,on?'#e02424':'#7f8d87','800');
- if(on) isoText(X+AW/2+64,AY1+40,64,DEPT[i][0],19,'#3a4a42','700','start');
+ isoText(X+AW/2,AY1+48,4,String(i),on?40:26,on?'#e02424':'#6d7c76','800');
+ if(on) isoText(X+AW/2,AY1+112,4,DEPT[i][0],21,'#e02424','800');
 }
 
 // ---------- KASIR
 for(var c2=0;c2<7;c2++){
- var cx0=40+c2*84;
- box(cx0,1020,cx0+54,1120,16,'#e8dfc4');
- box(cx0,1020,cx0+54,1030,26,'#d8cba6');
+ var cx0=60+c2*92;
+ box(cx0,760,cx0+60,862,15,'#e8dfc4');
+ box(cx0,760,cx0+60,772,30,'#d8cba6');
 }
-isoText(250,1170,20,'CHECKOUTS',22,'#8a7d52','800');
+isoText(330,905,4,'CHECKOUTS',24,'#8a7d52','800');
 
 // ---------- PINTU MASUK + CUSTOMER SERVICE
-box(640,1120,780,1180,10,'#bfe3cd');
-isoText(710,1150,18,'ENTRANCE',19,'#2f7d55','800');
-box(800,1080,920,1180,34,'#a8d8bd');
-isoText(860,1130,44,'CUSTOMER',15,'#256b47','800');
-isoText(860,1160,44,'SERVICE',15,'#256b47','800');
+box(760,880,940,940,10,'#bfe3cd');
+isoText(850,910,16,'ENTRANCE',21,'#2f7d55','800');
+box(980,820,1110,940,34,'#a8d8bd');
+isoText(1045,865,42,'CUSTOMER',17,'#256b47','800');
+isoText(1045,900,42,'SERVICE',17,'#256b47','800');
 
 // ---------- troli dekat pintu
-for(var tr=0;tr<4;tr++){ box(600-tr*26,1128,600-tr*26+18,1172,20,'#b9c6c0'); }
+for(var tr=0;tr<4;tr++){ box(700-tr*30,886,700-tr*30+20,934,22,'#b9c6c0'); }
 
 // ---------- tanaman
 function plant(px,py,sc){
@@ -159,10 +159,10 @@ function plant(px,py,sc){
  add(el('ellipse',{cx:t1[0],cy:t1[1]-6*sc,rx:22*sc,ry:17*sc,fill:'#4f9a52'}));
  add(el('ellipse',{cx:t1[0]-8*sc,cy:t1[1]-14*sc,rx:15*sc,ry:12*sc,fill:'#63b064'}));
 }
-plant(790,1060,1); plant(-30,1040,.9); plant(930,60,.9); plant(-40,120,.85);
+plant(960,780,1); plant(-40,800,.9); plant(1090,40,.9); plant(-40,60,.85);
 
 // ---------- PIN tujuan
-var pTop=iso(TX,(AY0+AY1)/2,HGT+10);
+var pTop=iso(TX,(AY0+AY1)/2,HGT+12);
 add(el('line',{x1:pTop[0],y1:pTop[1],x2:pTop[0],y2:pTop[1]-118,stroke:'#e02424','stroke-width':4}));
 add(el('circle',{cx:pTop[0],cy:pTop[1],r:7,fill:'#e02424',opacity:.5}));
 var lw=Math.min(430,Math.max(190,prod.length*15+64));
@@ -182,7 +182,7 @@ add(el('polygon',{points:(kTop[0]-10)+','+(kTop[1]-98)+' '+(kTop[0]+10)+','+(kTo
 // ---------- zoom & geser
 var s=1,tx=0,ty=0;
 function ap(){G.setAttribute('transform','translate('+tx+','+ty+') scale('+s+')');}
-function zoom(f){var n=Math.max(1,Math.min(4,s*f));tx=750-(750-tx)*(n/s);ty=540-(540-ty)*(n/s);s=n;
+function zoom(f){var n=Math.max(1,Math.min(4,s*f));tx=750-(750-tx)*(n/s);ty=520-(520-ty)*(n/s);s=n;
  if(s<=1.01){s=1;tx=0;ty=0;}ap();}
 document.getElementById('zin').onclick=function(){zoom(1.5)};
 document.getElementById('zout').onclick=function(){zoom(1/1.5)};
