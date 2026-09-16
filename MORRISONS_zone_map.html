@@ -8,46 +8,43 @@
  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
  html,body{height:100%;background:#eef2f0;overflow:hidden}
- .top{background:linear-gradient(135deg,#00733b,#01532c);color:#fff;padding:15px 20px 13px}
- .top .t{font-size:14px;opacity:.88}
- .top .p{font-size:25px;font-weight:800;line-height:1.15;margin-top:2px}
- .chip{display:inline-flex;align-items:center;gap:9px;margin-top:10px;background:#ffc300;color:#11331f;
-   padding:7px 15px;border-radius:999px;font-weight:800;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
- .chip .d{font-weight:600;font-size:13px;opacity:.78}
- .wrap{position:absolute;left:0;right:0;top:126px;bottom:60px;display:flex;align-items:center;
-   justify-content:center;overflow:hidden;padding:10px}
- .canvas{position:relative;display:inline-block;max-width:100%;max-height:100%;line-height:0}
- .canvas img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;border-radius:14px}
- .ov{position:absolute;inset:0}
- .ov svg{width:100%;height:100%;display:block}
- .pin{position:absolute;transform:translate(-50%,-100%);pointer-events:none}
- .bub{display:inline-block;padding:8px 15px;border-radius:999px;color:#fff;font-weight:800;font-size:15px;
-   white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.35)}
- .stem{width:3px;margin:0 auto;background:currentColor}
- .dot{width:17px;height:17px;border-radius:50%;border:3px solid #fff;margin:0 auto;
-   box-shadow:0 3px 9px rgba(0,0,0,.4)}
- .kiosk{display:block;margin:0 auto;filter:drop-shadow(0 5px 9px rgba(0,0,0,.45))}
- .halo{position:absolute;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+ .top{background:linear-gradient(135deg,#00733b,#01532c);color:#fff;padding:14px 20px 12px}
+ .top .t{font-size:13.5px;opacity:.88}
+ .top .p{font-size:24px;font-weight:800;line-height:1.15;margin-top:2px}
+ .chip{display:inline-flex;align-items:center;gap:9px;margin-top:9px;background:#ffc300;color:#11331f;
+   padding:6px 14px;border-radius:999px;font-weight:800;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+ .chip .d{font-weight:600;font-size:12.5px;opacity:.78}
+ #stage{position:absolute;left:0;right:0;top:118px;bottom:56px;overflow:hidden}
+ #bg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+ #layer{position:absolute;inset:0;pointer-events:none}
+ #layer svg{position:absolute;inset:0;width:100%;height:100%}
+ .pin{position:absolute;transform:translate(-50%,-100%)}
+ .bub{display:inline-block;padding:7px 14px;border-radius:999px;color:#fff;font-weight:800;font-size:14px;
+   white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+ .stem{width:3px;margin:0 auto}
+ .dot{width:16px;height:16px;border-radius:50%;border:3px solid #fff;margin:0 auto;
+   box-shadow:0 3px 9px rgba(0,0,0,.45)}
+ .halo{position:absolute;transform:translate(-50%,-50%);border-radius:50%;
    animation:pulse 2.2s ease-out infinite}
- @keyframes pulse{0%{transform:translate(-50%,-50%) scale(.75);opacity:.55}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
- .foot{position:absolute;left:0;right:0;bottom:0;height:60px;background:#fff;border-top:1px solid #dfe7e2;
-   display:flex;align-items:center;gap:20px;padding:0 20px;font-size:14px;color:#2f3f38;font-weight:700}
- .k{display:flex;align-items:center;gap:8px}
- .sw{width:15px;height:15px;border-radius:50%}
- .note{position:absolute;right:12px;top:132px;background:rgba(17,51,31,.72);color:#fff;font-size:11px;
-   padding:5px 10px;border-radius:7px;letter-spacing:.3px}
+ @keyframes pulse{0%{transform:translate(-50%,-50%) scale(.7);opacity:.5}100%{transform:translate(-50%,-50%) scale(1.45);opacity:0}}
+ .foot{position:absolute;left:0;right:0;bottom:0;height:56px;background:#fff;border-top:1px solid #dfe7e2;
+   display:flex;align-items:center;gap:18px;padding:0 18px;font-size:13.5px;color:#2f3f38;font-weight:700}
+ .k{display:flex;align-items:center;gap:7px}
+ .sw{width:14px;height:14px;border-radius:50%}
+ .note{position:absolute;right:10px;top:124px;background:rgba(17,51,31,.7);color:#fff;font-size:10.5px;
+   padding:4px 9px;border-radius:6px;z-index:5}
 </style>
 </head>
 <body>
 <div class="top">
   <div class="t">Morrisons Pontefract &middot; here is where to find it</div>
   <div class="p" id="prodLbl">Pepsi Max 2l</div>
-  <div class="chip"><span id="zoneLbl">Soft Drinks</span><span class="d" id="hintLbl"></span></div>
+  <div class="chip"><span id="zoneLbl">Food Cupboard</span><span class="d" id="hintLbl"></span></div>
 </div>
-<div class="wrap"><div class="canvas" id="cv">
+<div id="stage">
   <img id="bg" alt="Store layout" src="https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1789559997844_9p00vh.png">
-  <div class="ov"><svg id="ov" viewBox="0 0 1000 667" preserveAspectRatio="none"></svg></div>
-</div></div>
+  <div id="layer"></div>
+</div>
 <div class="note">Illustrative layout</div>
 <div class="foot">
   <div class="k"><span class="sw" style="background:#1565ff"></span>You are here</div>
@@ -56,69 +53,85 @@
 </div>
 <script>
 (function(){
-// zona: koordinat persen pada ilustrasi
 var Z={
- produce   :{x:19,y:38,n:'Fruit & Veg',           h:'front left, in the wooden crates'},
- bakery    :{x:30,y:13,n:'Oven Fresh Bakery',     h:'back left corner'},
- butcher   :{x:53,y:13,n:'Market Street',         h:'along the back wall'},
- grocery   :{x:47,y:37,n:'Food Cupboard',         h:'the middle aisles'},
- frozen    :{x:67,y:40,n:'Frozen Food',           h:'the chest freezers, centre right'},
- chilled   :{x:61,y:32,n:'Milk Cheese & Chilled', h:'the chilled cabinets'},
- household :{x:79,y:38,n:'Household & Cleaning',  h:'right-hand aisles'},
- toiletries:{x:87,y:42,n:'Toiletries & Beauty',   h:'far right, by the pharmacy'},
- baby      :{x:90,y:33,n:'Baby & Toddler',        h:'far right, past toiletries'},
- cafe      :{x:86,y:82,n:'The Cafe',              h:'front right'},
- checkouts :{x:45,y:68,n:'Checkouts',             h:'across the front'}
+ produce   :{x:17,y:46,n:'Fruit & Veg',           h:'front left, in the wooden crates'},
+ bakery    :{x:31,y:14,n:'Oven Fresh Bakery',     h:'back left corner'},
+ butcher   :{x:55,y:15,n:'Market Street',         h:'along the back wall'},
+ grocery   :{x:46,y:40,n:'Food Cupboard',         h:'the middle aisles'},
+ frozen    :{x:64,y:42,n:'Frozen Food',           h:'the chest freezers, centre right'},
+ chilled   :{x:59,y:34,n:'Milk Cheese & Chilled', h:'the chilled cabinets'},
+ household :{x:78,y:42,n:'Household & Cleaning',  h:'right-hand aisles'},
+ toiletries:{x:86,y:45,n:'Toiletries & Beauty',   h:'far right, by the pharmacy'},
+ baby      :{x:89,y:36,n:'Baby & Toddler',        h:'far right, past toiletries'},
+ cafe      :{x:84,y:82,n:'The Cafe',              h:'front right'},
+ checkouts :{x:44,y:70,n:'Checkouts',             h:'across the front'}
 };
+var KI={x:64,y:70};                 // kios berdiri di lantai terbuka, kanan kasir
 var q=new URLSearchParams(location.search);
-var zk=(q.get('zone')||'grocery').toLowerCase();
-var z=Z[zk]||Z.grocery;
+var z=Z[(q.get('zone')||'grocery').toLowerCase()]||Z.grocery;
 var prod=q.get('product')||'Pepsi Max 2l';
 document.getElementById('prodLbl').textContent=prod;
 document.getElementById('zoneLbl').textContent=z.n;
 document.getElementById('hintLbl').textContent=z.h;
 document.title=prod;
 
-var KI={x:41,y:86};          // posisi kios, dekat pintu masuk
-var cv=document.getElementById('cv'), ov=document.getElementById('ov');
-var NS='http://www.w3.org/2000/svg';
-function mk(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
-function P(p){return [p.x*10, p.y*6.67];}   // persen -> viewBox 1000x667
+var KIOSK='<svg width="62" height="80" viewBox="0 0 62 80" style="display:block;margin:0 auto;'+
+ 'filter:drop-shadow(0 4px 7px rgba(0,0,0,.45))">'+
+ '<ellipse cx="31" cy="76" rx="21" ry="5" fill="#0d2418" opacity=".3"/>'+
+ '<rect x="22" y="52" width="18" height="22" rx="3" fill="#1f3d2c"/>'+
+ '<rect x="13" y="70" width="36" height="7" rx="3.5" fill="#16301f"/>'+
+ '<rect x="4" y="2" width="54" height="54" rx="7" fill="#22402f"/>'+
+ '<rect x="8" y="6" width="46" height="46" rx="4" fill="#0d5c33"/>'+
+ '<rect x="11" y="9" width="40" height="28" rx="2.5" fill="#eaf4ee"/>'+
+ '<circle cx="22" cy="20" r="5" fill="#0d5c33" opacity=".32"/>'+
+ '<rect x="30" y="15" width="17" height="3.4" rx="1.7" fill="#0d5c33" opacity=".32"/>'+
+ '<rect x="30" y="21" width="12" height="3.4" rx="1.7" fill="#0d5c33" opacity=".32"/>'+
+ '<rect x="15" y="41" width="32" height="7" rx="3.5" fill="#ffc300"/>'+
+ '<circle cx="31" cy="4" r="2.2" fill="#7ee0a6"/></svg>';
 
-// rute: keluar dari kios, menyusur koridor depan, lalu naik ke zona
-var a=P(KI), b=P(z), midY=Math.min(a[1]-40, 470);
-var d='M '+a[0]+' '+a[1]+' C '+a[0]+' '+(a[1]-70)+', '+b[0]+' '+(midY+40)+', '+b[0]+' '+b[1];
-ov.appendChild(mk('path',{d:d,fill:'none',stroke:'#00a651','stroke-width':14,opacity:.28,'stroke-linecap':'round'}));
-ov.appendChild(mk('path',{d:d,fill:'none',stroke:'#00a651','stroke-width':7,'stroke-linecap':'round',
-  'stroke-dasharray':'2 18'}));
-
-var KIOSK='<svg class="kiosk" width="74" height="96" viewBox="0 0 74 96">'+
- '<ellipse cx="37" cy="90" rx="26" ry="6" fill="#000" opacity=".22"/>'+
- '<rect x="26" y="62" width="22" height="26" rx="3" fill="#1f3d2c"/>'+
- '<rect x="16" y="84" width="42" height="8" rx="4" fill="#162e21"/>'+
- '<rect x="6" y="2" width="62" height="64" rx="8" fill="#22402f"/>'+
- '<rect x="10" y="6" width="54" height="56" rx="5" fill="#0d5c33"/>'+
- '<rect x="14" y="10" width="46" height="34" rx="3" fill="#e8f3ec"/>'+
- '<circle cx="27" cy="24" r="6" fill="#0d5c33" opacity=".35"/>'+
- '<rect x="36" y="18" width="20" height="4" rx="2" fill="#0d5c33" opacity=".35"/>'+
- '<rect x="36" y="25" width="15" height="4" rx="2" fill="#0d5c33" opacity=".35"/>'+
- '<rect x="18" y="48" width="38" height="9" rx="4.5" fill="#ffc300"/>'+
- '<circle cx="37" cy="4" r="2.6" fill="#7ee0a6"/></svg>';
-
-function pin(p,col,txt,h,kiosk){
-  var halo=document.createElement('div');
-  halo.className='halo';
-  halo.style.cssText+='left:'+p.x+'%;top:'+p.y+'%;width:70px;height:70px;background:'+col;
-  cv.appendChild(halo);
-  var el=document.createElement('div');
-  el.className='pin'; el.style.left=p.x+'%'; el.style.top=p.y+'%'; el.style.color=col;
-  el.innerHTML='<div class="bub" style="background:'+col+'">'+txt+'</div>'+
-               '<div class="stem" style="height:'+h+'px"></div>'+
-               (kiosk?KIOSK:'<div class="dot" style="background:'+col+'"></div>');
-  cv.appendChild(el);
+var img=document.getElementById('bg'), layer=document.getElementById('layer'), stage=document.getElementById('stage');
+function rect(){
+ var cw=stage.clientWidth, ch=stage.clientHeight;
+ var iw=img.naturalWidth||1536, ih=img.naturalHeight||1024;
+ var s=Math.min(cw/iw,ch/ih), w=iw*s, h=ih*s;
+ return {l:(cw-w)/2, t:(ch-h)/2, w:w, h:h};
 }
-pin(z,'#e02424',prod.length>24?prod.slice(0,23)+'…':prod,34);
-pin(KI,'#1565ff','You are here',18,true);
+function draw(){
+ var R=rect();
+ var P=function(p){return {x:R.l+R.w*p.x/100, y:R.t+R.h*p.y/100};};
+ var a=P(KI), b=P(z);
+ layer.innerHTML='';
+ var ns='http://www.w3.org/2000/svg';
+ var svg=document.createElementNS(ns,'svg');
+ var d='M '+a.x+' '+a.y+' C '+a.x+' '+(a.y-R.h*.14)+', '+b.x+' '+(b.y+R.h*.20)+', '+b.x+' '+b.y;
+ ['#00a651|'+(R.h*0.022)+'|0.26','#00a651|'+(R.h*0.011)+'|1'].forEach(function(cfg,i){
+  var p=cfg.split('|'), e=document.createElementNS(ns,'path');
+  e.setAttribute('d',d); e.setAttribute('fill','none'); e.setAttribute('stroke',p[0]);
+  e.setAttribute('stroke-width',p[1]); e.setAttribute('stroke-linecap','round');
+  e.setAttribute('opacity',p[2]);
+  if(i===1) e.setAttribute('stroke-dasharray','1 '+(R.h*0.028));
+  svg.appendChild(e);
+ });
+ layer.appendChild(svg);
+
+ var halo=document.createElement('div');
+ halo.className='halo';
+ halo.style.cssText='left:'+b.x+'px;top:'+b.y+'px;width:64px;height:64px;background:#e02424';
+ layer.appendChild(halo);
+
+ function pin(p,col,txt,stem,kiosk){
+  var el=document.createElement('div');
+  el.className='pin'; el.style.left=p.x+'px'; el.style.top=p.y+'px';
+  el.innerHTML='<div class="bub" style="background:'+col+'">'+txt+'</div>'+
+    '<div class="stem" style="height:'+stem+'px;background:'+col+'"></div>'+
+    (kiosk?KIOSK:'<div class="dot" style="background:'+col+'"></div>');
+  layer.appendChild(el);
+ }
+ pin(b,'#e02424',prod.length>24?prod.slice(0,23)+'…':prod,30,false);
+ pin(a,'#1565ff','You are here',14,true);
+}
+if(img.complete&&img.naturalWidth) draw(); else img.onload=draw;
+addEventListener('resize',draw);
 })();
 </script>
 </body>
