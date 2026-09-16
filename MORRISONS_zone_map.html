@@ -17,7 +17,7 @@
  #stage{position:absolute;left:0;right:0;top:118px;bottom:56px;overflow:hidden}
  #bg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
  #layer{position:absolute;inset:0;pointer-events:none}
- #layer svg{position:absolute;inset:0;width:100%;height:100%}
+ #layer svg.route{position:absolute;inset:0;width:100%;height:100%}
  .pin{position:absolute;transform:translate(-50%,-100%)}
  .bub{display:inline-block;padding:7px 14px;border-radius:999px;color:#fff;font-weight:800;font-size:14px;
    white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.4)}
@@ -66,7 +66,7 @@ var Z={
  cafe      :{x:84,y:82,n:'The Cafe',              h:'front right'},
  checkouts :{x:44,y:70,n:'Checkouts',             h:'across the front'}
 };
-var KI={x:70,y:88};                 // kios berdiri di lantai terbuka depan, di luar jalur kasir
+var KI={x:55,y:82};                 // kios berdiri di lantai terbuka depan, di luar jalur kasir
 var q=new URLSearchParams(location.search);
 var z=Z[(q.get('zone')||'grocery').toLowerCase()]||Z.grocery;
 var prod=q.get('product')||'Pepsi Max 2l';
@@ -102,7 +102,7 @@ function draw(){
  var a=P(KI), b=P(z);
  layer.innerHTML='';
  var ns='http://www.w3.org/2000/svg';
- var svg=document.createElementNS(ns,'svg');
+ var svg=document.createElementNS(ns,'svg'); svg.setAttribute('class','route');
  var d='M '+a.x+' '+a.y+' C '+a.x+' '+(a.y-R.h*.14)+', '+b.x+' '+(b.y+R.h*.20)+', '+b.x+' '+b.y;
  ['#00a651|'+(R.h*0.022)+'|0.26','#00a651|'+(R.h*0.011)+'|1'].forEach(function(cfg,i){
   var p=cfg.split('|'), e=document.createElementNS(ns,'path');
