@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ARC WebView bridge probe</title>
+<style>
+ *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+   font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+ html,body{height:100%;background:#0f1614;color:#e8f0ec}
+ #w{height:100%;display:flex;flex-direction:column}
+ header{background:#16241e;padding:14px 20px;border-bottom:3px solid #ffc300;flex:0 0 auto}
+ h1{font-size:19px;font-weight:800}
+ .sub{font-size:12.5px;opacity:.7;margin-top:2px}
+ main{flex:1 1 auto;overflow-y:auto;padding:16px 20px 24px}
+ .card{background:#17221e;border:1px solid #27352f;border-radius:12px;padding:14px 16px;margin-bottom:12px}
+ .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:#8fb3a2;margin-bottom:9px}
+ .kv{display:flex;gap:10px;font-size:15px;padding:5px 0;border-bottom:1px solid #212e28;align-items:flex-start}
+ .kv:last-child{border-bottom:0}
+ .kv .k{flex:0 0 45%;color:#a8c0b6}
+ .kv .v{flex:1;font-weight:700;word-break:break-word}
+ .ok{color:#5fd39b} .no{color:#ff7a7a} .mid{color:#ffc300}
+ pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;
+   white-space:pre-wrap;word-break:break-word;color:#cfe3d9}
+ footer{flex:0 0 auto;padding:12px 20px 18px;display:flex;gap:10px;flex-wrap:wrap;background:#0f1614;border-top:1px solid #27352f}
+ button{border-radius:11px;padding:13px 18px;font-size:15px;font-weight:800;cursor:pointer;
+   background:#1f3d2f;color:#e8f0ec;border:1.5px solid #345644}
+ button.go{background:#ffc300;color:#11331f;border-color:#ffc300}
+ #log{font-size:12.5px;color:#9fd9bd;margin-top:8px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div id="w">
+ <header>
+  <h1>ARC WebView bridge probe</h1>
+  <div class="sub">Read-only. Nothing is sent anywhere. Screenshot this whole screen.</div>
+ </header>
+ <main id="main"></main>
+ <footer>
+  <button class="go" id="mic">Test microphone</button>
+  <button id="asr">Test speech recognition</button>
+  <button id="cls">Test ARC close</button>
+  <button id="cp">Copy report</button>
+  <div id="log"></div>
+ </footer>
+</div>
+<script>
+(function(){
+var main=document.getElementById('main'), log=document.getElementById('log');
+var report=[];
+
+function card(title){ var c=document.createElement('div'); c.className='card';
+ c.innerHTML='<h2>'+title+'</h2>'; main.appendChild(c); report.push('\n## '+title); return c; }
+function row(c,k,v,cls){ var d=document.createElement('div'); d.className='kv';
+ d.innerHTML='<div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+String(v)+'</div>';
+ c.appendChild(d); report.push(k+': '+v); }
+function pre(c,t){ var p=document.createElement('pre'); p.textContent=t; c.appendChild(p); report.push(t); }
+function yn(b){ return b?'yes':'no'; }
+function cl(b){ return b?'ok':'no'; }
+
+// ---- 1. jembatan yang disuntikkan
+var c1=card('Injected bridges');
+var names=['ARC','Android','AndroidBridge','AndroidInterface','NativeBridge','KioskBridge','Amity','JSBridge','Merlin'];
+var found=[];
+names.forEach(function(n){
+ var present = (typeof window[n]!=='undefined');
+ if(present) found.push(n);
+ row(c1, 'window.'+n, present? ('present ('+(typeof window[n])+')') : 'absent', cl(present));
+});
+var wk = !!(window.webkit && window.webkit.messageHandlers);
+row(c1,'webkit.messageHandlers', yn(wk), cl(wk));
+
+// ---- 2. isi jembatan yang ketemu
+found.concat(wk?['webkit.messageHandlers']:[]).forEach(function(n){
+ var c=card('Members of '+n);
+ var obj = n==='webkit.messageHandlers' ? window.webkit.messageHandlers : window[n];
+ var keys=[];
+ try{ for(var k in obj){ keys.push(k+' : '+(typeof obj[k])); } }catch(e){ keys.push('enumeration failed: '+e.message); }
+ try{ Object.getOwnPropertyNames(obj).forEach(function(k){
+   var s=k+' : '+(typeof obj[k]); if(keys.indexOf(s)<0) keys.push(s); }); }catch(e){}
+ pre(c, keys.length? keys.sort().join('\n') : '(no enumerable members)');
+});
+
+// ---- 3. kemampuan suara
+var c3=card('Voice capability');
+var hasMD = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+var legacyGUM = !!(navigator.getUserMedia||navigator.webkitGetUserMedia);
+var SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+var hasMR = (typeof window.MediaRecorder!=='undefined');
+var hasTTS = !!(window.speechSynthesis);
+row(c3,'navigator.mediaDevices.getUserMedia', yn(hasMD), cl(hasMD));
+row(c3,'legacy getUserMedia', yn(legacyGUM), cl(legacyGUM));
+row(c3,'SpeechRecognition (STT)', yn(!!SR), cl(!!SR));
+row(c3,'MediaRecorder', yn(hasMR), cl(hasMR));
+row(c3,'speechSynthesis (TTS)', yn(hasTTS), cl(hasTTS));
+row(c3,'secure context (https)', yn(window.isSecureContext), cl(window.isSecureContext));
+if(navigator.permissions && navigator.permissions.query){
+ navigator.permissions.query({name:'microphone'}).then(function(p){
+   row(c3,'microphone permission', p.state, p.state==='granted'?'ok':(p.state==='prompt'?'mid':'no'));
+ }).catch(function(e){ row(c3,'microphone permission','query failed: '+e.message,'mid'); });
+} else { row(c3,'navigator.permissions','absent','no'); }
+
+// ---- 4. penyimpanan dan jaringan
+var c4=card('Storage and network');
+var ls=false; try{ localStorage.setItem('__p','1'); localStorage.removeItem('__p'); ls=true; }catch(e){}
+row(c4,'localStorage writable', yn(ls), cl(ls));
+row(c4,'fetch', yn(typeof fetch==='function'), cl(typeof fetch==='function'));
+row(c4,'navigator.onLine', yn(navigator.onLine), cl(navigator.onLine));
+
+// ---- 5. lingkungan
+var c5=card('Environment');
+row(c5,'screen', screen.width+' x '+screen.height+'  dpr '+(window.devicePixelRatio||1));
+row(c5,'viewport', window.innerWidth+' x '+window.innerHeight);
+row(c5,'language', navigator.language);
+pre(c5, navigator.userAgent);
+
+// ---- tombol uji
+document.getElementById('mic').onclick=function(){
+ log.textContent='Requesting microphone...';
+ if(!hasMD && !legacyGUM){ log.textContent='RESULT: no getUserMedia in this WebView at all.'; return; }
+ navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){
+   var t=s.getAudioTracks()[0];
+   log.textContent='RESULT: microphone GRANTED. track="'+(t&&t.label||'unnamed')+'" MediaRecorder='+yn(hasMR);
+   s.getTracks().forEach(function(x){x.stop();});
+ }).catch(function(e){
+   log.textContent='RESULT: microphone REFUSED. '+e.name+' - '+e.message;
+ });
+};
+document.getElementById('asr').onclick=function(){
+ if(!SR){ log.textContent='RESULT: SpeechRecognition is undefined. Browser speech-to-text is not available in this WebView.'; return; }
+ try{
+  var r=new SR(); r.lang='en-GB'; r.interimResults=false;
+  r.onresult=function(ev){ log.textContent='RESULT: heard "'+ev.results[0][0].transcript+'"'; };
+  r.onerror=function(ev){ log.textContent='RESULT: recognition error - '+ev.error; };
+  r.onend=function(){ if(!log.textContent) log.textContent='RESULT: recognition ended with no result.'; };
+  log.textContent='Listening, say something...';
+  r.start();
+ }catch(e){ log.textContent='RESULT: start failed - '+e.message; }
+};
+document.getElementById('cls').onclick=function(){
+ try{
+  if(window.ARC && typeof ARC.close==='function'){ log.textContent='Calling ARC.close()...'; ARC.close(); }
+  else log.textContent='RESULT: ARC.close is not a function.';
+ }catch(e){ log.textContent='RESULT: ARC.close threw - '+e.message; }
+};
+document.getElementById('cp').onclick=function(){
+ var ta=document.createElement('textarea'); ta.value=report.join('\n');
+ document.body.appendChild(ta); ta.select();
+ try{ document.execCommand('copy'); log.textContent='Report copied to clipboard.'; }catch(e){ log.textContent='Copy failed.'; }
+ ta.remove();
+};
+})();
+</script>
+</body>
+</html>
