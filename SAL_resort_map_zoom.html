@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Resort Map</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:#0e1a14;overflow:hidden;
+    font-family:-apple-system,"Segoe UI",Roboto,sans-serif;touch-action:none}
+  #stage{position:fixed;inset:0;overflow:hidden;touch-action:none}
+  #map{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;
+    user-select:none;-webkit-user-drag:none;pointer-events:none}
+  #hint{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+    background:rgba(14,26,20,.82);color:#fff;font-size:15px;letter-spacing:.2px;
+    padding:11px 20px;border-radius:999px;backdrop-filter:blur(8px);
+    transition:opacity .6s;white-space:nowrap}
+  #hint.gone{opacity:0}
+  .btns{position:fixed;right:18px;bottom:22px;display:flex;flex-direction:column;gap:10px}
+  .btn{width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);
+    color:#0e1a14;font-size:24px;font-weight:600;line-height:1;
+    box-shadow:0 3px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
+  .btn:active{background:#e7ece9}
+  .btn.sm{font-size:13px;font-weight:700;letter-spacing:.5px}
+</style>
+</head>
+<body>
+<div id="stage"><img id="map" alt="Resort map" src="https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1789547067922_uef977.jpg"></div>
+<div id="hint">Pinch to zoom · drag to move · double-tap to reset</div>
+<div class="btns">
+  <button class="btn" id="zin">+</button>
+  <button class="btn" id="zout">−</button>
+  <button class="btn sm" id="zfit">FIT</button>
+</div>
+<script>
+(function(){
+  var stage=document.getElementById('stage'),img=document.getElementById('map'),hint=document.getElementById('hint');
+  var s=1,tx=0,ty=0,minS=1,maxS=1,base=1,iw=0,ih=0,ready=false;
+  function apply(){img.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')';}
+  function clamp(){
+    var vw=innerWidth,vh=innerHeight,w=iw*s,h=ih*s;
+    tx = w<=vw ? (vw-w)/2 : Math.min(0,Math.max(vw-w,tx));
+    ty = h<=vh ? (vh-h)/2 : Math.min(0,Math.max(vh-h,ty));
+  }
+  function fit(){
+    var vw=innerWidth,vh=innerHeight;
+    base=Math.min(vw/iw,vh/ih); s=base; minS=base; maxS=base*8;
+    clamp(); apply();
+  }
+  function zoomAt(ns,cx,cy){
+    ns=Math.max(minS,Math.min(maxS,ns));
+    tx = cx-(cx-tx)*(ns/s); ty = cy-(cy-ty)*(ns/s);
+    s=ns; clamp(); apply(); hide();
+  }
+  function hide(){hint.classList.add('gone');}
+  img.onload=function(){iw=img.naturalWidth;ih=img.naturalHeight;img.style.width=iw+'px';img.style.height=ih+'px';ready=true;fit();};
+  if(img.complete&&img.naturalWidth){img.onload();}
+  addEventListener('resize',function(){if(ready)fit();});
+
+  var pts={},last=0,sd=0,sx=0,sy=0,px=0,py=0,moved=false;
+  function ctr(){var a=Object.values(pts);if(a.length<2)return null;
+    return{x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2,d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)};}
+  stage.addEventListener('pointerdown',function(e){
+    stage.setPointerCapture(e.pointerId); pts[e.pointerId]={x:e.clientX,y:e.clientY};
+    moved=false;
+    if(Object.keys(pts).length===1){px=e.clientX;py=e.clientY;}
+    else{var c=ctr();if(c){sd=c.d;sx=c.x;sy=c.y;}}
+  });
+  stage.addEventListener('pointermove',function(e){
+    if(!pts[e.pointerId])return;
+    pts[e.pointerId]={x:e.clientX,y:e.clientY};
+    var n=Object.keys(pts).length;
+    if(n===1){
+      var dx=e.clientX-px,dy=e.clientY-py;
+      if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
+      tx+=dx;ty+=dy;px=e.clientX;py=e.clientY;clamp();apply();if(moved)hide();
+    }else if(n===2){
+      var c=ctr(); if(!c||!sd)return;
+      moved=true; zoomAt(s*(c.d/sd),c.x,c.y); sd=c.d;
+    }
+  });
+  function up(e){
+    delete pts[e.pointerId];
+    if(Object.keys(pts).length===0&&!moved){
+      var now=Date.now();
+      if(now-last<320){ (s>base*1.15)?fit():zoomAt(base*3,e.clientX,e.clientY); hide(); }
+      last=now;
+    }
+    if(Object.keys(pts).length<2)sd=0;
+  }
+  stage.addEventListener('pointerup',up); stage.addEventListener('pointercancel',up);
+  stage.addEventListener('wheel',function(e){e.preventDefault();zoomAt(s*(e.deltaY<0?1.15:1/1.15),e.clientX,e.clientY);},{passive:false});
+  document.getElementById('zin').onclick=function(){zoomAt(s*1.6,innerWidth/2,innerHeight/2);};
+  document.getElementById('zout').onclick=function(){zoomAt(s/1.6,innerWidth/2,innerHeight/2);};
+  document.getElementById('zfit').onclick=function(){fit();hide();};
+  setTimeout(hide,7000);
+})();
+</script>
+</body>
+</html>
