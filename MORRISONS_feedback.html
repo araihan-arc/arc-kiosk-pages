@@ -102,8 +102,26 @@
  textarea.csv{width:100%;height:130px;margin-top:14px;font-family:ui-monospace,Menlo,Consolas,monospace;
    font-size:11.5px;border:1px solid var(--line);border-radius:10px;padding:10px}
 
+ /* --- suara: tombol rekam di layar komentar --- */
+ .vrow{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+ .mic{display:inline-flex;align-items:center;gap:11px;border:2.5px solid var(--green);
+   background:#fff;color:var(--green);border-radius:99px;padding:13px 24px 13px 17px;
+   font-size:16px;font-weight:800;cursor:pointer;transition:transform .13s,background .13s,color .13s}
+ .mic:active{transform:scale(.96)}
+ .mic svg{width:22px;height:22px;flex:0 0 auto}
+ .mic.rec{background:#b3121b;border-color:#b3121b;color:#fff;animation:mpulse 1.5s ease-in-out infinite}
+ @keyframes mpulse{0%,100%{box-shadow:0 0 0 0 rgba(179,18,27,.42)}50%{box-shadow:0 0 0 13px rgba(179,18,27,0)}}
+ .vstat{font-size:14.5px;font-weight:700;color:#55705f;line-height:1.4;flex:1;min-width:150px}
+ .vstat.err{color:#9a2b18}
+ .vnote{font-size:12.5px;color:#7a8d81;margin-top:11px;line-height:1.5;max-width:46ch}
+ .interim{color:#8d9a90;font-style:italic}
+
  /* layar pendek: rapatkan supaya layar terima kasih tidak terpotong */
  @media (max-height:760px){
+  .mic{padding:10px 19px 10px 14px;font-size:15px}
+  .mic svg{width:19px;height:19px}
+  .vnote{margin-top:8px}
+  textarea.say{height:116px;margin-top:13px}
   main{justify-content:flex-start;padding:16px 26px}
   .tick{width:54px;height:54px;margin-bottom:10px}
   .tick svg{width:28px;height:28px}
@@ -201,7 +219,7 @@ function chrome(){
  if(view>5){ Array.prototype.forEach.call(dots.querySelectorAll('.dot'),function(d){d.className='dot on';}); }
 }
 
-function render(v){ view=v; chrome(); main.innerHTML=''; foot.innerHTML='';
+function render(v){ stopVoice(); clearTimeout(vTimer); view=v; chrome(); main.innerHTML=''; foot.innerHTML='';
  if(v===0) return intro();
  if(v>=1&&v<=5) return question(v-1);
  if(v===6) return reasonScreen();
@@ -287,6 +305,18 @@ function reasonScreen(){
  foot.appendChild(back); foot.appendChild(next);
 }
 
+// ---------- suara: ketik ATAU bicara di layar komentar ----------
+// Kata yang dikenali langsung jadi teks di kotak yang sama. Tidak ada audio yang
+// disimpan atau dikirim ke mana pun — payload-nya tetap teks, sama seperti mengetik.
+var SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
+var vparam = (location.search.match(/[?&]voice=([^&]*)/)||[])[1] || '';
+function voiceOn(){ if(vparam==='off') return false; if(vparam==='force') return true; return !!SRC; }
+var rec=null, recOn=false;
+function stopVoice(){ recOn=false; if(rec){ try{ rec.onend=null; rec.onerror=null; rec.onresult=null; rec.stop(); }catch(e){} rec=null; } }
+
+var MIC_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>';
+var STOP_SVG='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>';
+
 function commentScreen(){
  var b=document.createElement('div'); b.className='fade';
  b.innerHTML='<span class="dim">Optional</span>'+
@@ -294,13 +324,75 @@ function commentScreen(){
  var ta=document.createElement('textarea'); ta.className='say'; ta.value=comment;
  ta.placeholder='Type here if you would like to. You can leave this empty.';
  ta.oninput=function(){ comment=ta.value.slice(0,600); };
- b.appendChild(ta); main.appendChild(b);
+ b.appendChild(ta);
+
+ if(voiceOn()){
+  var row=document.createElement('div'); row.className='vrow';
+  var mic=document.createElement('button'); mic.type='button'; mic.className='mic';
+  mic.setAttribute('aria-label','Say your comment out loud instead of typing');
+  var stat=document.createElement('div'); stat.className='vstat';
+  var note=document.createElement('div'); note.className='vnote';
+  note.textContent='Your words are turned into text on this screen so you can check and edit them. No recording is kept.';
+
+  function paint(){
+   mic.innerHTML=(recOn?STOP_SVG:MIC_SVG)+'<span>'+(recOn?'Stop':'Say it instead')+'</span>';
+   mic.className='mic'+(recOn?' rec':'');
+  }
+  function say(t,err){ stat.textContent=t||''; stat.className='vstat'+(err?' err':''); }
+
+  function commit(txt){
+   txt=String(txt).trim(); if(!txt) return;
+   var cur=ta.value.replace(/\s+$/,'');
+   if(cur && !/[.!?]$/.test(cur)) cur+='.';
+   ta.value=(cur?cur+' ':'')+txt.charAt(0).toUpperCase()+txt.slice(1);
+   ta.value=ta.value.slice(0,600); comment=ta.value;
+   ta.scrollTop=ta.scrollHeight;
+  }
+
+  function start(){
+   if(!SRC){ say('Speaking is not available on this screen. Please type your comment instead.',true); return; }
+   try{ rec=new SRC(); }catch(e){ say('Speaking is not available on this screen. Please type your comment instead.',true); return; }
+   rec.lang='en-GB'; rec.continuous=true; rec.interimResults=true; rec.maxAlternatives=1;
+   rec.onstart=function(){ recOn=true; paint(); say('Listening — speak now. Press Stop when you are done.'); };
+   rec.onresult=function(ev){
+    resetIdle();
+    var interim='';
+    for(var i=ev.resultIndex;i<ev.results.length;i++){
+     var r=ev.results[i];
+     if(r.isFinal) commit(r[0].transcript); else interim+=r[0].transcript;
+    }
+    say(interim?('Listening… “'+interim.trim()+'”'):'Listening — speak now. Press Stop when you are done.');
+   };
+   rec.onerror=function(ev){
+    var e=ev&&ev.error;
+    if(e==='not-allowed'||e==='service-not-allowed')
+     say('The microphone is blocked on this screen. Please type your comment instead.',true);
+    else if(e==='no-speech') say('I did not catch that. Press the button and try again, or type instead.',true);
+    else if(e==='audio-capture') say('No microphone was found on this screen. Please type instead.',true);
+    else if(e==='aborted') say('');
+    else say('Speaking did not work just now. Please type your comment instead.',true);
+    recOn=false; rec=null; paint();
+   };
+   rec.onend=function(){ if(recOn){ recOn=false; paint(); if(!/blocked|not available|did not catch|No microphone|did not work/.test(stat.textContent)) say('Stopped. Press the button again to add more, or edit the text above.'); } };
+   try{ rec.start(); }catch(e){ say('Speaking did not start. Please type your comment instead.',true); recOn=false; rec=null; paint(); }
+   clearTimeout(vTimer); vTimer=setTimeout(function(){ if(recOn) stopAndPaint(); }, 60000);
+  }
+  function stopAndPaint(){ var was=recOn; stopVoice(); if(was) say('Stopped. Press the button again to add more, or edit the text above.'); paint(); }
+
+  mic.onclick=function(){ resetIdle(); if(recOn) stopAndPaint(); else start(); };
+  paint();
+  row.appendChild(mic); row.appendChild(stat);
+  b.appendChild(row); b.appendChild(note);
+ }
+
+ main.appendChild(b);
  var back=document.createElement('button'); back.className='btn gho'; back.textContent='Back';
  back.onclick=function(){ render(branch()?6:5); };
  var next=document.createElement('button'); next.className='btn pri'; next.textContent='Continue';
  next.onclick=function(){ render(8); };
  foot.appendChild(back); foot.appendChild(next);
 }
+var vTimer=null;
 
 function review(){
  var b=document.createElement('div'); b.className='fade';
