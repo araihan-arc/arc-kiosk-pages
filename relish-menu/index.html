@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Relish Bistro Menu</title>
+<style>
+  :root { --bg:#1c0e08; --bar:#26140c; --ink:#f4e9dc; --muted:#b9a593; --accent:#e0b46c; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; overflow:hidden; }
+  .app { display:flex; flex-direction:column; height:100%; }
+
+  header { background:var(--bar); padding:14px 0 0; flex:0 0 auto; }
+  .title { padding:0 20px 10px; font-size:20px; font-weight:600; letter-spacing:.02em; }
+  .title small { color:var(--muted); font-weight:400; font-size:14px; margin-left:8px; }
+  .tabs { display:flex; gap:8px; overflow-x:auto; padding:0 16px 12px; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { flex:0 0 auto; border:1px solid #5a3d2c; background:transparent; color:var(--ink);
+    font:inherit; font-size:16px; padding:10px 16px; border-radius:999px; white-space:nowrap; }
+  .tab.on { background:var(--accent); border-color:var(--accent); color:#2a160c; font-weight:600; }
+
+  .track { flex:1 1 auto; display:flex; overflow-x:auto; overflow-y:hidden;
+    scroll-snap-type:x mandatory; scroll-behavior:smooth; scrollbar-width:none; }
+  .track::-webkit-scrollbar { display:none; }
+  .page { flex:0 0 100%; height:100%; scroll-snap-align:center; scroll-snap-stop:always;
+    display:flex; align-items:center; justify-content:center; padding:10px; }
+  .page img { max-width:100%; max-height:100%; object-fit:contain; border-radius:6px;
+    box-shadow:0 6px 24px rgba(0,0,0,.45); user-select:none; -webkit-user-drag:none; }
+
+  footer { flex:0 0 auto; background:var(--bar); padding:12px 16px 16px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .nav { border:0; background:#3a2318; color:var(--ink); width:52px; height:52px;
+    border-radius:50%; font-size:26px; line-height:1; }
+  .nav:disabled { opacity:.3; }
+  .dots { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .dot { width:10px; height:10px; border-radius:50%; background:#5a3d2c; border:0; padding:0; }
+  .dot.on { background:var(--accent); width:24px; border-radius:6px; }
+  .hint { color:var(--muted); font-size:13px; text-align:center; padding:0 0 6px; }
+
+  .zoom { position:fixed; inset:0; background:#000; overflow:auto; z-index:10; }
+  .zoom img { display:block; width:200%; max-width:none; }
+  .close { position:fixed; top:16px; right:16px; z-index:11; width:56px; height:56px;
+    border-radius:50%; border:0; background:rgba(40,22,14,.9); color:#fff; font-size:28px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title">Relish Bistro <small>Menu</small></div>
+    <nav class="tabs" id="tabs"></nav>
+  </header>
+  <main class="track" id="track"></main>
+  <div class="hint">Swipe to turn the page · tap a page to zoom in</div>
+  <footer>
+    <button class="nav" id="prev" aria-label="Previous page">‹</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav" id="next" aria-label="Next page">›</button>
+  </footer>
+</div>
+<div class="zoom" id="zoom" hidden><img id="zimg" alt=""></div>
+<button class="close" id="zclose" hidden aria-label="Close zoom">×</button>
+
+<script>
+  // One entry per page of the printed menu, in order.
+  const PAGES = [
+    { tab: "Menu",            alt: "Relish Bistro cover" },
+    { tab: "Relish Special",  alt: "Relish Special" },
+    { tab: "Starters",        alt: "Starter and Munchies" },
+    { tab: "Rice & Noodles",  alt: "Rice, Noodles and Seafood" },
+    { tab: "Meat & Poultry",  alt: "Meats and Poultry" },
+    { tab: "Pasta & Pizza",   alt: "Pasta, Pizza, Burger and Buns" },
+    { tab: "Desserts",        alt: "Dessert" },
+    { tab: "Coffee & Tea",    alt: "Coffee, Non Coffee, Hot Tea and Iced Tea" },
+    { tab: "Drinks",          alt: "Local Drink, Smoothies, Soft Drinks, Fresh Juice and Mocktail" },
+    { tab: "Cocktails",       alt: "Signature and International Cocktails" },
+    { tab: "Spirits & Beer",  alt: "Gin, Vodka, Rum, Tequila, Bourbon, Whiskey, Liqueur and Beer" },
+    { tab: "Wine",            alt: "Red, White, Sweet, Sparkling and House Wine" },
+  ];
+  const $ = id => document.getElementById(id);
+  const track = $("track"), tabs = $("tabs"), dots = $("dots");
+  let current = 0;
+
+  PAGES.forEach((p, i) => {
+    const n = String(i + 1).padStart(2, "0");
+    const page = document.createElement("section");
+    page.className = "page";
+    page.innerHTML = `<img src="img/p${n}.jpg" alt="${p.alt}" ${i > 1 ? 'loading="lazy"' : ""}>`;
+    page.querySelector("img").addEventListener("click", () => openZoom(`img/p${n}.jpg`));
+    track.appendChild(page);
+
+    const t = document.createElement("button");
+    t.className = "tab"; t.textContent = p.tab;
+    t.addEventListener("click", () => go(i));
+    tabs.appendChild(t);
+
+    const d = document.createElement("button");
+    d.className = "dot"; d.setAttribute("aria-label", `Page ${i + 1}`);
+    d.addEventListener("click", () => go(i));
+    dots.appendChild(d);
+  });
+
+  function go(i) {
+    i = Math.max(0, Math.min(PAGES.length - 1, i));
+    track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
+  }
+  function mark(i) {
+    if (i === current && tabs.children[i].classList.contains("on")) return;
+    current = i;
+    [...tabs.children].forEach((t, k) => t.classList.toggle("on", k === i));
+    [...dots.children].forEach((d, k) => d.classList.toggle("on", k === i));
+    tabs.children[i].scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+    $("prev").disabled = i === 0;
+    $("next").disabled = i === PAGES.length - 1;
+  }
+  let raf = 0;
+  track.addEventListener("scroll", () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => mark(Math.round(track.scrollLeft / track.clientWidth)));
+  });
+  window.addEventListener("resize", () => track.scrollTo({ left: current * track.clientWidth }));
+  $("prev").addEventListener("click", () => go(current - 1));
+  $("next").addEventListener("click", () => go(current + 1));
+
+  function openZoom(src) {
+    $("zimg").src = src; $("zoom").hidden = false; $("zclose").hidden = false;
+    $("zoom").scrollTo(0, 0);
+  }
+  function closeZoom() { $("zoom").hidden = true; $("zclose").hidden = true; }
+  $("zclose").addEventListener("click", closeZoom);
+  $("zoom").addEventListener("dblclick", closeZoom);
+
+  // Open on a given page with #wine, #desserts, etc.
+  const start = PAGES.findIndex(p => "#" + p.tab.toLowerCase().replace(/[^a-z]+/g, "-") === location.hash);
+  mark(0);
+  if (start > 0) requestAnimationFrame(() => track.scrollTo({ left: start * track.clientWidth }));
+</script>
+</body>
+</html>
