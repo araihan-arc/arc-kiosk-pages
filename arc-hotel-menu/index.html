@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ARC Kitchen Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050607; --panel:#0e1112; --line:#1f2527; --ink:#f4f7f6; --muted:#9aa6a3;
+    --green:#1dc497; --cyan:#05bed2; --coral:#ff8f7a;
+    --grad:linear-gradient(90deg,#05bed2,#1dc497);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;
+    font-family:Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  .app{display:flex;flex-direction:column;height:100%}
+
+  header{flex:0 0 auto;padding:14px 0 0;background:var(--bg);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:10px;padding:0 18px 12px}
+  .brand img{width:30px;height:30px}
+  .brand b{font-family:Manrope,Inter,sans-serif;font-weight:800;letter-spacing:.14em;font-size:15px}
+  .brand span{color:var(--muted);font-size:13px;margin-left:auto}
+  .tabs{display:flex;gap:8px;overflow-x:auto;padding:0 14px 12px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;font:600 15px Manrope,Inter,sans-serif;color:var(--ink);background:transparent;
+    border:1px solid #2a3234;border-radius:999px;padding:9px 16px;white-space:nowrap}
+  .tab.on{background:var(--grad);border-color:transparent;color:#03110d}
+
+  .track{flex:1 1 auto;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+    scroll-behavior:smooth;scrollbar-width:none}
+  .track::-webkit-scrollbar{display:none}
+  .page{flex:0 0 100%;height:100%;scroll-snap-align:center;scroll-snap-stop:always;overflow-y:auto;
+    overscroll-behavior:contain}
+
+  /* hero */
+  .hero{position:relative;height:34vh;min-height:220px;background:#111 center/cover no-repeat}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,6,7,0) 35%,rgba(5,6,7,.92) 100%)}
+  .hero .cap{position:absolute;left:22px;right:22px;bottom:16px;z-index:1}
+  .kicker{font:600 12px Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--green)}
+  .hero h2{margin:6px 0 0;font:800 clamp(30px,6vw,46px)/1.05 Manrope,Inter,sans-serif;letter-spacing:-.02em}
+  .hero .hours{margin-top:6px;color:#cfd8d5;font-size:14px}
+
+  .list{padding:8px 22px 24px;display:flex;flex-direction:column}
+  .item{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .item.feat{grid-template-columns:92px 1fr auto;align-items:center}
+  .item.feat img{width:92px;height:92px;object-fit:cover;border-radius:14px;grid-row:span 2}
+  .name{font:700 18px/1.25 Manrope,Inter,sans-serif}
+  .price{font:700 18px Manrope,Inter,sans-serif;color:var(--green);white-space:nowrap}
+  .desc{grid-column:1/2;color:var(--muted);font-size:14px;line-height:1.45}
+  .item.feat .desc{grid-column:2/3}
+  .tag{display:inline-block;font:600 11px Inter,sans-serif;letter-spacing:.06em;padding:2px 7px;border-radius:6px;
+    margin-left:6px;vertical-align:2px;border:1px solid #2f3a3c;color:#cfd8d5}
+  .tag.hot{border-color:#5a2a22;color:var(--coral)}
+  .tag.sig{background:var(--grad);border:0;color:#03110d}
+  .note{color:var(--muted);font-size:12.5px;line-height:1.5;padding:16px 22px 28px}
+
+  /* cover */
+  .cover{position:relative;height:100%;background:#000 center/cover no-repeat;display:flex;align-items:flex-end}
+  .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.35) 40%,rgba(0,0,0,.92))}
+  .cover .in{position:relative;z-index:1;padding:28px 26px 40px;width:100%}
+  .cover img.mark{width:56px;height:56px}
+  .cover h1{margin:16px 0 4px;font:800 clamp(40px,9vw,64px)/1 Manrope,Inter,sans-serif;letter-spacing:-.02em}
+  .cover h1 em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .cover .sub{font-size:17px;color:#d9e2df}
+  .cover .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+  .chip{border:1px solid #2f3a3c;background:rgba(14,17,18,.7);border-radius:12px;padding:10px 14px;font-size:14px}
+  .chip b{display:block;font:700 13px Manrope,Inter,sans-serif;color:var(--green);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+  .cover .ask{margin-top:18px;color:#cfd8d5;font-size:14px}
+  .cover .by{display:flex;align-items:center;gap:8px;margin-top:26px;color:var(--muted);font-size:12px}
+  .cover .by img{height:14px;filter:invert(1);opacity:.75}
+
+  footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:10px 16px 14px;border-top:1px solid var(--line);background:var(--bg)}
+  .nav{width:50px;height:50px;border-radius:50%;border:1px solid #2a3234;background:var(--panel);color:var(--ink);font-size:24px}
+  .nav:disabled{opacity:.3}
+  .dots{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+  .dot{width:9px;height:9px;border-radius:50%;border:0;padding:0;background:#2a3234}
+  .dot.on{width:24px;border-radius:6px;background:var(--grad)}
+  .hint{color:var(--muted);font-size:12px;text-align:center;padding:6px 0 0}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><img src="img/brand/amity-mark.png" alt=""><b>ARC HOTEL</b><span>ARC Kitchen · All-Day Dining</span></div>
+    <nav class="tabs" id="tabs"></nav>
+  </header>
+
+  <main class="track" id="track">
+
+    <section class="page" data-tab="Welcome">
+      <div class="cover" style="background-image:url(img/cover2.jpg)">
+        <div class="in">
+          <img class="mark" src="img/brand/amity-mark.png" alt="">
+          <h1>ARC <em>Kitchen</em></h1>
+          <div class="sub">All-day dining at ARC Hotel, True Digital Park Bangkok</div>
+          <div class="meta">
+            <div class="chip"><b>Open daily</b>06:30 – 22:30</div>
+            <div class="chip"><b>Breakfast</b>06:30 – 10:30</div>
+            <div class="chip"><b>Bar</b>11:00 – 23:00</div>
+            <div class="chip"><b>Where</b>1F, East Building</div>
+          </div>
+          <div class="ask">Swipe to browse. Want it in your room? Just ask ARC, our assistant, to send your order to the kitchen.</div>
+          <div class="by"><img src="img/brand/amity-wordmark.png" alt="Amity Robotics"> <span>Hospitality by Amity Robotics</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-tab="Breakfast">
+      <div class="hero" style="background-image:url(img/breakfast.jpg)"><div class="cap">
+        <div class="kicker">06:30 – 10:30</div><h2>Breakfast</h2></div></div>
+      <div class="list">
+        <div class="item"><div class="name">ARC Breakfast Set <span class="tag sig">SIGNATURE</span></div><div class="price">฿420</div>
+          <div class="desc">Two eggs any style, bacon or chicken sausage, hash brown, grilled tomato, toast, juice and coffee or tea</div></div>
+        <div class="item feat"><img src="img/benedict.jpg" alt=""><div class="name">Eggs Benedict</div><div class="price">฿320</div>
+          <div class="desc">Poached eggs, smoked ham, hollandaise, English muffin. Swap for smoked salmon +฿80</div></div>
+        <div class="item"><div class="name">Belgian Waffle</div><div class="price">฿260</div>
+          <div class="desc">Fresh berries, maple syrup, whipped cream</div></div>
+        <div class="item"><div class="name">Jok Moo</div><div class="price">฿220</div>
+          <div class="desc">Thai rice congee with pork, ginger, spring onion and a soft egg</div></div>
+        <div class="item"><div class="name">Avocado Toast <span class="tag">V</span></div><div class="price">฿280</div>
+          <div class="desc">Sourdough, smashed avocado, poached egg, chili flakes</div></div>
+        <div class="item"><div class="name">Tropical Fruit Plate <span class="tag">V</span></div><div class="price">฿190</div>
+          <div class="desc">Mango, papaya, pineapple, dragon fruit, lime</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-tab="Thai">
+      <div class="hero" style="background-image:url(img/khaosoi.jpg)"><div class="cap">
+        <div class="kicker">From our Thai kitchen</div><h2>Thai Signatures</h2></div></div>
+      <div class="list">
+        <div class="item feat"><img src="img/tomyum.jpg" alt=""><div class="name">Tom Yum Goong <span class="tag hot">🌶🌶</span></div><div class="price">฿380</div>
+          <div class="desc">River prawns, lemongrass, galangal, kaffir lime, mushrooms</div></div>
+        <div class="item feat"><img src="img/padthai.jpg" alt=""><div class="name">Pad Thai Goong <span class="tag sig">SIGNATURE</span></div><div class="price">฿320</div>
+          <div class="desc">Rice noodles, prawns, tamarind, tofu, peanuts, bean sprouts</div></div>
+        <div class="item feat"><img src="img/greencurry.jpg" alt=""><div class="name">Green Curry Chicken <span class="tag hot">🌶</span></div><div class="price">฿340</div>
+          <div class="desc">Thai eggplant, sweet basil, coconut milk, jasmine rice</div></div>
+        <div class="item feat"><img src="img/krapao.jpg" alt=""><div class="name">Pad Krapow Moo <span class="tag hot">🌶🌶</span></div><div class="price">฿260</div>
+          <div class="desc">Stir-fried holy basil with minced pork, fried egg, jasmine rice</div></div>
+        <div class="item feat"><img src="img/khaosoi.jpg" alt=""><div class="name">Khao Soi Gai <span class="tag hot">🌶</span></div><div class="price">฿320</div>
+          <div class="desc">Chiang Mai curry noodles, chicken drumstick, pickled mustard greens</div></div>
+        <div class="item"><div class="name">Som Tam Thai <span class="tag hot">🌶🌶</span></div><div class="price">฿220</div>
+          <div class="desc">Green papaya salad, dried shrimp, peanuts, lime. Vegetarian on request</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-tab="Western">
+      <div class="hero" style="background-image:url(img/steak.jpg)"><div class="cap">
+        <div class="kicker">Grill & comfort</div><h2>Western Classics</h2></div></div>
+      <div class="list">
+        <div class="item"><div class="name">Grilled Ribeye 250 g <span class="tag sig">SIGNATURE</span></div><div class="price">฿1,250</div>
+          <div class="desc">Australian grain-fed beef, fries, green salad, peppercorn sauce</div></div>
+        <div class="item"><div class="name">ARC Wagyu Burger</div><div class="price">฿520</div>
+          <div class="desc">Wagyu patty, cheddar, caramelised onion, brioche bun, fries</div></div>
+        <div class="item feat"><img src="img/carbonara.jpg" alt=""><div class="name">Spaghetti Carbonara</div><div class="price">฿380</div>
+          <div class="desc">Smoked pork jowl, egg yolk, pecorino, black pepper</div></div>
+        <div class="item"><div class="name">Caesar Salad</div><div class="price">฿290</div>
+          <div class="desc">Romaine, parmesan, croutons, anchovy dressing. Add grilled chicken +฿90</div></div>
+        <div class="item"><div class="name">Fish & Chips</div><div class="price">฿420</div>
+          <div class="desc">Beer-battered seabass, fries, tartare sauce, lemon</div></div>
+        <div class="item"><div class="name">ARC Club Sandwich</div><div class="price">฿350</div>
+          <div class="desc">Chicken, bacon, egg, tomato, lettuce, fries</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-tab="Desserts">
+      <div class="hero" style="background-image:url(img/mango.jpg)"><div class="cap">
+        <div class="kicker">Something sweet</div><h2>Desserts</h2></div></div>
+      <div class="list">
+        <div class="item"><div class="name">Mango Sticky Rice <span class="tag sig">SIGNATURE</span></div><div class="price">฿220</div>
+          <div class="desc">Nam Dok Mai mango, sweet coconut sticky rice, toasted mung beans</div></div>
+        <div class="item feat"><img src="img/lava.jpg" alt=""><div class="name">Dark Chocolate Cake</div><div class="price">฿240</div>
+          <div class="desc">Layered chocolate sponge, ganache, cherries</div></div>
+        <div class="item"><div class="name">Thai Tea Crème Brûlée</div><div class="price">฿220</div>
+          <div class="desc">Cha yen custard, burnt sugar crust</div></div>
+        <div class="item"><div class="name">Coconut Ice Cream <span class="tag">V</span></div><div class="price">฿160</div>
+          <div class="desc">Young coconut, roasted peanuts, sticky rice</div></div>
+        <div class="item"><div class="name">Seasonal Fruit <span class="tag">V</span></div><div class="price">฿190</div>
+          <div class="desc">Chef's selection of Thai fruit</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-tab="Coffee & Tea">
+      <div class="hero" style="background-image:url(img/latte.jpg)"><div class="cap">
+        <div class="kicker">Hot or iced</div><h2>Coffee & Tea</h2></div></div>
+      <div class="list">
+        <div class="item"><div class="name">Espresso</div><div class="price">฿90</div>
+          <div class="desc">Single origin from northern Thailand</div></div>
+        <div class="item"><div class="name">Americano</div><div class="price">฿110</div>
+          <div class="desc">Iced +฿20</div></div>
+        <div class="item"><div class="name">Latte / Cappuccino</div><div class="price">฿130</div>
+          <div class="desc">Oat or almond milk +฿20</div></div>
+        <div class="item"><div class="name">Flat White</div><div class="price">฿140</div><div class="desc">Double shot, silky milk</div></div>
+        <div class="item feat"><img src="img/thaitea.jpg" alt=""><div class="name">Cha Yen <span class="tag sig">THAI</span></div><div class="price">฿120</div>
+          <div class="desc">Thai iced milk tea, condensed milk</div></div>
+        <div class="item"><div class="name">Matcha Latte</div><div class="price">฿150</div><div class="desc">Ceremonial-grade matcha, hot or iced</div></div>
+        <div class="item"><div class="name">Selection of Teas</div><div class="price">฿120</div>
+          <div class="desc">English breakfast, jasmine, chamomile, lemongrass & pandan</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-tab="Drinks">
+      <div class="hero" style="background-image:url(img/smoothie.jpg)"><div class="cap">
+        <div class="kicker">Fresh & alcohol-free</div><h2>Smoothies & Mocktails</h2></div></div>
+      <div class="list">
+        <div class="item"><div class="name">Berry Blast Smoothie</div><div class="price">฿180</div><div class="desc">Mixed berries, banana, yoghurt, mint</div></div>
+        <div class="item"><div class="name">Mango Passion Smoothie</div><div class="price">฿180</div><div class="desc">Mango, passion fruit, coconut water</div></div>
+        <div class="item"><div class="name">Butterfly Pea Cooler <span class="tag sig">SIGNATURE</span></div><div class="price">฿160</div>
+          <div class="desc">Butterfly pea flower, lemongrass, lime. Changes colour as you stir</div></div>
+        <div class="item"><div class="name">Virgin Mojito</div><div class="price">฿170</div><div class="desc">Lime, mint, soda</div></div>
+        <div class="item"><div class="name">Fresh Young Coconut</div><div class="price">฿150</div><div class="desc">Served in the shell</div></div>
+        <div class="item"><div class="name">Fresh Juice</div><div class="price">฿140</div><div class="desc">Orange, watermelon or pineapple</div></div>
+      </div>
+    </section>
+
+    <section class="page" data-tab="Bar">
+      <div class="hero" style="background-image:url(img/cocktail.jpg)"><div class="cap">
+        <div class="kicker">11:00 – 23:00</div><h2>Cocktails & Beer</h2></div></div>
+      <div class="list">
+        <div class="item"><div class="name">Digital Sunset <span class="tag sig">SIGNATURE</span></div><div class="price">฿390</div>
+          <div class="desc">Thai rum, passion fruit, lime, chili-salt rim</div></div>
+        <div class="item"><div class="name">Lemongrass Gin & Tonic</div><div class="price">฿360</div><div class="desc">Gin infused with lemongrass and kaffir lime</div></div>
+        <div class="item"><div class="name">Bangkok Mule</div><div class="price">฿360</div><div class="desc">Vodka, ginger beer, galangal, lime</div></div>
+        <div class="item"><div class="name">Espresso Martini</div><div class="price">฿380</div><div class="desc">Vodka, coffee liqueur, fresh espresso</div></div>
+        <div class="item feat"><img src="img/beer.jpg" alt=""><div class="name">Draft Beer</div><div class="price">฿180</div>
+          <div class="desc">Local Thai lager, pint</div></div>
+        <div class="item"><div class="name">House Wine</div><div class="price">฿290</div><div class="desc">Red, white or rosé, by the glass</div></div>
+      </div>
+      <div class="note">Prices are in Thai Baht and subject to 10% service charge and 7% VAT. 🌶 spicy · V vegetarian. Please tell our team about any allergies. Alcohol is served to guests aged 20 and over.<br><br>Dummy menu for an internal ARC Hotel demo. Photos from Unsplash, used under the Unsplash License.</div>
+    </section>
+
+  </main>
+
+  <div class="hint">Swipe to turn the page</div>
+  <footer>
+    <button class="nav" id="prev" aria-label="Previous page">‹</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav" id="next" aria-label="Next page">›</button>
+  </footer>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const track = $("track"), tabs = $("tabs"), dots = $("dots");
+  const pages = [...track.querySelectorAll(".page")];
+  let current = 0;
+  const slug = s => s.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
+
+  pages.forEach((p, i) => {
+    const t = document.createElement("button");
+    t.className = "tab"; t.textContent = p.dataset.tab;
+    t.addEventListener("click", () => go(i)); tabs.appendChild(t);
+    const d = document.createElement("button");
+    d.className = "dot"; d.setAttribute("aria-label", "Page " + (i + 1));
+    d.addEventListener("click", () => go(i)); dots.appendChild(d);
+  });
+
+  function go(i){ i = Math.max(0, Math.min(pages.length - 1, i));
+    track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" }); }
+  function mark(i){
+    current = i;
+    [...tabs.children].forEach((t,k) => t.classList.toggle("on", k === i));
+    [...dots.children].forEach((d,k) => d.classList.toggle("on", k === i));
+    tabs.children[i].scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+    $("prev").disabled = i === 0; $("next").disabled = i === pages.length - 1;
+  }
+  let raf = 0;
+  track.addEventListener("scroll", () => { cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => { const i = Math.round(track.scrollLeft / track.clientWidth); if (i !== current) mark(i); }); });
+  window.addEventListener("resize", () => track.scrollTo({ left: current * track.clientWidth }));
+  $("prev").addEventListener("click", () => go(current - 1));
+  $("next").addEventListener("click", () => go(current + 1));
+
+  mark(0);
+  const start = pages.findIndex(p => "#" + slug(p.dataset.tab) === location.hash);
+  if (start > 0) requestAnimationFrame(() => { track.scrollTo({ left: start * track.clientWidth }); mark(start); });
+</script>
+</body>
+</html>

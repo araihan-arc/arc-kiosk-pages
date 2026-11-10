@@ -1,0 +1,23 @@
+ARC Hotel dummy menu - photo credits
+All photos from Unsplash (https://unsplash.com), free to use under the Unsplash License (https://unsplash.com/license). Unsplash+ photos were excluded.
+
+cover2.jpg      https://unsplash.com/photos/woman-in-front-on-brown-dining-table-and-chairs-inside-building-wVoP_Q2Bg_A
+cover.jpg       https://unsplash.com/photos/empty-table-and-chairs-inside-building-ZgREXhl8ER0
+breakfast.jpg   https://unsplash.com/photos/breakfast-spread-with-waffles-eggs-and-juice-hrlvr2ZlUNk
+benedict.jpg    https://unsplash.com/photos/two-eggs-benedict-with-hollandaise-sauce-and-hash-browns-KPkixm9VGvs
+tomyum.jpg      https://unsplash.com/photos/spicy-shrimp-soup-with-rice-and-decorative-items-zb6GZ6e2VR0
+padthai.jpg     https://unsplash.com/photos/a-plate-of-food-on-a-wooden-table-_wBJ0cvKhIE
+greencurry.jpg  https://unsplash.com/photos/green-soup-on-white-ceramic-bowl-qav5LFLbSUk
+krapao.jpg      https://unsplash.com/photos/a-white-plate-topped-with-rice-and-vegetables-j9Oo0NRFnyU
+khaosoi.jpg     https://unsplash.com/photos/a-bowl-of-food-with-a-spoon-in-it-vxJZOosHvcU
+steak.jpg       https://unsplash.com/photos/grilled-meat-on-white-ceramic-plate-pe9dvM1rQkM
+carbonara.jpg   https://unsplash.com/photos/pasta-dish-on-white-ceramic-plate--5FECW242og
+mango.jpg       https://unsplash.com/photos/a-plate-of-food-with-rice-mango-and-sauce-bKrXKkPkhas
+lava.jpg        https://unsplash.com/photos/chocolate-cake-on-white-ceramic-plate-LDnmyOaA-ew
+latte.jpg       https://unsplash.com/photos/several-cups-of-coffee-with-latte-art-zReWD06oMzU
+thaitea.jpg     https://unsplash.com/photos/a-glass-of-liquid-sitting-on-top-of-a-wooden-table-xp1JN3Ctgcg
+smoothie.jpg    https://unsplash.com/photos/a-vibrant-berry-smoothie-topped-with-fresh-mint-leaves-6MUOCpV3kG8
+cocktail.jpg    https://unsplash.com/photos/bartender-preparing-a-cocktail-at-a-dimly-lit-bar-zKyNdc5ECEA
+beer.jpg        https://unsplash.com/photos/a-close-up-of-a-glass-of-beer-with-drops-of-water-Lq1rOaigDoY
+
+Brand: Amity Robotics mark and wordmark (amityrobotics.com, company's own assets).
