@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bangkok, Your Way · ARC Hotel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!--
+  CONTENT MAINTENANCE (for hotel staff)
+  - All itineraries and places live in the DATA object near the bottom of this file.
+  - DATA.stops: one entry per place, keyed by its KM doc id. Fields: n name, a area, km distance from hotel (approx.),
+    in_ indoor (1/0), k kid-friendly, s senior-friendly, b budget 0-3, img photo URL, h opening hours, f floor, d one-line description.
+  - DATA.its: one entry per itinerary. s = list of [stopId, minutes, [activity, activity]].
+  - Travel times are rough estimates computed from distance (see travelMin()). They are SAMPLE values, not live routes.
+  - Data source: ARC Hotel KM (dummy/sample). Verify hours and prices before showing real guests.
+-->
+<style>
+:root{
+  --bg:#f6f1e8; --paper:#fffdf8; --ink:#1d1a16; --muted:#6b6257; --line:#e4dacb;
+  --accent:#b4532a; --accent-ink:#fff; --gold:#b8892f; --chip:#efe6d6; --chip-on:#1d1a16; --chip-on-ink:#fff;
+  --ok:#2f6b4f; --shadow:0 10px 30px rgba(40,25,10,.08);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#14120f; --paper:#1d1a16; --ink:#f3ece1; --muted:#b3a897; --line:#352f27;
+  --accent:#e07a4b; --accent-ink:#1d1a16; --gold:#d6aa55; --chip:#2a251f; --chip-on:#f3ece1; --chip-on-ink:#14120f;
+  --ok:#7fc3a1; --shadow:0 10px 30px rgba(0,0,0,.35); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#14120f; --paper:#1d1a16; --ink:#f3ece1; --muted:#b3a897; --line:#352f27;
+  --accent:#e07a4b; --accent-ink:#1d1a16; --gold:#d6aa55; --chip:#2a251f; --chip-on:#f3ece1; --chip-on-ink:#14120f;
+  --ok:#7fc3a1; --shadow:0 10px 30px rgba(0,0,0,.35); color-scheme:dark }
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,"Noto Sans Thai",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+html[lang="th"] body{font-family:"Noto Sans Thai",Inter,system-ui,sans-serif}
+img{max-width:100%;display:block}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:650;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+button{font:inherit;color:inherit;cursor:pointer}
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;padding-block:10px}
+.brand{font-weight:600;font-size:14px}
+.brand b{font-family:Fraunces,serif;font-size:18px;margin-right:6px}
+.top nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.top nav a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:999px}
+.top nav a:hover{background:var(--chip);color:var(--ink)}
+.lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lang button{border:0;background:none;padding:6px 12px;font-size:13px}
+.lang button[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-ink)}
+/* hero */
+.hero{position:relative;min-height:min(42vh,640px);display:flex;align-items:flex-end;color:#fff;overflow:hidden}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 20%,rgba(0,0,0,.65))}
+.hero .wrap{position:relative;z-index:1;padding-block:40px 96px;width:100%}
+.hero h1{font-size:clamp(40px,7vw,76px);line-height:1}
+.hero p{max-width:560px;font-size:18px;margin:12px 0 0;opacity:.92}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);margin-bottom:14px}
+.sample{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--chip);color:var(--muted)}
+/* finder */
+section{padding-block:44px;scroll-margin-top:60px}
+.finder{background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:26px;margin-top:-56px;position:relative;z-index:2}
+.finder h2{font-size:28px}
+.q{margin-top:20px}
+.q > label,.q > .ql{display:block;font-weight:600;font-size:14px;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--chip);border-radius:999px;padding:9px 15px;font-size:14px;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-ink);border-color:var(--chip-on)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.btn{border:0;border-radius:999px;padding:13px 22px;font-weight:600;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.toggle{display:flex;align-items:center;gap:10px;font-size:14px}
+.toggle input{width:20px;height:20px;accent-color:var(--accent)}
+/* results */
+.sechead{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.sechead h2{font-size:32px}
+.count{color:var(--muted);font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;text-align:left;padding:0;box-shadow:var(--shadow);transition:transform .2s}
+.card:hover{transform:translateY(-3px)}
+.card .ph{aspect-ratio:4/3;position:relative;background:var(--chip)}
+.card .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card .dur{position:absolute;left:12px;top:12px;background:rgba(20,16,12,.72);color:#fff;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px}
+.card .fav{position:absolute;right:10px;top:10px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.9);color:#b4532a;font-size:18px;line-height:36px}
+.card .bd{padding:16px 16px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.card h3{font-size:20px}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+.tag{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--chip);color:var(--muted)}
+.match{font-size:12px;font-weight:600;color:var(--ok)}
+.empty{padding:28px;border:1px dashed var(--line);border-radius:16px;color:var(--muted);text-align:center}
+/* detail */
+.detail{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;display:none}
+.detail.open{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dhero{position:relative;height:34vh;min-height:220px;color:#fff}
+.dhero img{width:100%;height:100%;object-fit:cover}
+.dhero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.7))}
+.dhero .wrap{position:absolute;left:0;right:0;bottom:0;z-index:1;padding-block:22px}
+.dhero h2{font-size:clamp(30px,5vw,48px)}
+.close{position:fixed;top:max(14px,env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px));z-index:60;width:46px;height:46px;border-radius:50%;border:0;background:var(--paper);color:var(--ink);box-shadow:var(--shadow);font-size:22px}
+.dlay{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;padding-block:28px 60px}
+@media (max-width:820px){.dlay{grid-template-columns:minmax(0,1fr)}}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
+.tl{position:relative;margin-top:18px}
+.tl:before{content:"";position:absolute;left:62px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.stop{display:grid;grid-template-columns:52px 22px minmax(0,1fr);gap:0 12px;margin-bottom:8px}
+.stop .tm{font-weight:600;font-size:14px;text-align:right;padding-top:2px}
+.stop .tm small{display:block;color:var(--muted);font-weight:400}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--accent);margin-top:5px;margin-left:4px;position:relative;z-index:1;box-shadow:0 0 0 4px var(--bg)}
+.sc{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px}
+@media (max-width:520px){.sc{grid-template-columns:minmax(0,1fr)} .sc img{height:150px}}
+.sc img{width:100%;height:100%;min-height:96px;max-height:180px;object-fit:cover;border-radius:10px}
+.sc h3{font-size:19px}
+.sc .where{font-size:13px;color:var(--muted);margin:2px 0 6px}
+.sc ul{margin:6px 0 8px;padding-left:18px;font-size:14px}
+.sc .why{font-size:14px;margin:0}
+.sc .links{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}
+.sc a{color:var(--accent);font-weight:600;font-size:14px}
+.leg{display:grid;grid-template-columns:52px 22px minmax(0,1fr);gap:0 12px;margin:0 0 8px;color:var(--muted);font-size:13px}
+.leg span:last-child{padding:4px 0}
+.brk{background:color-mix(in srgb,var(--gold) 14%,transparent);border-radius:10px;padding:6px 10px;display:inline-block}
+.side{display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px}
+.panel h3{font-size:18px;margin-bottom:8px}
+.qr{display:flex;justify-content:center;padding:10px;background:#fff;border-radius:12px}
+.qr img,.qr canvas{width:180px!important;height:180px!important}
+.small{font-size:13px;color:var(--muted)}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:4px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+/* info sections */
+.info{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.box{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px}
+.box h3{font-size:19px;margin-bottom:6px}
+.box ul{margin:0;padding-left:18px;font-size:14px;color:var(--muted)}
+.mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.mini .m{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.mini img{width:100%;aspect-ratio:3/2;object-fit:cover}
+.mini .m div{padding:10px 12px;font-size:14px}
+.mini .m b{display:block;font-size:14px}
+.mini .m span{color:var(--muted);font-size:12px}
+footer{border-top:1px solid var(--line);padding-block:26px 40px;color:var(--muted);font-size:13px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;z-index:80;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><b>ARC</b><span data-i="brand">Hotel · True Digital Park</span></div>
+  <nav>
+    <a href="#plans" data-i="nav1">Plans</a><a href="#around" data-i="nav2">Around the hotel</a><a href="#tips" data-i="nav3">Tips</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Language"><button data-l="en" aria-pressed="true">EN</button><button data-l="th" aria-pressed="false">ไทย</button></div>
+</div></header>
+
+<div class="hero">
+  <img src="https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=1600&q=80&fm=jpg&fit=crop" alt="Bangkok temple at sunset">
+  <div class="wrap">
+    <span class="badge" data-i="badge">Your digital concierge</span>
+    <h1>Bangkok, Your Way</h1>
+    <p data-i="heroP">Tell us how much time you have and who you are with. We will suggest a plan that starts right here at ARC Hotel.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="finder" id="finder">
+    <div class="eyebrow" data-i="fEye">Plan finder</div>
+    <h2 data-i="fTitle">Find your perfect Bangkok plan</h2>
+    <div class="q"><span class="ql" data-i="qTime">How much time do you have?</span><div class="chips" id="cTime"></div></div>
+    <div class="q"><span class="ql" data-i="qWho">Who are you with?</span><div class="chips" id="cWho"></div></div>
+    <div class="q"><span class="ql" data-i="qInt">What do you enjoy? (choose any)</span><div class="chips" id="cInt"></div></div>
+    <div class="q grid2">
+      <div><label for="sPace" data-i="qPace">Pace</label><select id="sPace"></select></div>
+      <div><label for="sBud" data-i="qBud">Budget</label><select id="sBud"></select></div>
+      <div><label for="sSet" data-i="qSet">Indoor or outdoor</label><select id="sSet"></select></div>
+      <div><label for="sStart" data-i="qStart">Start time</label><select id="sStart"></select></div>
+    </div>
+    <div class="q"><label class="toggle"><input type="checkbox" id="rainy"> <span data-i="qRain">It is raining, show indoor plans only</span></label></div>
+    <div class="actions">
+      <button class="btn" id="go" data-i="go">Show my plans</button>
+      <button class="btn ghost" id="surprise" data-i="surprise">Surprise me</button>
+      <button class="btn ghost" id="reset" data-i="reset">Clear</button>
+    </div>
+  </div>
+</div>
+
+<section id="plans"><div class="wrap">
+  <div class="sechead"><div><div class="eyebrow" data-i="pEye">Curated plans</div><h2 data-i="pTitle">Plans for you</h2></div><span class="count" id="count"></span></div>
+  <div class="cards" id="cards"></div>
+</div></section>
+
+<section id="around"><div class="wrap">
+  <div class="sechead"><div><div class="eyebrow" data-i="aEye">Within a few minutes</div><h2 data-i="aTitle">Around the hotel</h2></div></div>
+  <div class="mini" id="mini"></div>
+</div></section>
+
+<section id="events" style="padding-top:0"><div class="wrap">
+  <div class="sechead"><div><div class="eyebrow" data-i="eEye">At ARC Hotel</div><h2 data-i="eTitle">Seasonal and events</h2></div><span class="sample" data-i="sampleTag">Sample data</span></div>
+  <div class="info" id="evts"></div>
+</div></section>
+
+<section id="tips" style="padding-top:0"><div class="wrap">
+  <div class="sechead"><div><div class="eyebrow" data-i="tEye">Good to know</div><h2 data-i="tTitle">Bangkok essentials</h2></div></div>
+  <div class="info" id="tipsBox"></div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <div class="box"><div class="eyebrow" data-i="stEye">From our team</div><h3 data-i="stTitle">Staff recommendations</h3><p class="small" data-i="stBody">Our team will share their favourite local spots here soon. Ask at the Guest Experience Desk for today's picks.</p></div>
+</div></section>
+
+<footer><div class="wrap" data-i="foot">Sample itineraries for demonstration. Opening hours, prices and travel times are estimates; please confirm with each venue before you go.</div></footer>
+
+<div class="detail" id="detail" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <button class="close" id="dClose" aria-label="Close">✕</button>
+  <div class="dhero"><img id="dImg" alt=""><div class="wrap"><div class="eyebrow" style="color:#fff;opacity:.85" id="dEye"></div><h2 id="dTitle"></h2></div></div>
+  <div class="wrap dlay">
+    <div>
+      <p id="dBlurb" style="font-size:17px;margin:0"></p>
+      <div class="meta" id="dMeta"></div>
+      <div class="grid2" style="max-width:520px;margin-top:10px">
+        <div><label for="dStart" class="small" data-i="qStart">Start time</label><select id="dStart"></select></div>
+      </div>
+      <div class="tl" id="tl"></div>
+    </div>
+    <aside class="side">
+      <div class="panel"><h3 data-i="takeTitle">Take this plan with you</h3><div class="qr" id="qr"></div><p class="small" data-i="takeBody">Scan with your phone camera to open this plan.</p>
+        <div class="actions" style="margin-top:8px"><button class="btn ghost" id="copy" data-i="copy">Copy plan</button><button class="btn ghost" id="dFav" data-i="fav">Save</button></div></div>
+      <div class="panel"><h3 data-i="sumTitle">At a glance</h3><div id="sum"></div></div>
+      <div class="panel"><h3 data-i="altTitle">If it rains</h3><div id="alt" class="small"></div></div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = {"stops": {"doc-44": {"n": "Byte All-Day Dining", "a": "hotel", "km": 0, "in_": 1, "k": 1, "s": 1, "b": 2, "img": "https://images.unsplash.com/photo-1581414211938-e772a180c7ab?w=1200&q=80&fm=jpg&fit=crop", "h": "Breakfast: 06:00 - 10:30 (weekdays), 06:00 - 11:00 (weekends); Lunch: 11:30 - 14:30; Dinne", "f": "Level 2", "d": "A modern food hall with open kitchens, offering live egg, noodle, and smoothie stations for breakfast."}, "doc-46": {"n": "Circuit Coffee", "a": "hotel", "km": 0, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://images.unsplash.com/photo-1567880905822-56f8e06fe630?w=1200&q=80&fm=jpg&fit=crop", "h": "06:30 - 20:00 daily", "f": "Level 2", "d": "Circuit Coffee offers specialty coffee made from Thai single-origin beans from Chiang Rai and Nan."}, "doc-48": {"n": "Cloud 25 Sky Bar", "a": "hotel", "km": 0, "in_": 0, "k": 0, "s": 1, "b": 3, "img": "https://images.unsplash.com/photo-1621275471769-e6aa344546d5?w=1200&q=80&fm=jpg&fit=crop", "h": "5 pm to 1 am daily, last order 12:30 am", "f": "Level 25, rooftop", "d": "An open-air rooftop bar offering panoramic views of the Bangkok skyline and the Chao Phraya river bend."}, "doc-55": {"n": "Rooftop Infinity Pool", "a": "hotel", "km": 0, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://images.unsplash.com/photo-1521750465-672a0f580901?w=1200&q=80&fm=jpg&fit=crop", "h": "06:00 - 22:00 daily", "f": "Level 25", "d": "A 30-meter heated infinity pool offering skyline views, an underwater sound system, a shallow kids' pool, sun loungers, shaded daybeds, and smart lockers."}, "doc-56": {"n": "Pulse Smart Gym", "a": "hotel", "km": 0, "in_": 1, "k": 0, "s": 0, "b": 0, "img": "https://images.unsplash.com/photo-1637430308606-86576d8fef3c?w=1200&q=80&fm=jpg&fit=crop", "h": "24 hours with digital key access; staffed from 06:00 to 22:00", "f": "Level 7", "d": "A state-of-the-art fitness facility featuring connected cardio and strength machines that remember user settings and sync with Apple Health, Google Fit, and Strava."}, "doc-58": {"n": "Reboot Recovery Lounge & Spa", "a": "hotel", "km": 0, "in_": 1, "k": 0, "s": 1, "b": 3, "img": "https://images.unsplash.com/photo-1788516382644-fd27b0f36ab5?w=1200&q=80&fm=jpg&fit=crop", "h": "09:00 - 22:00 daily (Last booking 20:30)", "f": "Level 7", "d": "Reboot is a wellness facility featuring a recovery lounge with an infrared sauna, cold plunge pool, compression boots, massage chairs, and a quiet sleep-pod room."}, "doc-85": {"n": "The Deck Garden Terrace", "a": "hotel", "km": 0, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://images.unsplash.com/photo-1613891186868-eebda780cc8a?w=1200&q=80&fm=jpg&fit=crop", "h": "The Deck: 06:00 - 22:00 daily", "f": "Level 4 (The Deck), Level 6 (Staff only)", "d": "Level 4 features The Deck, an open-air garden terrace for hotel guests, offering a 250-meter walking loop, shaded reading areas, a herb garden supplying the Byte restaura"}, "doc-188": {"n": "Kids' Lab Playroom", "a": "hotel", "km": 0, "in_": 1, "k": 1, "s": 0, "b": 0, "img": "https://images.unsplash.com/photo-1659018966820-de07c94e0d01?w=1200&q=80&fm=jpg&fit=crop", "h": "09:00 - 19:00 daily", "f": "Level 5", "d": "A supervised STEM playroom offering a variety of educational and fun activities including coding robots, LEGO building, a digital drawing wall, science experiments, and a"}, "doc-226": {"n": "Level Up Gaming & VR Lounge", "a": "hotel", "km": 0, "in_": 1, "k": 1, "s": 0, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771568_ozf5hg.jpg", "h": "10:00 - 00:00 daily", "f": "Level 5", "d": "A gaming and virtual reality lounge featuring a wide range of entertainment options including console gaming, high-end PC gaming, racing simulators, a VR arena, and board"}, "doc-80": {"n": "101 True Digital Park Mall", "a": "tdp", "km": 0.3, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://images.unsplash.com/photo-1613946069412-38f7f1ff0b65?w=1200&q=80&fm=jpg&fit=crop", "h": "Generally 10:00 - 22:00. Some cafes open from 08:00.", "f": "", "d": "This shopping mall is directly connected to ARC Hotel TDP via a covered Level 1 walkway, approximately 2 to 5 minutes walk from the hotel lobby."}, "doc-118": {"n": "1:2 Coffee", "a": "tdp", "km": 0.3, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://images.unsplash.com/photo-1790689893625-aa90a7ec18b2?w=1200&q=80&fm=jpg&fit=crop", "h": "08:00 - 18:00", "f": "1F", "d": "Specialty coffee bar near the ARC Hotel lobby."}, "doc-120": {"n": "Choongman Chicken", "a": "tdp", "km": 0.3, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://images.unsplash.com/photo-1586793783658-261cddf883ef?w=1200&q=80&fm=jpg&fit=crop", "h": "10:00 - 22:00", "f": "2F", "d": "Korean fried chicken restaurant located on the 2nd floor of the East Building in True Digital Park."}, "doc-116": {"n": "UNIQLO 101 TDP", "a": "tdp", "km": 0.3, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://images.unsplash.com/photo-1729487151777-b4be9098ecbb?w=1200&q=80&fm=jpg&fit=crop", "h": "10:00 - 22:00", "f": "1F", "d": "Japanese clothing brand offering everyday LifeWear for women, men, and kids."}, "doc-158": {"n": "Seacon Square", "a": "east", "km": 4.1, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772966_p7m4ba.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "A large shopping center located in Prawet, Bangkok, approximately 4.1 km from the hotel."}, "doc-159": {"n": "Science Center for Education", "a": "east", "km": 5.0, "in_": 1, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383773049_dtwlu2.jpg", "h": "Tuesday to Sunday 09:00 - 16:00, closed Monday", "f": "", "d": "A science museum located in Bangkok, Thailand, approximately 5.0 km from the hotel."}, "doc-161": {"n": "Suan Luang Rama IX Park", "a": "east", "km": 5.6, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383773051_sjc9wz.jpg", "h": "Daily 05:00 - 21:00", "f": "", "d": "A public park located in the Bangkok area, approximately 5.6 km from the hotel."}, "doc-153": {"n": "Talad Rot Fai Srinakarin", "a": "east", "km": 9.0, "in_": 0, "k": 1, "s": 0, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772926_4fung0.jpg", "h": "Daily 17:00 - 00:00", "f": "", "d": "A large open-air evening market featuring vintage clothes, collectables, classic cars, a substantial food section, dessert shops, and bars with live music."}, "doc-152": {"n": "Megabangna", "a": "east", "km": 12.0, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772910_k0b5ub.jpg", "h": "Daily, 10:00 - 22:00", "f": "", "d": "A large low-rise shopping centre in the Bang Na area, featuring IKEA (Thailand's first store), Central department store, HomePro, Big C, and Mega Cineplex cinema."}, "doc-151": {"n": "Safari World Bangkok", "a": "east", "km": 25.0, "in_": 0, "k": 1, "s": 0, "b": 3, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772905_asqe1u.jpg", "h": "Daily 09:00 - 17:00", "f": "", "d": "Safari World is a large animal attraction in Bangkok, Thailand, featuring two main sections: Safari Park and Marine Park."}, "doc-22": {"n": "Benjasiri Park", "a": "sukhumvit", "km": 6.9, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770908_gz6tsd.jpg", "h": "Daily 05:00 - 21:00", "f": "", "d": "Benjasiri Park is a public park in Thailand, located in the Bangkok area."}, "doc-24": {"n": "EMSPHERE", "a": "sukhumvit", "km": 6.9, "in_": 1, "k": 1, "s": 1, "b": 2, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770787_btwsb0.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "A shopping mall in the Bangkok area with free entry."}, "doc-28": {"n": "Terminal 21", "a": "sukhumvit", "km": 8.0, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770812_z86vcl.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "Chain of mixed-use complexes located in the Bangkok area, approximately 8.0 km in a straight line from the hotel."}, "doc-29": {"n": "Chuvit Garden", "a": "sukhumvit", "km": 8.2, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770887_y7u4bj.jpg", "h": "Daily 05:00 - 21:00", "f": "", "d": "Chuvit Garden, also known as Suan Chuwit, is a park located in Bangkok, Thailand."}, "doc-35": {"n": "M.R. Kukrit's House Museum", "a": "silom", "km": 9.3, "in_": 1, "k": 0, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770950_hlvtbm.jpg", "h": "Tuesday to Sunday 09:00 - 16:00, closed Monday", "f": "", "d": "A museum in Bangkok, Thailand, also known as Baan Soi Suan Plu."}, "doc-36": {"n": "Central Rama 9", "a": "rama9", "km": 7.0, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770952_2wd4k2.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "A prominent shopping mall in Bangkok, Thailand, located approximately 9.5 kilometers from the hotel."}, "doc-31": {"n": "Wat Phra Ram 9", "a": "rama9", "km": 8.5, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770931_slwboj.jpg", "h": "Daily 08:00 - 17:00", "f": "", "d": "A Buddhist temple located in Bangkok, Thailand, approximately 8.5 km from the hotel."}, "doc-16": {"n": "Erawan Shrine", "a": "siam", "km": 10.0, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772827_lqp9ys.jpg", "h": "Daily 08:00 - 17:00", "f": "", "d": "A small open-air shrine dedicated to Phra Phrom, the Thai manifestation of the Hindu god Brahma, situated at the heart of Bangkok's busiest shopping district."}, "doc-38": {"n": "Central Chidlom", "a": "siam", "km": 10.0, "in_": 1, "k": 1, "s": 1, "b": 2, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771006_w4ignt.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "A shopping mall located in Pathum Wan, Bangkok."}, "doc-213": {"n": "CentralWorld", "a": "siam", "km": 10.3, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771393_19m7iu.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "A prominent mixed-use development located in Bangkok, Thailand, approximately 10.3 km from the hotel."}, "doc-220": {"n": "Siam Paragon", "a": "siam", "km": 10.5, "in_": 1, "k": 1, "s": 1, "b": 3, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771487_9cvzml.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "Siam Paragon is a prominent shopping mall in Bangkok."}, "doc-150": {"n": "SEA LIFE Bangkok Ocean World", "a": "siam", "km": 10.5, "in_": 1, "k": 1, "s": 1, "b": 3, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772866_i8ifoh.jpg", "h": "Daily 10:00 - 20:00 (Last entry at 19:00)", "f": "Levels B1 and B2", "d": "A large indoor aquarium located under Siam Paragon, featuring an ocean tunnel, sharks, rays, and reef fish."}, "doc-221": {"n": "Siam Square", "a": "siam", "km": 10.7, "in_": 0, "k": 1, "s": 0, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771566_eagwyn.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "Siam Square is a prominent shopping area located in Bangkok, Thailand."}, "doc-225": {"n": "Siam Discovery", "a": "siam", "km": 11.0, "in_": 1, "k": 1, "s": 1, "b": 2, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771493_7jk8vt.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "A prominent shopping center located in the Bangkok area, approximately 11.0 km in a straight line from the hotel."}, "doc-61": {"n": "MBK Center", "a": "siam", "km": 11.0, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770406_ukefzl.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "Large shopping mall in Bangkok, Thailand, located approximately 11.0 km from the hotel."}, "doc-148": {"n": "Bangkok Art and Culture Centre", "a": "siam", "km": 11.0, "in_": 1, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772817_ykcyhd.jpg", "h": "Tuesday to Sunday, 10:00 to 20:00; closed Mondays, New Year and Songkran holidays.", "f": "", "d": "The city's public contemporary art centre, located at 939 Rama I Road, Pathum Wan, Bangkok 10330, at the Pathumwan intersection opposite MBK Center."}, "doc-216": {"n": "Pathumwananurak Park", "a": "siam", "km": 10.4, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771428_unkkkd.jpg", "h": "Daily 05:00 - 21:00", "f": "", "d": "A public park in Bangkok, Thailand, located approximately 10.4 km in a straight line from the hotel."}, "doc-149": {"n": "Mahanakhon SkyWalk", "a": "silom", "km": 11.0, "in_": 1, "k": 1, "s": 1, "b": 3, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772908_h7i9p0.jpg", "h": "Daily 10:00 - Official closing times vary, please check on the day of visit when purchasin", "f": "74th, 78th", "d": "Thailand's highest observation deck, featuring an indoor viewing floor on the 74th floor and an outdoor rooftop on the 78th floor, including a glass-floor section offerin"}, "doc-39": {"n": "Patpong Museum", "a": "silom", "km": 9.8, "in_": 1, "k": 0, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771046_kvn90j.jpg", "h": "Tuesday to Sunday 09:00 - 16:00, closed Monday", "f": "", "d": "Patpong Museum (พิพิธภัณฑ์พัฒน์พงศ์) is a museum located in the Bangkok area, approximately 9.8 km from the hotel."}, "doc-217": {"n": "Sri Maha Mariamman Temple", "a": "silom", "km": 10.5, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771431_f6mj60.jpg", "h": "Daily 08:00 - 17:00", "f": "", "d": "A prominent Hindu temple located in Bangkok, Thailand, also known as Wat Phra Sri Maha Uma Devi."}, "doc-17": {"n": "Wat Traimit (Golden Buddha)", "a": "chinatown", "km": 12.5, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772768_sbf1zr.jpg", "h": "Daily 08:00 - 17:00. Museum floors are closed on Mondays.", "f": "", "d": "Home to Phra Phuttha Maha Suwan Patimakon, a solid gold seated Buddha about 3 meters tall and about 5.5 tonnes, believed to date from the Sukhothai period."}, "doc-79": {"n": "Wat Mangkon Kamalawat", "a": "chinatown", "km": 12.7, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770686_z7pxak.jpg", "h": "Daily 08:00 - 17:00", "f": "", "d": "A Buddhist temple located in Bangkok, Thailand, approximately 12.7 km in a straight line from the hotel."}, "doc-141": {"n": "The Old Siam Plaza", "a": "chinatown", "km": 13.5, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771152_t3oy8u.jpg", "h": "10:00 - 22:00 daily", "f": "", "d": "A shopping mall located in Phra Nakhon, Bangkok, Thailand."}, "doc-145": {"n": "Sala Chalermkrung Royal Theatre", "a": "chinatown", "km": 13.5, "in_": 1, "k": 0, "s": 1, "b": 2, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771210_dn0jtc.jpg", "h": "Box office 10:00 - 18:00; show times vary. Note: Hours and prices can change on public hol", "f": "", "d": "A historic theatre located in Bangkok, Thailand, offering performances."}, "doc-70": {"n": "River City Bangkok", "a": "riverside", "km": 11.7, "in_": 1, "k": 1, "s": 1, "b": 2, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770552_28ryn7.jpg", "h": "Daily 10:00 - 22:00", "f": "", "d": "A shopping mall located in Bangkok, Thailand, approximately 11.7 km in a straight line from the hotel."}, "doc-74": {"n": "Lhong 1919", "a": "riverside", "km": 12.4, "in_": 0, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770610_ls905n.jpg", "h": "Open 24 hours", "f": "", "d": "Lhong 1919 (ล้ง 1919) is a historical tourist attraction and outdoor landmark in Bangkok, located approximately 12.4 km from the hotel."}, "doc-108": {"n": "Wang Lang Market", "a": "riverside", "km": 15.0, "in_": 0, "k": 1, "s": 0, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772612_oxa0jc.jpg", "h": "Daily 17:00 - 00:00", "f": "", "d": "A vibrant market located in Bangkok, Thailand."}, "doc-3": {"n": "Museum of Siam", "a": "oldtown", "km": 14.2, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772277_e5o6cg.jpg", "h": "Tuesday to Sunday 09:00 - 16:00, closed on Monday", "f": "", "d": "The Museum of Siam is a discovery museum located in Phra Nakhon District, Bangkok, approximately 14.2 km from the hotel."}, "doc-126": {"n": "Wat Suthat", "a": "oldtown", "km": 14.0, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://images.unsplash.com/photo-1528181304800-259b08848526?w=1200&q=80&fm=jpg&fit=crop", "h": "Daily 08:00 - 17:00", "f": "", "d": "Buddhist temple located in Bangkok, Thailand."}, "doc-0": {"n": "Devasathan", "a": "oldtown", "km": 14.1, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772139_jxu8j8.jpg", "h": "Daily 08:00 - 17:00", "f": "", "d": "Devasathan (เทวสถานโบสถ์พราหมณ์), also known as Phram Temple, is a significant temple district located in Bangkok, Thailand."}, "doc-4": {"n": "Democracy Monument", "a": "oldtown", "km": 14.2, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772328_7dlnst.jpg", "h": "Open 24 hours (outdoor landmark)", "f": "", "d": "A significant monument located in Bangkok, Thailand."}, "doc-143": {"n": "Mahakan Fort Park", "a": "oldtown", "km": 13.8, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771203_yp5kd1.jpg", "h": "Daily 05:00 - 21:00", "f": "", "d": "A public park located in Bangkok, Thailand, approximately 13.8 km from the hotel."}, "doc-125": {"n": "Wat Ratchanatdaram", "a": "oldtown", "km": 13.9, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=1200&q=80&fm=jpg&fit=crop", "h": "Daily 08:00 - 17:00", "f": "", "d": "A prominent Buddhist temple located in Bangkok, Thailand."}, "doc-142": {"n": "King Prajadhipok Museum", "a": "oldtown", "km": 14.0, "in_": 1, "k": 0, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771154_lun0tk.jpg", "h": "Tuesday to Sunday 09:00 - 16:00, closed on Monday", "f": "", "d": "A museum in Bangkok, Thailand, dedicated to King Prajadhipok (Rama VII)."}, "doc-154": {"n": "Khao San Road", "a": "oldtown", "km": 15.0, "in_": 0, "k": 0, "s": 0, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772932_k55udi.jpg", "h": "Shop and bar hours vary; busiest after dark.", "f": "", "d": "Khao San Road is a vibrant street, approximately 400 meters long, situated in Banglamphu, Phra Nakhon, Bangkok 10200, near the Chao Phraya River and the old town."}, "doc-19": {"n": "Bangkok National Museum", "a": "oldtown", "km": 15.0, "in_": 1, "k": 1, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772808_7zbws5.jpg", "h": "Wednesday to Sunday, 09:00 - 16:00. Closed Monday, Tuesday, and public holidays.", "f": "", "d": "Thailand's main national museum, opened in 1874 and set in the former Front Palace."}, "doc-18": {"n": "Wat Benchamabophit", "a": "oldtown", "km": 13.5, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772838_woat2c.jpg", "h": "Daily 08:00 - 17:00", "f": "", "d": "A royal temple begun in 1899 under King Rama V, designed by Prince Naris and faced in white Italian Carrara marble, with stained-glass windows showing European influence."}, "doc-156": {"n": "Rajadamnern Stadium", "a": "oldtown", "km": 14.0, "in_": 1, "k": 0, "s": 0, "b": 2, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772971_bm9me4.jpg", "h": "Daily 09:00 - 17:00", "f": "", "d": "Rajadamnern Stadium, established in 1945, is one of Thailand's oldest Muay Thai stadiums, hosting live Muay Thai events multiple nights each week."}, "doc-20": {"n": "Erawan Museum", "a": "samutprakan", "km": 12.0, "in_": 1, "k": 1, "s": 1, "b": 2, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770748_00qe1a.jpg", "h": "Tuesday to Sunday 09:00 - 16:00, closed Monday. Hours and prices can change on public holi", "f": "", "d": "The Erawan Museum is a prominent cultural museum located in Samut Prakan, Thailand."}, "doc-155": {"n": "The Ancient City (Muang Boran)", "a": "samutprakan", "km": 30.0, "in_": 0, "k": 1, "s": 0, "b": 2, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772969_4db8z4.jpg", "h": "Daily, approximately 09:00 - 19:00. Please check the official website for current hours an", "f": "", "d": "A very large open-air museum located at 296/1 Moo 7 Sukhumvit Road, Bang Pu Mai, Mueang Samut Prakan, Samut Prakan 10280."}, "doc-247": {"n": "Robot Building", "a": "silom", "km": 9.5, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383771328_1pp6fs.jpg", "h": "Monday to Friday 09:00 - 18:00; exterior viewable anytime. Hours can change on public holi", "f": "", "d": "An office building located in Bangkok, recognized for its unique robot-like architectural design."}, "doc-26": {"n": "Prasart Museum", "a": "east", "km": 7.0, "in_": 1, "k": 0, "s": 1, "b": 1, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383770796_90isyc.jpg", "h": "Tuesday to Sunday 09:00 - 16:00, closed Monday", "f": "", "d": "A museum showcasing cultural artifacts and history."}, "doc-160": {"n": "Si Nakhon Khuean Khan Botanical Park", "a": "east", "km": 5.2, "in_": 0, "k": 1, "s": 1, "b": 0, "img": "https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/7483e748-f303-4dcd-9248-9318407f2b39/images/image_1794383772988_3koxac.jpg", "h": "Daily 05:00 - 21:00", "f": "", "d": "A park and botanical garden located in the Bangkok area, Thailand."}}, "its": [{"id": "first-time", "t": "First Time in Bangkok", "th": "ครั้งแรกในกรุงเทพฯ", "hrs": 8, "who": ["solo", "couple", "friends"], "int": ["culture", "food", "photo"], "pace": "balanced", "bud": 1, "set": "mixed", "rainy": 0, "start": "09:00", "bl": "The classic old-town loop: temples, a museum and Chinatown, back before dinner.", "s": [["doc-126", 60, ["See the Giant Swing outside", "Walk the cloister of Buddha images"]], ["doc-3", 90, ["Interactive galleries on Thai identity", "Good air-conditioned break"]], ["doc-17", 60, ["The 5.5-tonne Golden Buddha", "Chinatown heritage floors"]], ["doc-79", 45, ["Chinatown’s busiest temple", "Lantern-lined lanes outside"]], ["doc-141", 60, ["Thai desserts and snacks", "Fabric and textile stalls"]]]}, {"id": "bkk-2h", "t": "Bangkok in 2 Hours", "th": "กรุงเทพฯ ใน 2 ชั่วโมง", "hrs": 2, "who": ["solo", "couple", "business"], "int": ["shopping", "food"], "pace": "relaxed", "bud": 1, "set": "indoor", "rainy": 1, "start": "17:00", "bl": "Short on time? Stay close: coffee, the mall next door and the hotel terrace.", "s": [["doc-118", 30, ["Pour-over and a pastry", "Grab a window seat"]], ["doc-80", 50, ["Browse the lifestyle floors", "Pick up a snack for later"]], ["doc-85", 30, ["Sunset walk on the 250 m loop", "Quiet reading corner"]]]}, {"id": "bkk-4h", "t": "Bangkok in 4 Hours", "th": "กรุงเทพฯ ใน 4 ชั่วโมง", "hrs": 4, "who": ["solo", "couple", "friends"], "int": ["shopping", "culture", "photo"], "pace": "balanced", "bud": 1, "set": "mixed", "rainy": 0, "start": "13:00", "bl": "BTS to Siam for art, shopping and the Erawan Shrine, then home by BTS.", "s": [["doc-148", 60, ["Free contemporary exhibitions", "Design shops on the lower floors"]], ["doc-225", 50, ["Creative Thai brands", "Rooftop-style displays"]], ["doc-213", 50, ["The city’s busiest mall", "Food court break"]], ["doc-16", 20, ["Watch the traditional dancers", "Offerings of jasmine garlands"]]]}, {"id": "half-day", "t": "Half-Day Highlights", "th": "ไฮไลต์ครึ่งวัน", "hrs": 6, "who": ["solo", "couple", "friends", "seniors"], "int": ["culture", "photo"], "pace": "balanced", "bud": 1, "set": "mixed", "rainy": 0, "start": "09:00", "bl": "Royal temples and the old city in one comfortable morning-to-afternoon.", "s": [["doc-18", 45, ["Italian marble halls", "Calm courtyard for photos"]], ["doc-19", 90, ["Royal treasures and old chariots", "Plenty of seating inside"]], ["doc-0", 30, ["Brahmin shrines rarely visited", "Quick and quiet stop"]], ["doc-126", 45, ["Giant Swing landmark", "Cloister of 156 Buddha images"]], ["doc-143", 30, ["Old city wall and fort", "Shade and benches"]]]}, {"id": "full-day", "t": "Full-Day Discovery", "th": "เที่ยวเต็มวัน", "hrs": 12, "who": ["friends", "couple", "solo"], "int": ["culture", "food", "shopping", "nightlife"], "pace": "active", "bud": 2, "set": "mixed", "rainy": 0, "start": "09:00", "bl": "From temples to the riverside to a skywalk at night: Bangkok in one long day.", "s": [["doc-125", 45, ["Loha Prasat’s 37 spires", "Climb to the top terrace"]], ["doc-3", 90, ["Thai history, made playful", "Cool down indoors"]], ["doc-17", 60, ["The Golden Buddha", "Chinatown heritage exhibits"]], ["doc-141", 60, ["Lunch on Thai desserts", "Old-style market hall"]], ["doc-74", 90, ["Riverside heritage warehouses", "Cafés and art shops"]], ["doc-70", 60, ["Antiques and galleries", "River views at dusk"]], ["doc-149", 60, ["Glass tray 314 m up", "City lights at night"]]]}, {"id": "family-aquarium", "t": "Family Aquarium Adventure", "th": "ผจญภัยอะควาเรียมกับครอบครัว", "hrs": 4, "who": ["family"], "int": ["family", "nature"], "pace": "relaxed", "bud": 2, "set": "indoor", "rainy": 1, "start": "10:00", "bl": "SEA LIFE first, lunch in the same building, a slow mall wander after.", "s": [["doc-150", 120, ["Shark tunnel and penguins", "Allow at least 90 minutes"]], ["doc-220", 60, ["Family lunch in the food hall", "Rest and refresh"]], ["doc-225", 30, ["Playful design floors", "Easy, short walk"]]]}, {"id": "kids-learning", "t": "Kids Learning & Discovery", "th": "เรียนรู้และค้นพบสำหรับเด็ก", "hrs": 6, "who": ["family"], "int": ["family", "art"], "pace": "relaxed", "bud": 0, "set": "indoor", "rainy": 1, "start": "09:30", "bl": "Hands-on science nearby, lunch and the in-hotel Kids’ Lab to finish.", "s": [["doc-159", 150, ["Planetarium and science halls", "Hands-on exhibits for 6+"]], ["doc-158", 60, ["Lunch and a play break", "Indoor, air-conditioned"]], ["doc-188", 90, ["Coding robots and STEM play", "Supervised sessions"]]]}, {"id": "toddlers", "t": "Bangkok with Toddlers", "th": "กรุงเทพฯ กับลูกเล็ก", "hrs": 3, "who": ["family"], "int": ["family", "nature"], "pace": "relaxed", "bud": 0, "set": "mixed", "rainy": 0, "start": "09:00", "bl": "Short distances, nap-friendly timing and lots of space to run.", "s": [["doc-85", 40, ["Stroller-friendly loop", "Shaded morning walk"]], ["doc-188", 60, ["Soft play and simple activities", "Close to the room"]], ["doc-44", 50, ["Kid-friendly lunch", "High chairs available (check)"]]]}, {"id": "family-shopping", "t": "Family-Friendly Shopping", "th": "ช้อปปิ้งสำหรับครอบครัว", "hrs": 4, "who": ["family"], "int": ["shopping", "family"], "pace": "relaxed", "bud": 1, "set": "indoor", "rainy": 1, "start": "11:00", "bl": "One big mall with play zones, food and everything under one roof.", "s": [["doc-152", 150, ["Toy and kids’ floors", "Big family food court"]], ["doc-158", 60, ["Second stop for snacks", "Short taxi ride"]]]}, {"id": "seniors", "t": "Easy Bangkok with Seniors", "th": "เที่ยวสบาย ๆ กับผู้สูงอายุ", "hrs": 4, "who": ["seniors"], "int": ["culture", "shopping"], "pace": "relaxed", "bud": 1, "set": "indoor", "rainy": 1, "start": "10:00", "bl": "Air-conditioned, seats everywhere and only one taxi ride each way.", "s": [["doc-142", 60, ["Small, calm museum", "Seating in every room"]], ["doc-3", 60, ["Easy galleries at ground level", "Café nearby"]], ["doc-141", 60, ["Lunch on traditional sweets", "Indoor market hall"]]]}, {"id": "minimal-walking", "t": "Minimal Walking Experience", "th": "เดินน้อย เที่ยวสบาย", "hrs": 3, "who": ["seniors", "family", "business"], "int": ["wellness", "food"], "pace": "relaxed", "bud": 2, "set": "indoor", "rainy": 1, "start": "14:00", "bl": "Never leave the building: spa, coffee and a view, all by lift.", "s": [["doc-46", 30, ["Coffee in the lobby", "Lift access"]], ["doc-58", 90, ["Recovery lounge and massage", "Book ahead"]], ["doc-48", 50, ["Early drink with a view", "Seats by the window"]]]}, {"id": "accessible-indoor", "t": "Accessible Indoor Attractions", "th": "สถานที่ในร่มเข้าถึงง่าย", "hrs": 4, "who": ["seniors", "family"], "int": ["shopping", "art"], "pace": "relaxed", "bud": 1, "set": "indoor", "rainy": 1, "start": "11:00", "bl": "Large indoor venues with lifts. Accessibility details: please confirm with each venue.", "s": [["doc-148", 60, ["Wide ramps through the galleries", "Check lift access on arrival"]], ["doc-220", 90, ["Spacious walkways", "Lunch inside"]], ["doc-150", 60, ["Mostly level route (confirm)", "Seats near the tanks"]]]}, {"id": "romantic-sunset", "t": "Romantic Sunset", "th": "พระอาทิตย์ตกแสนโรแมนติก", "hrs": 4, "who": ["couple"], "int": ["photo", "nightlife"], "pace": "relaxed", "bud": 3, "set": "mixed", "rainy": 0, "start": "16:00", "bl": "Golden hour on the river, then the city from 314 metres up.", "s": [["doc-74", 75, ["Riverside piers at golden hour", "Photo walls and cafés"]], ["doc-70", 45, ["Sunset over the river", "Quiet galleries"]], ["doc-149", 60, ["Glass tray at dusk", "Rooftop bar (check hours)"]]]}, {"id": "cafe-date", "t": "Couples' Café Date", "th": "เดตคาเฟ่สำหรับคู่รัก", "hrs": 3, "who": ["couple"], "int": ["food", "photo"], "pace": "relaxed", "bud": 1, "set": "mixed", "rainy": 0, "start": "14:00", "bl": "Slow coffee, a park bench and the hotel terrace for the last light.", "s": [["doc-118", 45, ["Specialty coffee for two", "Share a pastry"]], ["doc-22", 60, ["Lake walk and sculptures", "Easy taxi ride"]], ["doc-85", 40, ["Sunset on The Deck", "Quiet corners"]]]}, {"id": "riverside-night", "t": "Riverside Date Night", "th": "เดตริมแม่น้ำยามค่ำ", "hrs": 4, "who": ["couple", "friends"], "int": ["nightlife", "food", "photo"], "pace": "balanced", "bud": 2, "set": "outdoor", "rainy": 0, "start": "17:30", "bl": "Heritage piers, a night market across the river and the lights on the water.", "s": [["doc-74", 75, ["Lanterns and courtyards", "Dinner by the river"]], ["doc-108", 75, ["Thonburi night market", "Street snacks to share"]], ["doc-70", 40, ["Night views by the water", "Last drink nearby"]]]}, {"id": "romantic-dinner", "t": "Romantic Dinner Experience", "th": "ดินเนอร์โรแมนติก", "hrs": 3, "who": ["couple"], "int": ["food", "nightlife", "wellness"], "pace": "relaxed", "bud": 3, "set": "indoor", "rainy": 1, "start": "17:30", "bl": "No traffic tonight: spa for two, dinner and drinks upstairs.", "s": [["doc-58", 75, ["Couples’ ritual (book ahead)", "Steam and sauna"]], ["doc-44", 60, ["Dinner at Byte", "Try the Thai street-food station"]], ["doc-48", 45, ["Cocktails on Level 25", "City lights"]]]}, {"id": "street-food", "t": "Street Food Trail", "th": "เส้นทางสตรีทฟู้ด", "hrs": 4, "who": ["friends", "solo", "couple"], "int": ["food", "nightlife"], "pace": "active", "bud": 0, "set": "outdoor", "rainy": 0, "start": "17:00", "bl": "Chinatown by night: temples, sweets and the city’s most famous food streets.", "s": [["doc-17", 40, ["Start before closing time", "Golden Buddha"]], ["doc-79", 30, ["Temple of the Dragon Lotus", "Lantern lanes"]], ["doc-141", 60, ["Thai desserts and kanom", "Grab a seat inside"]], ["doc-108", 90, ["Night market grazing", "Cash and QR both useful"]]]}, {"id": "hidden-gems", "t": "Local Hidden Gems", "th": "อัญมณีที่ซ่อนอยู่", "hrs": 6, "who": ["solo", "couple", "friends"], "int": ["culture", "art", "photo"], "pace": "balanced", "bud": 1, "set": "mixed", "rainy": 0, "start": "10:00", "bl": "Places most visitors miss: a teak house, an antique museum and quiet shrines.", "s": [["doc-35", 60, ["Thai teak houses and garden", "Classical art collection"]], ["doc-26", 60, ["Private antique collection", "Book a guided visit"]], ["doc-0", 30, ["Brahmin shrine", "Rarely crowded"]], ["doc-143", 40, ["City wall walk", "Old community nearby"]], ["doc-142", 60, ["Story of Thai democracy", "Calm and cool"]]]}, {"id": "rainy-day", "t": "Rainy Day Bangkok", "th": "วันฝนตกในกรุงเทพฯ", "hrs": 6, "who": ["family", "couple", "solo", "seniors", "friends"], "int": ["art", "shopping", "family"], "pace": "relaxed", "bud": 1, "set": "indoor", "rainy": 1, "start": "10:00", "bl": "Everything indoors and linked by BTS skywalks around Siam.", "s": [["doc-148", 90, ["Free exhibitions", "Art bookshops"]], ["doc-150", 90, ["Aquarium in the dry", "Great for all ages"]], ["doc-220", 90, ["Lunch and shopping", "Gourmet market"]], ["doc-213", 60, ["More shops via skywalk", "Dessert stop"]]]}, {"id": "art-culture", "t": "Art & Culture Trail", "th": "เส้นทางศิลปะและวัฒนธรรม", "hrs": 6, "who": ["solo", "couple", "seniors"], "int": ["art", "culture"], "pace": "balanced", "bud": 1, "set": "indoor", "rainy": 1, "start": "10:00", "bl": "Galleries, a national museum and a royal theatre in the old city.", "s": [["doc-148", 75, ["Contemporary Thai art", "Free entry for most shows"]], ["doc-19", 90, ["National collection", "Allow time for the main hall"]], ["doc-3", 60, ["Interactive Thai culture", "Café break"]], ["doc-145", 45, ["Art deco theatre", "Check show times"]]]}, {"id": "shopping", "t": "Shopping Lover's Guide", "th": "คู่มือนักช้อป", "hrs": 8, "who": ["friends", "couple", "solo"], "int": ["shopping", "food"], "pace": "active", "bud": 2, "set": "indoor", "rainy": 1, "start": "11:00", "bl": "Sukhumvit to Siam: themed floors, local designers and luxury, all on the BTS.", "s": [["doc-28", 75, ["Each floor is a world city", "Pier 21 food court"]], ["doc-24", 75, ["New flagship stores", "Dining hall"]], ["doc-225", 60, ["Thai designers", "Creative concepts"]], ["doc-220", 90, ["Luxury and gourmet market", "Lunch break"]], ["doc-61", 75, ["Bargains and souvenirs", "Phones and gadgets"]]]}, {"id": "budget", "t": "Bangkok on a Budget", "th": "เที่ยวกรุงเทพฯ แบบประหยัด", "hrs": 6, "who": ["solo", "friends"], "int": ["culture", "nature", "food"], "pace": "balanced", "bud": 0, "set": "mixed", "rainy": 0, "start": "08:30", "bl": "Free parks, free temples and street food. Transport is the main cost.", "s": [["doc-161", 75, ["Bangkok’s biggest park", "Morning walk or bike"]], ["doc-31", 40, ["Free temple visit", "Dress modestly"]], ["doc-29", 30, ["Pocket park and city views", "Free entry"]], ["doc-22", 60, ["Lake and sculptures", "Picnic spot"]]]}, {"id": "luxury", "t": "Luxury Bangkok", "th": "กรุงเทพฯ สุดหรู", "hrs": 6, "who": ["couple", "solo"], "int": ["shopping", "wellness", "food"], "pace": "relaxed", "bud": 3, "set": "indoor", "rainy": 1, "start": "12:00", "bl": "Spa first, flagship shopping, then dinner above the city.", "s": [["doc-58", 90, ["Signature massage", "Recovery lounge"]], ["doc-38", 75, ["Department store icons", "Personal shopping"]], ["doc-220", 75, ["Luxury avenue", "Gourmet market"]], ["doc-149", 60, ["SkyWalk at dusk", "Rooftop drinks (check)"]]]}, {"id": "business", "t": "Business Traveler After-Work", "th": "หลังเลิกงานสำหรับนักธุรกิจ", "hrs": 2, "who": ["business", "solo"], "int": ["wellness", "food", "nightlife"], "pace": "relaxed", "bud": 2, "set": "indoor", "rainy": 1, "start": "18:30", "bl": "Two hours, zero commute: gym, dinner and a drink, all inside the hotel.", "s": [["doc-56", 40, ["Quick workout", "24-hour digital key"]], ["doc-44", 45, ["Dinner at Byte", "Order by table tablet"]], ["doc-48", 35, ["Nightcap on Level 25", "Last order 00:30"]]]}, {"id": "around-hotel", "t": "Around the Hotel in 1 Hour", "th": "รอบโรงแรมใน 1 ชั่วโมง", "hrs": 1, "who": ["business", "solo", "couple", "family", "seniors", "friends"], "int": ["food", "shopping"], "pace": "relaxed", "bud": 1, "set": "indoor", "rainy": 1, "start": "12:00", "bl": "Coffee, a quick bite and a look around 101 True Digital Park.", "s": [["doc-118", 20, ["Coffee to go", "East Building"]], ["doc-120", 25, ["Korean fried chicken", "Quick lunch"]], ["doc-80", 15, ["Quick browse", "Back via the skywalk"]]]}, {"id": "nature-day", "t": "Green Bangkok", "th": "กรุงเทพฯ สีเขียว", "hrs": 6, "who": ["family", "couple", "solo", "seniors"], "int": ["nature", "photo", "wellness"], "pace": "relaxed", "bud": 0, "set": "outdoor", "rainy": 0, "start": "07:30", "bl": "Start early before the heat: two big parks and a botanical garden.", "s": [["doc-161", 90, ["Gardens from around the world", "Cycle hire inside (check)"]], ["doc-160", 60, ["Botanical garden", "Shaded paths"]], ["doc-55", 60, ["Back for a swim", "Rooftop pool"]]]}, {"id": "weekend-market", "t": "Night Market Evening", "th": "ตลาดนัดยามค่ำ", "hrs": 4, "who": ["friends", "couple", "family", "solo"], "int": ["food", "shopping", "nightlife"], "pace": "balanced", "bud": 0, "set": "outdoor", "rainy": 0, "start": "17:30", "bl": "The closest big night market: food, vintage finds and live music.", "s": [["doc-153", 150, ["Street food rows", "Vintage and souvenir stalls"]], ["doc-158", 45, ["Cool down indoors", "Dessert stop"]]]}], "events": [{"n": "ARC Hotel Loy Krathong Celebrations 2026", "d": "Celebrate Loy Krathong, the Thai festival of light, with an eco-friendly krathong-making workshop, Thai street-food stalls, and a rooftop dinner featuring live Thai music."}, {"n": "Christmas Dining Events at Byte", "d": "Festive dining at Byte featuring a Christmas carvery, roast turkey, Thai festive specials, seafood on ice, and a Christmas dessert bar."}, {"n": "Cloud 25 New Year's Eve Countdown Party", "d": "Count down to 2027 on the rooftop with a live DJ, a sharing-plate dinner, free-flow drinks, and views of the fireworks across the Bangkok skyline."}, {"n": "ARC Tech Night Start-up Meetup", "d": "A monthly evening meetup for founders, developers, and investors at True Digital Park."}, {"n": "Level Up Friday Gaming Tournament", "d": "A weekly gaming tournament featuring racing-simulator time trials and console knockout competitions."}, {"n": "ARC Hotel Sunday 5K Run Series", "d": "A special edition of the hotel's Sunday 5 km group run."}]};
+const PAGE_URL = "https://araihan-arc.github.io/arc-kiosk-pages/arc-hotel-itinerary/";
+const T = {
+ en:{brand:"Hotel · True Digital Park",nav1:"Plans",nav2:"Around the hotel",nav3:"Tips",badge:"Your digital concierge",heroP:"Tell us how much time you have and who you are with. We will suggest a plan that starts right here at ARC Hotel.",fEye:"Plan finder",fTitle:"Find your perfect Bangkok plan",qTime:"How much time do you have?",qWho:"Who are you with?",qInt:"What do you enjoy? (choose any)",qPace:"Pace",qBud:"Budget",qSet:"Indoor or outdoor",qStart:"Start time",qRain:"It is raining, show indoor plans only",go:"Show my plans",surprise:"Surprise me",reset:"Clear",pEye:"Curated plans",pTitle:"Plans for you",aEye:"Within a few minutes",aTitle:"Around the hotel",eEye:"At ARC Hotel",eTitle:"Seasonal and events",sampleTag:"Sample data",tEye:"Good to know",tTitle:"Bangkok essentials",stEye:"From our team",stTitle:"Staff recommendations",stBody:"Our team will share their favourite local spots here soon. Ask at the Guest Experience Desk for today's picks.",foot:"Sample itineraries for demonstration. Opening hours, prices and travel times are estimates; please confirm with each venue before you go.",takeTitle:"Take this plan with you",takeBody:"Scan with your phone camera to open this plan.",copy:"Copy plan",fav:"Save",saved:"Saved",sumTitle:"At a glance",altTitle:"If it rains",
+  hrs:h=>h>=12?"Full day":h+(h==1?" hour":" hours"),plans:n=>n+(n==1?" plan":" plans"),
+  time:{1:"1 hour",2:"2 hours",3:"3 hours",4:"4 hours",6:"6 hours",8:"8 hours",12:"Full day"},
+  who:{solo:"Solo",couple:"Couple",family:"Family with kids",seniors:"With seniors",friends:"Friends",business:"Business trip"},
+  int:{food:"Food",culture:"Culture",shopping:"Shopping",nature:"Nature",art:"Art",nightlife:"Nightlife",wellness:"Wellness",photo:"Photography",family:"Family fun"},
+  pace:{any:"Any pace",relaxed:"Relaxed",balanced:"Balanced",active:"Active"},
+  bud:{9:"Any budget",0:"Budget",1:"Mid-range",2:"Comfort",3:"Premium"},
+  set:{any:"Any",indoor:"Indoor",outdoor:"Outdoor",mixed:"Mixed"},
+  any:"Any",match:"Good match",indoor:"Indoor",outdoor:"Outdoor",kid:"Kid-friendly",senior:"Senior-friendly",maps:"Open in Google Maps",hours:"Hours",
+  walk:"Walk",lift:"Lift",bts:"BTS Skytrain",taxi:"Taxi or Grab",about:"about",min:"min",brk:"Rest, drink and restroom break",
+  total:"Total incl. travel",stops:"Stops",budget:"Budget level",walking:"Walking",low:"Low",med:"Medium",high:"High",
+  nores:"No plan matches all your choices. Try fewer interests or a different time.",copied:"Plan copied",ret:"Back to ARC Hotel",
+  altNone:"This plan is already mostly indoors.",altTxt:"Swap outdoor stops for one of these indoor plans:",sampleNote:"Times are estimates. Travel times are rough and do not reflect live traffic."},
+ th:{brand:"โรงแรม · ทรู ดิจิทัล พาร์ค",nav1:"แผนเที่ยว",nav2:"รอบโรงแรม",nav3:"เคล็ดลับ",badge:"คอนเซียร์จดิจิทัลของคุณ",heroP:"บอกเราว่าคุณมีเวลาเท่าไรและเที่ยวกับใคร แล้วเราจะแนะนำแผนที่เริ่มจาก ARC Hotel",fEye:"ค้นหาแผน",fTitle:"หาแผนเที่ยวกรุงเทพฯ ที่ใช่",qTime:"คุณมีเวลาเท่าไร",qWho:"เที่ยวกับใคร",qInt:"ชอบอะไรบ้าง (เลือกได้หลายข้อ)",qPace:"จังหวะการเที่ยว",qBud:"งบประมาณ",qSet:"ในร่มหรือกลางแจ้ง",qStart:"เวลาเริ่ม",qRain:"ฝนตก แสดงเฉพาะแผนในร่ม",go:"ดูแผนของฉัน",surprise:"สุ่มให้หน่อย",reset:"ล้าง",pEye:"แผนที่คัดสรร",pTitle:"แผนสำหรับคุณ",aEye:"เดินไม่กี่นาที",aTitle:"รอบโรงแรม",eEye:"ที่ ARC Hotel",eTitle:"เทศกาลและกิจกรรม",sampleTag:"ข้อมูลตัวอย่าง",tEye:"ควรรู้",tTitle:"ข้อควรรู้ในกรุงเทพฯ",stEye:"จากทีมของเรา",stTitle:"พนักงานแนะนำ",stBody:"ทีมงานจะแบ่งปันสถานที่โปรดเร็ว ๆ นี้ สอบถามได้ที่ Guest Experience Desk",foot:"แผนเที่ยวตัวอย่างเพื่อการสาธิต เวลาเปิดปิด ราคา และเวลาเดินทางเป็นค่าประมาณ โปรดตรวจสอบกับสถานที่ก่อนเดินทาง",takeTitle:"นำแผนนี้ไปด้วย",takeBody:"สแกนด้วยกล้องโทรศัพท์เพื่อเปิดแผนนี้",copy:"คัดลอกแผน",fav:"บันทึก",saved:"บันทึกแล้ว",sumTitle:"สรุป",altTitle:"ถ้าฝนตก",
+  hrs:h=>h>=12?"ทั้งวัน":h+" ชั่วโมง",plans:n=>n+" แผน",
+  time:{1:"1 ชั่วโมง",2:"2 ชั่วโมง",3:"3 ชั่วโมง",4:"4 ชั่วโมง",6:"6 ชั่วโมง",8:"8 ชั่วโมง",12:"ทั้งวัน"},
+  who:{solo:"คนเดียว",couple:"คู่รัก",family:"ครอบครัวกับเด็ก",seniors:"กับผู้สูงอายุ",friends:"กลุ่มเพื่อน",business:"เดินทางธุรกิจ"},
+  int:{food:"อาหาร",culture:"วัฒนธรรม",shopping:"ช้อปปิ้ง",nature:"ธรรมชาติ",art:"ศิลปะ",nightlife:"ไนต์ไลฟ์",wellness:"สุขภาพ",photo:"ถ่ายรูป",family:"สนุกกับครอบครัว"},
+  pace:{any:"จังหวะใดก็ได้",relaxed:"สบาย ๆ",balanced:"พอดี",active:"กระฉับกระเฉง"},
+  bud:{9:"งบใดก็ได้",0:"ประหยัด",1:"ปานกลาง",2:"สบาย",3:"พรีเมียม"},
+  set:{any:"ใดก็ได้",indoor:"ในร่ม",outdoor:"กลางแจ้ง",mixed:"ผสม"},
+  any:"ใดก็ได้",match:"เหมาะกับคุณ",indoor:"ในร่ม",outdoor:"กลางแจ้ง",kid:"เหมาะกับเด็ก",senior:"เหมาะกับผู้สูงอายุ",maps:"เปิดใน Google Maps",hours:"เวลาเปิด",
+  walk:"เดิน",lift:"ลิฟต์",bts:"รถไฟฟ้า BTS",taxi:"แท็กซี่หรือ Grab",about:"ประมาณ",min:"นาที",brk:"พักดื่มน้ำและเข้าห้องน้ำ",
+  total:"รวมเวลาเดินทาง",stops:"จุดแวะ",budget:"ระดับงบ",walking:"การเดิน",low:"น้อย",med:"ปานกลาง",high:"มาก",
+  nores:"ไม่มีแผนที่ตรงทุกตัวเลือก ลองลดความสนใจหรือเปลี่ยนเวลา",copied:"คัดลอกแผนแล้ว",ret:"กลับ ARC Hotel",
+  altNone:"แผนนี้อยู่ในร่มเป็นส่วนใหญ่แล้ว",altTxt:"เปลี่ยนจุดกลางแจ้งเป็นแผนในร่มเหล่านี้:",sampleNote:"เวลาเป็นค่าประมาณ เวลาเดินทางไม่ได้อิงการจราจรจริง"}
+};
+const TIPS = {
+ en:[["Getting around",["BTS Punnawithi is linked to True Digital Park by a covered walkway.","Use the BTS for Siam and Sukhumvit; taxis or Grab are easier for the old town.","Ask the Guest Experience Desk to write your destination in Thai."]],
+     ["Paying",["Thai QR payments and cards are widely accepted in malls.","Carry some cash for markets, street food and taxis."]],
+     ["Temples",["Cover shoulders and knees; remove shoes where asked.","Speak quietly and do not point your feet at Buddha images."]],
+     ["Heat and rain",["Plan outdoor stops early morning or late afternoon.","Drink water often; showers can be sudden, so keep an indoor plan ready."]]],
+ th:[["การเดินทาง",["สถานี BTS ปุณณวิถีเชื่อมกับทรู ดิจิทัล พาร์คด้วยทางเดินมีหลังคา","ใช้ BTS ไปสยามและสุขุมวิท ส่วนเมืองเก่าใช้แท็กซี่หรือ Grab สะดวกกว่า","ขอให้ Guest Experience Desk เขียนชื่อปลายทางเป็นภาษาไทยให้"]],
+     ["การชำระเงิน",["ห้างส่วนใหญ่รับ QR และบัตร","พกเงินสดสำหรับตลาด อาหารริมทาง และแท็กซี่"]],
+     ["การเข้าวัด",["แต่งกายมิดชิด ปิดไหล่และเข่า ถอดรองเท้าเมื่อมีป้ายบอก","พูดเบา ๆ และไม่ชี้เท้าไปทางพระพุทธรูป"]],
+     ["อากาศร้อนและฝน",["เที่ยวกลางแจ้งช่วงเช้าหรือเย็น","ดื่มน้ำบ่อย ๆ และเตรียมแผนในร่มไว้"]]]
+};
+let L = "en";
+const st = {time:null, who:null, int:new Set(), pace:"any", bud:"9", set:"any", start:"", rainy:false};
+const $ = s => document.querySelector(s);
+const ls = { get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}} };
+let favs = new Set(ls.get("arc-it-favs",[]));
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const t = k => T[L][k];
+function toMin(hm){const [h,m]=hm.split(":").map(Number);return h*60+m}
+function fmt(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
+function travel(a,b){ // a,b stop objects or null for hotel
+  const A=a||{a:"hotel",km:0}, B=b||{a:"hotel",km:0};
+  if(A.a==="hotel"&&B.a==="hotel") return {m:3,mode:"lift"};
+  if((A.a==="hotel"&&B.a==="tdp")||(A.a==="tdp"&&B.a==="hotel")) return {m:8,mode:"walk"};
+  if(A.a===B.a) return {m:10,mode:"walk"};
+  const fromHome = A.a==="hotel"||A.a==="tdp"||B.a==="hotel"||B.a==="tdp";
+  const other = (A.a==="hotel"||A.a==="tdp")?B:A;
+  if(fromHome && ["siam","sukhumvit","silom"].includes(other.a)) return {m: other.a==="sukhumvit"?25:35, mode:"bts"};
+  const d = fromHome ? other.km : Math.abs(A.km-B.km)+3;
+  return {m:Math.max(15,Math.round(10+2.4*d)), mode:"taxi"};
+}
+function build(it, start){
+  const out=[]; let now=toMin(start||it.start); let prev=null; let walkMin=0;
+  it.s.forEach(([id,mins,acts],i)=>{
+    const S=DATA.stops[id]; const tr=travel(prev,S);
+    out.push({leg:tr, at:now}); now+=tr.m; if(tr.mode==="walk") walkMin+=tr.m;
+    out.push({stop:S,id,mins,acts,from:now,to:now+mins}); now+=mins;
+    if(it.pace!=="active" && i<it.s.length-1 && (i%2===1) && mins<120){ out.push({brk:true,from:now,to:now+15}); now+=15; }
+    prev=S;
+  });
+  const back=travel(prev,null); out.push({leg:back,at:now,home:true}); now+=back.m;
+  return {rows:out,end:now,total:now-toMin(start||it.start),walkMin};
+}
+function score(it){
+  let sc=0;
+  if(st.rainy && !it.rainy) return -1;
+  if(st.time){ const d=Math.abs(it.hrs-st.time); if(d>Math.max(2,st.time*.5)) return -1; sc+=10-d*2; }
+  if(st.who){ if(!it.who.includes(st.who)) return -1; sc+=8; }
+  if(st.int.size){ const o=it.int.filter(x=>st.int.has(x)).length; if(!o) return -1; sc+=o*4; }
+  if(st.pace!=="any"){ sc+= it.pace===st.pace?4:(st.pace==="relaxed"&&it.pace==="active"?-6:0); }
+  if(st.bud!=="9"){ if(it.bud>Number(st.bud)+1) return -1; sc+= it.bud<=Number(st.bud)?3:0; }
+  if(st.set!=="any"){ if(it.set!==st.set && it.set!=="mixed") return -1; sc+= it.set===st.set?3:1; }
+  return sc;
+}
+function chips(el,map,key,multi){
+  el.innerHTML=Object.entries(map).map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${multi?st[key].has(k):String(st[key])===k}">${esc(v)}</button>`).join("");
+  el.onclick=e=>{const b=e.target.closest(".chip"); if(!b) return; const k=b.dataset.k;
+    if(multi){ st[key].has(k)?st[key].delete(k):st[key].add(k); }
+    else { st[key] = String(st[key])===k?null:(key==="time"?Number(k):k); }
+    chips(el,map,key,multi); render(); };
+}
+function opts(el,map,val){ el.innerHTML=Object.entries(map).map(([k,v])=>`<option value="${k}" ${String(val)===k?"selected":""}>${esc(v)}</option>`).join(""); }
+function startOpts(el,val,withAny){ let h=""; if(withAny) h+=`<option value="" ${!val?"selected":""}>${esc(t("any"))}</option>`; for(let m=6*60;m<=21*60;m+=30){const v=fmt(m);h+=`<option ${v===val?"selected":""}>${v}</option>`} el.innerHTML=h; }
+function card(it,sc){
+  const img=DATA.stops[it.s[0][0]].img;
+  const tags=[t("set")[it.set], ...it.int.slice(0,2).map(x=>t("int")[x])];
+  return `<article class="card" tabindex="0" data-id="${it.id}" role="button" aria-label="${esc(it.t)}">
+   <div class="ph"><img loading="lazy" src="${esc(img)}" alt=""><span class="dur">${esc(t("hrs")(it.hrs))}</span>
+   <button class="fav" data-fav="${it.id}" aria-label="Save">${favs.has(it.id)?"♥":"♡"}</button></div>
+   <div class="bd">${sc>=14?`<span class="match">${esc(t("match"))}</span>`:""}<h3>${esc(L==="th"?it.th:it.t)}</h3><p>${esc(it.bl)}</p>
+   <div class="tags">${tags.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div></div></article>`;
+}
+function render(){
+  const list=DATA.its.map(it=>({it,sc:score(it)})).filter(x=>x.sc>=0).sort((a,b)=>b.sc-a.sc||(favs.has(b.it.id)-favs.has(a.it.id)));
+  $("#count").textContent=t("plans")(list.length);
+  $("#cards").innerHTML = list.length? list.map(x=>card(x.it,x.sc)).join("") : `<div class="empty">${esc(t("nores"))}</div>`;
+}
+function openIt(id, push=true){
+  const it=DATA.its.find(x=>x.id===id); if(!it) return;
+  const start = st.start || it.start;
+  startOpts($("#dStart"), start, false);
+  $("#dImg").src=DATA.stops[it.s[0][0]].img; $("#dTitle").textContent=L==="th"?it.th:it.t; $("#dEye").textContent=t("hrs")(it.hrs)+" · "+t("set")[it.set];
+  $("#dBlurb").textContent=it.bl;
+  $("#dMeta").innerHTML=[...it.who.map(w=>t("who")[w]),...it.int.map(x=>t("int")[x])].map(x=>`<span class="tag">${esc(x)}</span>`).join("")+` <span class="sample">${esc(t("sampleTag"))}</span>`;
+  drawTl(it,start);
+  $("#dFav").textContent = favs.has(id)?t("saved"):t("fav"); $("#dFav").dataset.id=id;
+  const url=PAGE_URL+"#it="+id; $("#qr").innerHTML="";
+  try{ new QRCode($("#qr"),{text:url,width:180,height:180,correctLevel:QRCode.CorrectLevel.M}); }catch(e){ $("#qr").textContent=url; }
+  const alts = DATA.its.filter(x=>x.rainy && x.id!==id && x.who.some(w=>it.who.includes(w))).slice(0,3);
+  $("#alt").innerHTML = it.rainy? esc(t("altNone")) : esc(t("altTxt"))+"<br>"+alts.map(a=>`<a href="#it=${a.id}" data-open="${a.id}" style="color:var(--accent);font-weight:600">${esc(L==="th"?a.th:a.t)}</a>`).join("<br>");
+  $("#detail").classList.add("open"); $("#detail").scrollTop=0; document.body.style.overflow="hidden";
+  if(push){ try{ history.replaceState(null,"","#it="+id) }catch(e){} }
+  $("#detail").dataset.id=id;
+}
+function drawTl(it,start){
+  const b=build(it,start); const mode={walk:t("walk"),lift:t("lift"),bts:t("bts"),taxi:t("taxi")};
+  let h="";
+  b.rows.forEach((r,i)=>{
+    if(r.leg){ const lab = r.home? t("ret") : ""; h+=`<div class="leg"><span>${i===0?fmt(r.at):""}</span><span></span><span>↓ ${esc(mode[r.leg.mode])} · ${esc(t("about"))} ${r.leg.m} ${esc(t("min"))}${lab?" · "+esc(lab):""}</span></div>`; }
+    else if(r.brk){ h+=`<div class="leg"><span>${fmt(r.from)}</span><span></span><span><span class="brk">☕ ${esc(t("brk"))} · 15 ${esc(t("min"))}</span></span></div>`; }
+    else { const S=r.stop; const q=encodeURIComponent(S.n+" Bangkok");
+      const badges=[S.in_?t("indoor"):t("outdoor"), S.k?t("kid"):"", S.s?t("senior"):""].filter(Boolean);
+      h+=`<div class="stop"><div class="tm">${fmt(r.from)}<small>${fmt(r.to)}</small></div><div class="dot"></div>
+       <div class="sc"><img loading="lazy" src="${esc(S.img)}" alt=""><div>
+        <h3>${esc(S.n)}</h3><div class="where">${esc(S.f||"")}${S.f&&S.h?" · ":""}${S.h?esc(t("hours"))+": "+esc(S.h):""}</div>
+        <p class="why">${esc(S.d)}</p><ul>${r.acts.map(a=>`<li>${esc(a)}</li>`).join("")}</ul>
+        <div class="tags">${badges.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}<span class="tag">${r.mins} ${esc(t("min"))}</span></div>
+        ${S.a==="hotel"?"":`<div class="links"><a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">${esc(t("maps"))} ↗</a></div>`}
+       </div></div></div>`; }
+  });
+  h+=`<p class="small" style="margin-left:86px">${esc(t("sampleNote"))}</p>`;
+  $("#tl").innerHTML=h;
+  const budTxt=["฿","฿฿","฿฿฿","฿฿฿฿"][it.bud]; const w=b.walkMin<20?t("low"):b.walkMin<45?t("med"):t("high");
+  $("#sum").innerHTML=`<div class="row"><span>${esc(t("total"))}</span><b>${Math.floor(b.total/60)}h ${b.total%60}m</b></div>
+   <div class="row"><span>${esc(t("stops"))}</span><b>${it.s.length}</b></div><div class="row"><span>${esc(t("budget"))}</span><b>${budTxt}</b></div>
+   <div class="row"><span>${esc(t("walking"))}</span><b>${esc(w)}</b></div><div class="row"><span>${esc(t("qStart"))}</span><b>${start} → ${fmt(b.end)}</b></div>`;
+  $("#copy").onclick=()=>{ const txt=(L==="th"?it.th:it.t)+"\n"+b.rows.filter(r=>r.stop).map(r=>`${fmt(r.from)}-${fmt(r.to)} ${r.stop.n}`).join("\n")+"\n"+PAGE_URL+"#it="+it.id;
+    const done=()=>toast(t("copied")); if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done))}else fallbackCopy(txt,done); };
+}
+function fallbackCopy(txt,done){ const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");done()}catch(e){} ta.remove(); }
+function closeIt(){ $("#detail").classList.remove("open"); document.body.style.overflow=""; try{history.replaceState(null,"",location.pathname)}catch(e){} }
+function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),1600); }
+function i18n(){
+  document.documentElement.lang=L;
+  document.querySelectorAll("[data-i]").forEach(el=>{const v=T[L][el.dataset.i]; if(typeof v==="string") el.textContent=v;});
+  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.l===L)));
+  chips($("#cTime"),t("time"),"time"); chips($("#cWho"),t("who"),"who"); chips($("#cInt"),t("int"),"int",true);
+  opts($("#sPace"),t("pace"),st.pace); opts($("#sBud"),t("bud"),st.bud); opts($("#sSet"),t("set"),st.set); startOpts($("#sStart"),st.start,true);
+  $("#mini").innerHTML=["doc-44","doc-46","doc-85","doc-55","doc-58","doc-226","doc-188","doc-48","doc-80","doc-118","doc-120"].map(id=>{const S=DATA.stops[id];return `<div class="m"><img loading="lazy" src="${esc(S.img)}" alt=""><div><b>${esc(S.n)}</b><span>${esc(S.f||"")}${S.h?" · "+esc(S.h.split(";")[0].slice(0,40)):""}</span></div></div>`}).join("");
+  $("#evts").innerHTML=DATA.events.map(e=>`<div class="box"><h3>${esc(e.n)}</h3><p class="small" style="margin:0">${esc(e.d)}</p></div>`).join("");
+  $("#tipsBox").innerHTML=TIPS[L].map(([h,ul])=>`<div class="box"><h3>${esc(h)}</h3><ul>${ul.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("");
+  render();
+  const id=$("#detail").dataset.id; if($("#detail").classList.contains("open")&&id) openIt(id,false);
+}
+document.querySelector(".lang").onclick=e=>{const b=e.target.closest("button"); if(!b) return; L=b.dataset.l; ls.set("arc-it-lang",L); i18n();};
+$("#sPace").onchange=e=>{st.pace=e.target.value;render()}; $("#sBud").onchange=e=>{st.bud=e.target.value;render()};
+$("#sSet").onchange=e=>{st.set=e.target.value;render()}; $("#sStart").onchange=e=>{st.start=e.target.value};
+$("#rainy").onchange=e=>{st.rainy=e.target.checked;render()};
+$("#go").onclick=()=>{render();$("#plans").scrollIntoView()};
+$("#surprise").onclick=()=>{const pool=DATA.its.filter(it=>score(it)>=0); const p=(pool.length?pool:DATA.its)[Math.floor(Math.random()*(pool.length||DATA.its.length))]; openIt(p.id)};
+$("#reset").onclick=()=>{Object.assign(st,{time:null,who:null,int:new Set(),pace:"any",bud:"9",set:"any",start:"",rainy:false}); $("#rainy").checked=false; i18n()};
+$("#cards").onclick=e=>{const f=e.target.closest("[data-fav]"); if(f){e.stopPropagation(); const id=f.dataset.fav; favs.has(id)?favs.delete(id):favs.add(id); ls.set("arc-it-favs",[...favs]); render(); return;}
+  const c=e.target.closest(".card"); if(c) openIt(c.dataset.id)};
+$("#cards").onkeydown=e=>{if(e.key==="Enter"){const c=e.target.closest(".card"); if(c) openIt(c.dataset.id)}};
+$("#dClose").onclick=closeIt; document.addEventListener("keydown",e=>{if(e.key==="Escape")closeIt()});
+$("#dStart").onchange=e=>{const it=DATA.its.find(x=>x.id===$("#detail").dataset.id); drawTl(it,e.target.value)};
+$("#dFav").onclick=e=>{const id=e.target.dataset.id; favs.has(id)?favs.delete(id):favs.add(id); ls.set("arc-it-favs",[...favs]); e.target.textContent=favs.has(id)?t("saved"):t("fav"); render()};
+$("#alt").onclick=e=>{const a=e.target.closest("[data-open]"); if(a){e.preventDefault(); openIt(a.dataset.open)}};
+function fromHash(){ const m=location.hash.match(/it=([\w-]+)/); if(m) openIt(m[1],false); }
+window.addEventListener("hashchange",fromHash);
+L = ls.get("arc-it-lang","en")==="th"?"th":"en";
+i18n(); fromHash();
+</script>
+</body>
+</html>
