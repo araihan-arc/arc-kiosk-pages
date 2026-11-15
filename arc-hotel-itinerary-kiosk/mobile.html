@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Your Day · ARC Hotel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ivory:#f8f7f2;--paper:#f1efe8;--card:#fffefb;--ink:#242822;--ink2:#575c53;--muted:#878a81;--green:#30473a;--green2:#3d5a49;--line:#e4e2d9;--accent:#9b7a4e;--gold:#c9a45c;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;--sans:Inter,"Helvetica Neue",Arial,sans-serif;color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:light}}
+:root[data-theme="dark"]{color-scheme:light}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ivory);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+a{color:inherit}
+[hidden]{display:none!important}
+.wrap{max-width:480px;margin:0 auto;background:var(--ivory);min-height:100dvh;box-shadow:0 0 0 1px rgba(0,0,0,.03)}
+/* header */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top,0px)) 20px 12px;background:rgba(248,247,242,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.brand{font:400 18px/1 var(--serif);letter-spacing:.22em;color:var(--green)}
+.brand small{display:block;font:600 8.5px var(--sans);letter-spacing:.3em;color:#7a827b;margin-top:6px}
+.icon{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--card)}
+.icon svg{width:18px;height:18px;stroke:var(--green);fill:none;stroke-width:1.8}
+/* hero */
+.hero{position:relative;height:300px;overflow:hidden;background:#2e3a31}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 30%,rgba(16,20,16,.72) 100%)}
+.hero .ht{position:absolute;left:20px;right:20px;bottom:20px;z-index:1;color:#fff}
+.k{font-size:10.5px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--accent)}
+.hero .k{color:#efdcb5}
+.hero h1{font:400 36px/1.04 var(--serif);letter-spacing:-.02em;margin:10px 0 0;text-wrap:balance}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);margin:0 20px;border-bottom:1px solid var(--line)}
+.meta div{padding:16px 0 15px;font-size:11.5px;color:var(--muted)}
+.meta div+div{border-left:1px solid var(--line);padding-left:14px}
+.meta strong{display:block;font:400 21px/1.15 var(--serif);color:var(--ink);margin-bottom:2px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px 6px}
+.btn2{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid #cfccc1;background:var(--card);font-size:14px;font-weight:600;color:var(--green);border-radius:2px}
+.btn2 svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8}
+.intro{margin:14px 20px 4px;font-size:14px;line-height:1.55;color:var(--ink2)}
+/* timeline */
+.tl{list-style:none;margin:0;padding:8px 20px 8px}
+.st{position:relative;display:grid;grid-template-columns:44px 1fr;gap:12px;padding:14px 0 18px}
+.st:before{content:"";position:absolute;left:21px;top:44px;bottom:-14px;width:1px;background:linear-gradient(var(--line),var(--line))}
+.st:last-child:before{display:none}
+.rail{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:2px}
+.num{width:32px;height:32px;border-radius:50%;border:1px solid var(--gold);display:grid;place-items:center;font:500 14px var(--serif);color:var(--green);background:var(--ivory)}
+.card{background:var(--card);border:1px solid var(--line);overflow:hidden}
+.ph{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#dfe3da,#c9d0c4)}
+.ph img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.ph .tag{z-index:2}
+.ph .ph0{position:absolute;inset:0;display:grid;place-items:center;font:400 44px var(--serif);color:rgba(48,71,58,.45)}
+.ph .tag{position:absolute;left:10px;top:10px;background:rgba(255,254,251,.94);padding:6px 9px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--green)}
+.cb{padding:14px 16px 16px}
+.when{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.04em}
+.cb h2{font:400 24px/1.15 var(--serif);margin:6px 0 8px;letter-spacing:-.01em}
+.sum{margin:0;font-size:14px;line-height:1.5;color:var(--ink2)}
+.more{margin-top:8px;font-size:13px;font-weight:600;color:var(--green);border-bottom:1px solid #9aa79d;padding:2px 0}
+.list{margin:10px 0 0;padding:0 0 0 18px;font-size:14px;line-height:1.55;color:var(--ink2)}
+.list li{margin:3px 0}
+.dir{margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;background:var(--green);color:#fff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:.01em}
+.dir svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:1.9}
+.note{margin:6px 20px 0;padding:14px 0 0;border-top:1px solid var(--line);font-size:12px;line-height:1.55;color:var(--muted)}
+.foot{padding:26px 20px calc(30px + env(safe-area-inset-bottom,0px));text-align:center}
+.foot .thanks{font:400 22px/1.2 var(--serif);color:var(--green);margin:0 0 6px}
+.foot p{margin:0;font-size:12.5px;color:var(--muted)}
+.foot .pw{margin-top:22px;font-size:11px;color:#9a9c94;letter-spacing:.04em}
+.foot .pw b{font-weight:700;color:#5f645c}
+.proto{margin-top:14px;font-size:11px;color:#9a9c94;border-bottom:1px solid #c9c8bf}
+/* toast + share sheet fallback */
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--ink);color:#fff;padding:12px 18px;font-size:13.5px;border-radius:2px;transition:.25s;z-index:50;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.sheet{position:fixed;inset:0;background:rgba(20,22,19,.45);display:flex;align-items:flex-end;justify-content:center;z-index:40}
+.sheet .in{width:100%;max-width:480px;background:var(--ivory);padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px))}
+.sheet h3{font:400 24px var(--serif);margin:6px 0 12px}
+.sheet input{width:100%;font:inherit;font-size:13px;padding:12px;border:1px solid #cfccc1;background:#fff;color:var(--ink)}
+.sheet .row{display:flex;gap:10px;margin-top:12px}
+.sheet .row>*{flex:1}
+.wa{display:flex;align-items:center;justify-content:center;min-height:48px;background:var(--green);color:#fff;text-decoration:none;font-weight:600;font-size:14px}
+/* prototype data labels (hidden for guests) */
+body.labels [data-src]{outline:2px dashed var(--lc,#2e7d4f);outline-offset:2px;position:relative}
+body.labels [data-src]:after{content:attr(data-src);position:absolute;left:0;top:-18px;z-index:9;font:700 9.5px/1 var(--sans);color:#fff;background:var(--lc,#2e7d4f);padding:4px 6px;white-space:nowrap}
+[data-k="a"]{--lc:#2e7d4f}[data-k="b"]{--lc:#b0730f}[data-k="m"]{--lc:#a33a2c}
+.legend{display:none;position:sticky;bottom:0;z-index:30;background:rgba(20,20,18,.94);color:#fff;font-size:11px;padding:10px 14px;gap:12px;flex-wrap:wrap}
+body.labels .legend{display:flex}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:5px}
+/* print / save as PDF */
+@media print{
+  @page{margin:14mm}
+  body{background:#fff}
+  .top,.acts,.more,.dir,.proto,.legend,.toast,.sheet,.icon{display:none!important}
+  .wrap{max-width:none;box-shadow:none;background:#fff}
+  .hero{height:200px}
+  .list[hidden]{display:block!important}
+  .st{break-inside:avoid}
+  .ph{aspect-ratio:auto;height:150px}
+  .card{border-color:#ddd}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><div class="brand" data-src="A · hotel name set for this page" data-k="a">ARC HOTEL<small>THE CITY, CURATED FOR YOU</small></div>
+    <button class="icon" id="shareTop" aria-label="Share plan"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></button></header>
+  <main id="app"></main>
+  <div class="legend"><span><i style="background:#2e7d4f"></i>A · from the itinerary output</span><span><i style="background:#b0730f"></i>B · needs existing data added</span><span><i style="background:#a33a2c"></i>Mock in this prototype</span></div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="sheet" id="sheet" hidden><div class="in"><div class="k">Share your plan</div><h3>Copy the link</h3><input id="lnk" readonly><div class="row"><button class="btn2" id="copy2">Copy link</button><a class="wa" id="wa" target="_blank" rel="noopener">WhatsApp</a></div><div class="row"><button class="btn2" id="closeS">Close</button></div></div></div>
+
+<script>
+/* Representative output in the connector's exact schema: {title, stops:[{id,name,category,duration,activities[]}]}.
+   Places and photos come from the ARC Hotel demo KM. Start time mirrors what the live card shows. */
+const SAMPLE={title:"Bangkok in 4 Hours",start:"13:00",city:"Bangkok",stops:[
+ {id:"doc-148",name:"Bangkok Art and Culture Centre",category:"Culture",duration:60,activities:["Free contemporary exhibitions","Design shops on the lower floors"]},
+ {id:"doc-225",name:"Siam Discovery",category:"Shopping",duration:50,activities:["Creative Thai brands","Rooftop-style displays"]},
+ {id:"doc-213",name:"CentralWorld",category:"Shopping",duration:50,activities:["The city’s busiest mall","Food court break"]},
+ {id:"doc-16",name:"Erawan Shrine",category:"Temple",duration:20,activities:["Watch the traditional dancers","Offerings of jasmine garlands"]}]};
+const BUF=15; /* "15min default travel" seen in the live composition log */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pad=n=>String(n).padStart(2,"0"),fmt=m=>pad(Math.floor(m/60)%24)+":"+pad(m%60),toMin=s=>{const[a,b]=s.split(":");return +a*60+ +b};
+const dur=m=>{const h=Math.floor(m/60),r=m%60;return h?(h+"h"+(r?" "+r+"m":"")):r+" min"};
+function b64d(s){return JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/")))))}
+/* the kiosk prototype puts the plan in the link: {t, st (minutes), c, s:[[id,name,duration,category,activities[]|string]]} */
+function fromLink(){const m=location.hash.match(/i=([^&]+)/);if(!m)return null;try{const p=b64d(m[1]);
+  return {title:p.t,start:fmt(p.st),city:p.c||"Bangkok",stops:p.s.map(x=>({id:x[0],name:x[1],duration:x[2],category:x[3],activities:Array.isArray(x[4])?x[4]:[x[4]].filter(Boolean)}))}}catch(e){return null}}
+const IT=fromLink()||SAMPLE,FROM_LINK=!!fromLink();
+const maps=s=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(s.name+", "+IT.city);
+const img=id=>"img/"+id+".jpg";
+
+function render(){let t=toMin(IT.start);const total=IT.stops.reduce((a,s)=>a+s.duration,0)+BUF*(IT.stops.length-1);
+  const rows=IT.stops.map((s,i)=>{const at=t;t+=s.duration+BUF;const extra=s.activities.slice(1);
+    return `<li class="st"><div class="rail"><span class="num">${i+1}</span></div>
+      <article class="card"><div class="ph" ${i?"":'data-src="B · photo per stop (KM image, not in output)" data-k="b"'}><span class="ph0">${esc(s.name[0])}</span><img src="${img(s.id)}" alt="${esc(s.name)}" loading="lazy" onerror="this.remove()"><span class="tag">${esc(s.category)}</span></div>
+      <div class="cb"><div class="when" ${i?"":'data-src="A · start + durations (approx.)" data-k="a"'}>${fmt(at)} · ${s.duration} min</div>
+        <h2 ${i?"":'data-src="A · name" data-k="a"'}>${esc(s.name)}</h2>
+        <p class="sum" ${i?"":'data-src="A · activities[0]" data-k="a"'}>${esc(s.activities[0]||"")}</p>
+        ${extra.length?`<button class="more" data-more="${i}" aria-expanded="false">More about this stop</button><ul class="list" id="ex${i}" hidden>${extra.map(a=>`<li>${esc(a)}</li>`).join("")}</ul>`:""}
+        <a class="dir" href="${maps(s)}" target="_blank" rel="noopener" ${i?"":'data-src="A · Maps search by name + city (can be ambiguous)" data-k="a"'}><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Directions</a></div></article></li>`}).join("");
+  $("#app").innerHTML=`<section class="hero" data-src="B · hero photo (first stop)" data-k="b"><img src="${img(IT.stops[0].id)}" alt="" onerror="this.remove()"><div class="ht"><div class="k">Your day, planned</div><h1 data-src="A · title" data-k="a">${esc(IT.title)}</h1></div></section>
+    <div class="meta"><div data-src="A · durations (+${BUF} min between stops)" data-k="a"><strong>${dur(total)}</strong>in total</div><div><strong>${IT.stops.length} stops</strong>chosen for you</div><div><strong>${esc(IT.start)}</strong>suggested start</div></div>
+    <div class="acts"><button class="btn2" id="shareBtn"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>Share plan</button><button class="btn2" id="pdfBtn"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>Save as PDF</button></div>
+    <ol class="tl">${rows}</ol>
+    <p class="note">Times are approximate and include a short pause between stops. Opening hours can change, so please check with each venue before you go.</p>
+    <footer class="foot"><p class="thanks">Enjoy your day.</p><p>The concierge team at ARC Hotel is happy to help with anything else.</p>
+      <div class="pw">planned with <b>arc</b> · amity robotics</div><button class="proto" id="protoBtn">${FROM_LINK?"Prototype notes":"Prototype notes · sample plan"}</button></footer>`;
+  $$("[data-more]").forEach(b=>b.onclick=()=>{const l=$("#ex"+b.dataset.more),o=l.hidden;l.hidden=!o;b.setAttribute("aria-expanded",o);b.textContent=o?"Show less":"More about this stop"});
+  $("#shareBtn").onclick=share;$("#pdfBtn").onclick=pdf;$("#protoBtn").onclick=()=>document.body.classList.toggle("labels")}
+
+let tt;function toast(t){$("#toast").textContent=t;$("#toast").classList.add("on");clearTimeout(tt);tt=setTimeout(()=>$("#toast").classList.remove("on"),2400)}
+const shareText=()=>IT.title+" · "+IT.stops.map(s=>s.name).join(", ");
+async function share(){const url=location.href;
+  if(navigator.share){try{await navigator.share({title:IT.title,text:shareText(),url});return}catch(e){if(e&&e.name==="AbortError")return}}
+  try{await navigator.clipboard.writeText(url);toast("Link copied. Paste it to share your plan.");return}catch(e){}
+  $("#lnk").value=url;$("#wa").href="https://wa.me/?text="+encodeURIComponent(shareText()+" "+url);$("#sheet").hidden=false;$("#lnk").select()}
+function pdf(){$$(".list").forEach(l=>l.hidden=false);try{window.print()}catch(e){toast("Use your browser’s Share or Print menu to save as PDF.")}}
+$("#shareTop").onclick=share;
+$("#copy2").onclick=()=>{$("#lnk").select();let ok=false;try{ok=document.execCommand("copy")}catch(e){}toast(ok?"Link copied.":"Select the link and copy it.")};
+$("#closeS").onclick=()=>$("#sheet").hidden=true;$("#sheet").onclick=e=>{if(e.target.id==="sheet")$("#sheet").hidden=true};
+render();
+</script>
+</body>
+</html>
