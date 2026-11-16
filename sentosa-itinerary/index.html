@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sentosa · Smart Itinerary</title>
+<meta name="description" content="Pick a theme and get a full day laid out from the Sentosa Visitor Centre at Beach Station.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>/* ============================================================
+   Sentosa Smart Itinerary — tema
+
+   Warna diambil dari aset Sentosa sendiri:
+     #F59200  oranye wordmark (warna dominan main_logo.png)
+     #001C2D  navy halaman sentosa.com.sg
+     #333333  warna teks badan
+     #F7F7F7  latar halaman
+   Huruf situs mereka Gotham (berbayar). Montserrat dipakai sebagai
+   pengganti terdekat yang tersedia bebas, dengan tumpukan sistem
+   sebagai cadangan kalau Google Fonts tidak bisa diraih.
+
+   Mode kiosk dan HP dibedakan lewat class html.k / html.m yang
+   dipasang JS, BUKAN lewat media query — supaya ?view= benar-benar
+   memaksa mode, bukan sekadar mengikuti lebar jendela.
+   ============================================================ */
+
+:root {
+  --orange: #f59200;
+  --orange-dark: #d87f00;
+  --navy: #001c2d;
+  --ink: #333;
+  --muted: #6b7280;
+  --bg: #f7f7f7;
+  --card: #fff;
+  --line: #e5e3e0;
+  --shadow: 0 2px 10px rgba(0, 28, 45, .07);
+  --shadow-lg: 0 10px 34px rgba(0, 28, 45, .14);
+  --r: 16px;
+  --font: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+
+.wrap { margin: 0 auto; }
+.hide { display: none !important; }
+
+/* ---------- kepala ---------- */
+.top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; background: var(--card); border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-mark { color: var(--orange); font-weight: 700; letter-spacing: -.02em; }
+.brand-sub { color: var(--muted); font-weight: 500; }
+.top-act { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: 999px; font-weight: 600; white-space: nowrap;
+  border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
+  transition: background .15s, border-color .15s;
+}
+.btn:hover { border-color: var(--orange); }
+.btn-primary { background: var(--orange); border-color: var(--orange); color: #fff; }
+.btn-primary:hover { background: var(--orange-dark); border-color: var(--orange-dark); }
+.btn-ghost { border-color: transparent; color: var(--muted); }
+
+/* ---------- layar 1: top ideas ---------- */
+.lede h1 { margin: 0 0 6px; color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
+.lede p { margin: 0; color: var(--muted); font-weight: 500; }
+
+.ideas { display: grid; gap: 18px; }
+
+.idea {
+  position: relative; display: flex; flex-direction: column; text-align: left;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  box-shadow: var(--shadow); overflow: hidden;
+  transition: transform .14s, box-shadow .14s, border-color .14s;
+}
+.idea:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--orange); }
+.idea:active { transform: translateY(0); }
+.idea-img { width: 100%; object-fit: cover; background: #e9e7e4; }
+.idea-body { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.idea-icon { position: absolute; background: #fff; border-radius: 999px; display: grid; place-items: center; box-shadow: var(--shadow); }
+.idea-t { color: var(--navy); font-weight: 700; letter-spacing: -.01em; }
+.idea-bl { color: var(--muted); font-weight: 500; flex: 1; }
+.idea-meta { display: flex; align-items: center; gap: 8px; color: var(--orange); font-weight: 600; }
+
+.tag-pop {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(245, 146, 0, .12); color: var(--orange-dark);
+  border-radius: 999px; font-weight: 700;
+}
+
+/* ---------- layar 2: itinerary ---------- */
+.plan-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.plan-head h2 { margin: 0 0 6px; color: var(--navy); font-weight: 700; letter-spacing: -.02em; }
+.plan-head p { margin: 0; color: var(--muted); font-weight: 500; max-width: 60ch; }
+
+.stops { list-style: none; margin: 0; padding: 0; display: grid; }
+
+.stop {
+  position: relative; display: grid; align-items: start;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  box-shadow: var(--shadow); overflow: hidden;
+}
+.stop-img { object-fit: cover; background: #e9e7e4; height: 100%; }
+.stop-body { display: flex; flex-direction: column; min-width: 0; }
+.stop-time { color: var(--orange); font-weight: 700; letter-spacing: .02em; }
+.stop-n { color: var(--navy); font-weight: 700; letter-spacing: -.01em; }
+.stop-note { color: var(--ink); font-weight: 500; }
+.stop-sub { color: var(--muted); font-weight: 500; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); flex: none; }
+.stop-act { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* ---------- panel QR ---------- */
+.qr {
+  display: flex; align-items: center; gap: 18px;
+  background: var(--navy); color: #fff; border-radius: var(--r);
+}
+.qr-svg { background: #fff; border-radius: 10px; flex: none; }
+.qr-svg svg { display: block; width: 100%; height: 100%; }
+.qr-t { font-weight: 700; margin: 0 0 4px; }
+.qr-p { margin: 0; color: #b9c6ce; font-weight: 500; }
+
+/* ---------- lembar bawah (HP) ---------- */
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: flex; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, .96); backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line);
+}
+.bar .btn { flex: 1; justify-content: center; padding: 13px 10px; font-size: 14px; }
+
+.scrim { position: fixed; inset: 0; background: rgba(0, 28, 45, .45); z-index: 50; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 51;
+  background: var(--card); border-radius: 20px 20px 0 0;
+  padding: 8px 16px calc(20px + env(safe-area-inset-bottom));
+  max-height: 86vh; overflow: auto; box-shadow: var(--shadow-lg);
+}
+.sheet-grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 6px auto 14px; }
+.sheet h3 { margin: 0 0 4px; color: var(--navy); font-size: 19px; font-weight: 700; }
+.sheet .sub { margin: 0 0 16px; color: var(--muted); font-size: 13px; font-weight: 500; }
+
+.pick { display: grid; gap: 10px; }
+.pick-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--card);
+}
+.pick-row[aria-current="true"] { border-color: var(--orange); background: rgba(245, 146, 0, .06); }
+.pick-ic { font-size: 22px; flex: none; }
+.pick-t { font-weight: 700; color: var(--navy); font-size: 15px; }
+.pick-b { color: var(--muted); font-size: 12.5px; font-weight: 500; margin-top: 2px; }
+
+.edit-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 14px; margin-bottom: 9px;
+}
+.edit-n { flex: 1; min-width: 0; font-weight: 600; font-size: 14px; color: var(--navy);
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icb { width: 34px; height: 34px; border-radius: 9px; border: 1.5px solid var(--line);
+       display: grid; place-items: center; font-size: 15px; color: var(--muted); flex: none; }
+.icb:disabled { opacity: .3; cursor: default; }
+.icb-rm { color: #b23b3b; }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: 92px; z-index: 60;
+  background: var(--navy); color: #fff; padding: 11px 18px; border-radius: 999px;
+  font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lg);
+}
+
+/* ============================================================
+   KIOSK
+   ============================================================ */
+html.k .wrap { max-width: 1040px; padding: 0 40px 64px; }
+html.k .top { padding: 26px 40px; position: sticky; top: 0; z-index: 30; }
+html.k .brand-mark { font-size: 30px; }
+html.k .brand-sub { font-size: 15px; }
+html.k .top .btn { padding: 13px 24px; font-size: 16px; }
+
+html.k .lede { padding: 44px 0 30px; }
+html.k .lede h1 { font-size: 46px; }
+html.k .lede p { font-size: 19px; }
+
+html.k .ideas { grid-template-columns: 1fr 1fr; }
+html.k .idea-img { height: 190px; }
+html.k .idea-body { padding: 22px 24px 24px; gap: 8px; }
+html.k .idea-icon { top: 160px; right: 22px; width: 58px; height: 58px; font-size: 27px; }
+html.k .idea-t { font-size: 25px; }
+html.k .idea-bl { font-size: 15.5px; line-height: 1.5; }
+html.k .idea-meta { font-size: 14px; padding-top: 4px; }
+html.k .tag-pop { font-size: 12px; padding: 4px 11px; }
+
+html.k .plan-head { padding: 34px 0 24px; }
+html.k .plan-head h2 { font-size: 40px; }
+html.k .plan-head p { font-size: 17px; line-height: 1.5; }
+html.k .stops { gap: 16px; }
+html.k .stop { grid-template-columns: 220px 1fr; }
+html.k .stop-img { width: 220px; }
+html.k .stop-body { padding: 22px 26px; gap: 7px; }
+html.k .stop-time { font-size: 14px; }
+html.k .stop-n { font-size: 23px; }
+html.k .stop-note { font-size: 16px; line-height: 1.5; }
+html.k .stop-sub { font-size: 14px; }
+html.k .stop-act { margin-top: 8px; }
+html.k .stop-act .btn { padding: 10px 18px; font-size: 14px; }
+
+html.k .qr { margin-top: 26px; padding: 26px 30px; }
+html.k .qr-svg { width: 168px; height: 168px; padding: 10px; }
+html.k .qr-t { font-size: 22px; }
+html.k .qr-p { font-size: 15px; line-height: 1.5; }
+html.k .bar, html.k .sheet, html.k .scrim { display: none !important; }
+
+/* ============================================================
+   HP
+   ============================================================ */
+html.m .wrap { max-width: 560px; padding: 0 16px 108px; }
+html.m .top { padding: 14px 16px; position: sticky; top: 0; z-index: 30; }
+html.m .brand-mark { font-size: 19px; }
+html.m .brand-sub { font-size: 11px; }
+html.m .top .btn { padding: 8px 14px; font-size: 13px; }
+
+html.m .lede { padding: 22px 0 16px; }
+html.m .lede h1 { font-size: 26px; }
+html.m .lede p { font-size: 14.5px; }
+
+html.m .ideas { grid-template-columns: 1fr; gap: 12px; }
+html.m .idea-img { height: 128px; }
+html.m .idea-body { padding: 14px 16px 16px; }
+html.m .idea-icon { top: 100px; right: 14px; width: 44px; height: 44px; font-size: 21px; }
+html.m .idea-t { font-size: 18px; }
+html.m .idea-bl { font-size: 13.5px; line-height: 1.45; }
+html.m .idea-meta { font-size: 12.5px; }
+html.m .tag-pop { font-size: 11px; padding: 3px 9px; }
+
+html.m .plan-head { padding: 18px 0 14px; flex-direction: column; gap: 12px; }
+html.m .plan-head h2 { font-size: 25px; }
+html.m .plan-head p { font-size: 14px; line-height: 1.5; }
+html.m .stops { gap: 12px; }
+html.m .stop { grid-template-columns: 104px 1fr; }
+html.m .stop-img { width: 104px; }
+html.m .stop-body { padding: 13px 14px; gap: 5px; }
+html.m .stop-time { font-size: 12px; }
+html.m .stop-n { font-size: 16px; line-height: 1.25; }
+html.m .stop-note { font-size: 13.5px; line-height: 1.45; }
+html.m .stop-sub { font-size: 12px; }
+html.m .stop-act { margin-top: 6px; }
+html.m .stop-act .btn { padding: 7px 13px; font-size: 12.5px; }
+html.m .qr { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <button id="b-home" class="brand" type="button" style="gap:12px">
+      <span class="brand-mark">sentosa</span>
+      <span class="brand-sub">Smart Itinerary</span>
+    </button>
+  </div>
+  <div class="top-act">
+    <span class="btn btn-ghost" id="origin-chip">Beach Station Visitor Centre</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="screen-ideas"></section>
+  <section id="screen-plan" class="hide"></section>
+</main>
+
+<nav class="bar hide" id="bar">
+  <button class="btn" id="b-edit" type="button">Edit stops</button>
+  <button class="btn btn-primary" id="b-change" type="button">Change plan</button>
+  <button class="btn" id="b-share" type="button">Share</button>
+</nav>
+
+<script>window.CATALOG={"generated":"2026-11-17","source":"KM demo Sentosa (37 entry) untuk tempatnya, plus tempat makan di pulau dari KM Village Hotel Sentosa. Seluruh perhentian ada di Pulau Sentosa.","origin":{"name":"Beach Station Visitor Centre"},"plans":{"half-day":{"t":"Half Day on Sentosa","bl":"Five hours, all on foot from Beach Station: the bazaar, the sensory walk, the beach, then the night show.","icon":"⛱","start":660,"hrs":5,"on":true,"w":5,"cover":"central-beach-bazaar","s":[["central-beach-bazaar",45,"Street food stalls, the Wings of Time ticket desk and the Sentosa shop"],["sensoryscape",60,"The planted walkway between Beach Station and Imbiah, best in late light"],["siloso-beach",90,"Sentosa's liveliest beach, two minutes from the station"],["coastes-restaurant-island",75,"Tables on the sand, wood-fired pizza and a cold drink"],["wings-time-fireworks",40,"Water jets, lasers and fireworks over the sea at 7.40 pm"]],"alt":["palawan-beach","fort-siloso-fort","madame-tussauds-imbiah","good-old-days","cable-car"]},"beach-day":{"t":"Beach Day","bl":"All three beaches end to end, a beach club in the middle, and the sun going down over the water.","icon":"🌅","start":720,"hrs":7,"on":true,"w":5,"cover":"siloso-beach","s":[["siloso-beach",90,"Water sports, beach volleyball and the busiest stretch of sand"],["tipsy-unicorn-beach",90,"Day beds, a pool and cocktails right on Siloso"],["palawan-beach",75,"The family beach, with the suspension bridge to the southernmost point of continental Asia"],["tanjong-beach",75,"The quiet one at the far end, best for a long slow afternoon"],["foc-by-beach",90,"Spanish beach club for paella and sangria as the light goes"]],"alt":["coastes-restaurant-island","palawan-activities","royal-albatross-sunset","central-beach-bazaar","albatross-speedboat-southern"]},"family-day":{"t":"Family Day","bl":"Built for children: a city they run themselves, chocolate, a waterpark and the beach to finish.","icon":"🧒","start":600,"hrs":8,"on":true,"w":5,"cover":"kidzania","s":[["kidzania",150,"An indoor city where children do the jobs, from pilot to firefighter"],["hershey-s-chocolate",75,"Make your own chocolate bar, then the ride"],["adventure-cove-waterpark",180,"Slides, a lazy river and a reef you can snorkel"],["good-old-days",60,"Halal certified, quick, and easy with children"],["palawan-beach",75,"Finish on the sand with the suspension bridge"]],"alt":["dopamine-land","palawan-activities","oceanarium","madame-tussauds-imbiah","sensoryscape"]},"thrills":{"t":"Thrills & Heights","bl":"Everything that drops, flies or hangs: the luge, the ropes course, the wind tunnel and an open-air gondola.","icon":"🎢","start":660,"hrs":7,"on":true,"w":4,"cover":"skyline-luge","s":[["skyline-luge",90,"Four downhill tracks to Siloso Beach, Skyride back up"],["mega-adventure-park",90,"The zip line to the beach, plus the ropes course and the jump"],["altitudex-indoor-skydiving",75,"A vertical wind tunnel, no experience needed"],["skyhelix",45,"Open-air gondola, the highest view on the island"],["cable-car",60,"Across to Mount Faber and back as the island lights up"]],"alt":["fort-siloso-fort","albatross-speedboat-southern","siloso-beach","central-beach-bazaar","tipsy-unicorn-beach"]},"island-classics":{"t":"Island Classics","bl":"The big ones, in the order that keeps the queues short: the theme park, the aquarium, the wax museum, the night show.","icon":"🎡","start":600,"hrs":10,"on":true,"w":4,"cover":"universal-studios","s":[["universal-studios",300,"Minion Land, the Battlestar coasters and the parade"],["oceanarium",120,"The expanded aquarium, 22 zones and the open ocean habitat"],["madame-tussauds-imbiah",90,"Wax figures plus the Spirit of Singapore boat ride"],["central-beach-bazaar",45,"Dinner at the stalls before the show"],["wings-time-fireworks",40,"The 8.40 pm show, 20 minutes over the water"]],"alt":["adventure-cove-waterpark","skyline-luge","sensoryscape","ocean-restaurant","siloso-beach"]},"eat-sentosa":{"t":"Eat Around Sentosa","bl":"Lunch on the sand, a Michelin-starred chef in the afternoon, and dinner under the aquarium glass.","icon":"🍜","start":720,"hrs":9,"on":true,"w":4,"cover":"good-old-days","s":[["good-old-days",60,"Halal certified local plates, right by Beach Station"],["coastes-restaurant-island",75,"Lunch with your feet in the sand"],["central-beach-bazaar",45,"Afternoon snacks and the fountain show"],["imamura-restaurant",90,"Kaiseki from a Michelin-starred chef"],["ocean-restaurant",90,"Dinner against the aquarium glass"]],"alt":["casserole-restaurant","foc-by-beach","tipsy-unicorn-beach","royal-albatross-sunset","jasons-gourmet-grocer"]}},"stops":{"adventure-cove-waterpark":{"n":"Adventure Cove Waterpark","c":"Ride","far":"","d":"Adventure Cove Waterpark at Resorts World Sentosa has high-speed water slides, a lazy river and snorkelling with tropical fish. Take Sentosa Express to Resorts World Station.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFKJT8A1BCM5144ZWTTEEQ-1794742284639-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Adventure+Cove+Waterpark%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"albatross-speedboat-southern":{"n":"Albatross Speedboat and Southern Islands","c":"Ride","far":"","d":"Albatross Speedboat Adventures is a 60-minute speedboat ride to explore Singapore's Southern Islands at sunset (standard ticket S$45).","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RMB-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Albatross+Speedboat+and+Southern+Islands%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"altitudex-indoor-skydiving":{"n":"AltitudeX Indoor Skydiving","c":"Ride","far":"","d":"AltitudeX at Siloso Beach is one of the world's largest themed vertical wind tunnels for indoor skydiving, 6 storeys tall. No experience needed; instructors brief you first.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RM8-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=AltitudeX+Indoor+Skydiving%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"casserole-restaurant":{"n":"Casserole Restaurant Sentosa (Vegetarian/Vegan Friendly)","c":"Food & drink","far":"","d":"This restaurant is ideal for those looking for meat alternatives, vegetarians, or vegans, prominently located and offering a menu inspired by Asian and Western cuisines.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-466-1779315703791.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Casserole%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"central-beach-bazaar":{"n":"Central Beach Bazaar","c":"Food & drink","far":"","d":"Located at the heart of Sentosa's beaches, Central Beach Bazaar is a new attraction that offers a day-to-night carnival beach experience.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/01e7911d4d2e4ae2e1456bc451202970/entry-270-1781101835872.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Central+Beach+Bazaar%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"coastes-restaurant-island":{"n":"Coastes Restaurant at Sentosa Island","c":"Beach","far":"","d":"Coastes is an iconic restaurant located on Sentosa Island, offering a family-friendly dining experience as part of Singapore's diverse dining scene, which ranges from food centers to fine…","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-458-1779315539206.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Coastes%2C+Siloso+Beach%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"dopamine-land":{"n":"Dopamine Land Singapore","c":"Attraction","far":"","d":"Dopamine Land is a multisensory experience that combines media, technology and play in one place.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/01e7911d4d2e4ae2e1456bc451202970/entry-271-1781101928726.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Dopamine+Land%2C+Resorts+World+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"foc-by-beach":{"n":"FOC by the Beach Sentosa","c":"Beach","far":"","d":"Lean back, relax, and savor delicious Mediterranean food with a refreshing sangria at this beachfront restaurant.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-464-1779315672437.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=FOC+by+the+Beach%2C+Siloso+Beach%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"fort-siloso-fort":{"n":"Fort Siloso and Fort Siloso Skywalk","c":"Attraction","far":"","d":"Fort Siloso is Singapore's only preserved coastal fort, with six interactive zones about the 1940s and World War II at the Surrender Chambers.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RM7-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Fort+Siloso+and+Fort+Siloso+Skywalk%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"good-old-days":{"n":"Good Old Days Food Court Sentosa (Halal Certified)","c":"Food & drink","far":"","d":"Enjoy delicious laksa, Hokkien mee, or other exquisite Singaporean dishes at this Halal-certified food court.","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/903d1cb9-5595-4998-b491-0d87b54137fa/images/image_1779253034459_2dsnwm.svg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Good+Old+Days+Food+Court%2C+Beach+Station%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"hershey-s-chocolate":{"n":"Hershey’s Chocolate World Singapore","c":"Attraction","far":"","d":"Stop by Hershey’s Chocolate World to pick up sweet treats like Hershey’s, Reese’s, and Twizzlers.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-461-1779315599091.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Hershey%27s+Chocolate+World%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"imamura-restaurant":{"n":"IMAMURA Restaurant Sentosa (Michelin-starred Chef)","c":"Food & drink","far":"","d":"This restaurant, part of a chain overseen by Michelin-starred chef Hirofumi Imamura, offers seasonal menus to stimulate your senses.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-468-1779315759972.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=IMAMURA%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"jasons-gourmet-grocer":{"n":"Jasons The Gourmet Grocer at Sentosa","c":"Food & drink","far":"","d":"Shop for groceries and premium brands at Jasons, a haven for those seeking excellent food and ingredients.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-462-1779315618780.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Jasons+Deli%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"kidzania":{"n":"KidZania Singapore","c":"Attraction","far":"","d":"KidZania Singapore at Palawan Beach is a kid-sized indoor city where children aged 4 to 14 role-play real jobs and earn kidZos currency. A great rainy-day option.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RM9-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=KidZania+Singapore%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"madame-tussauds-imbiah":{"n":"Madame Tussauds and Imbiah Lookout Attractions","c":"Ride","far":"","d":"Imbiah Lookout (Sentosa Express to Imbiah Station) groups several attractions: Madame Tussauds Singapore with celebrity and Marvel figures, Sentosa 4D AdventureLand motion-simulator rides,…","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RM5-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Madame+Tussauds+and+Imbiah+Lookout+Attractions%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"mega-adventure-park":{"n":"Mega Adventure Park","c":"Ride","far":"","d":"Mega Adventure Park on Imbiah Hill has MegaZip, a 75m-high zipline reaching 60km/h that lands on Siloso Beach, plus MegaBounce trampolines and climbing.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RM1-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Mega+Adventure+Park%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"ocean-restaurant":{"n":"Ocean Restaurant Sentosa (Underwater Dining)","c":"Food & drink","far":"","d":"Experience deep-sea dining where you can enjoy your meal while observing majestic marine animals like sharks and manta rays.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-470-1779311267580.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Ocean+Restaurant%2C+Resorts+World+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"palawan-beach":{"n":"Palawan Beach","c":"Beach","far":"","d":"Palawan Beach is about 5 minutes from Beach Station by Beach Shuttle — the best beach for families.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFKJT8A1BCM5144ZWTTEEK-1794742284639-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Palawan+Beach%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"royal-albatross-sunset":{"n":"Royal Albatross Sunset Dinner Cruise","c":"Food & drink","far":"","d":"Title: Royal Albatross Sunset Dinner Cruise","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-261-1779311516183.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Royal+Albatross%2C+Resorts+World+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"sensoryscape":{"n":"Sentosa Sensoryscape","c":"Attraction","far":"","d":"Sentosa Sensoryscape is a free garden walkway in the heart of the island linking Resorts World Sentosa to the beaches. Six themed gardens blend nature, art and technology.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RM6-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Sentosa+Sensoryscape%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"siloso-beach":{"n":"Siloso Beach","c":"Beach","far":"2 min walk from Beach Station","d":"Siloso Beach is a 2-minute walk from Beach Station — Sentosa's liveliest beach. Try water sports at Ola Beach Club (JetPack, stand-up paddleboard), kayaking, beach volleyball, and beach…","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFKJT8A1BCM5144ZWTTEEJ-1794742284639-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Siloso+Beach%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"cable-car":{"n":"Singapore Cable Car","c":"Food & drink","far":"","d":"The Singapore Cable Car Sky Network has two lines. The Mount Faber Line flies from Mount Faber Peak and HarbourFront to Sentosa (S$33 adult, S$22 child), reaching 120 metres above sea…","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RM3-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Singapore+Cable+Car%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"oceanarium":{"n":"Singapore Oceanarium","c":"Attraction","far":"","d":"Singapore Oceanarium at Resorts World Sentosa has 22 immersive zones with marine animals, live habitats and digital exhibits about the ocean. Adult admission (peak) is S$55.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFKJT8A1BCM5144ZWTTEEP-1794742284639-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Singapore+Oceanarium%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"skyhelix":{"n":"SkyHelix Sentosa","c":"Ride","far":"","d":"SkyHelix Sentosa is Singapore's highest open-air panoramic ride, lifting you 79 metres above sea level with 360-degree views of Sentosa and the Southern Islands. Standard ticket S$20.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RM2-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=SkyHelix+Sentosa%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"skyline-luge":{"n":"Skyline Luge Singapore","c":"Ride","far":"3 min walk from Beach Station","d":"Skyline Luge Singapore at Imbiah Lookout has four downhill luge tracks to Siloso Beach, plus the Skyride chairlift back up with sea views. At night the tracks light up in colour.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFKJT8A1BCM5144ZWTTEER-1794742284639-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Skyline+Luge+Singapore%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"tanjong-beach":{"n":"Tanjong Beach","c":"Food & drink","far":"","d":"Tanjong Beach is the quietest of Sentosa's three beaches, about 15 minutes' walk or a short Beach Shuttle ride from Beach Station.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFKJT8A1BCM5144ZWTTEEM-1794742284639-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Tanjong+Beach%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"palawan-activities":{"n":"The Palawan at Sentosa Activities","c":"On the island","far":"","d":"The Palawan @ Sentosa at Palawan Beach is a family beach playground: HydroDash, Singapore's only floating aqua park; HyperDrive, Asia's first indoor gamified electric go-kart circuit;…","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RMA-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=The+Palawan+at+Sentosa+Activities%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"tipsy-unicorn-beach":{"n":"Tipsy Unicorn Beach Club Sentosa","c":"Food & drink","far":"","d":"This bar and beach club, decorated in pastel colors, serves delicious cocktails, making it an ideal place to relax.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-463-1779315645869.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Tipsy+Unicorn+Beach+Club%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"fnb"},"universal-studios":{"n":"Universal Studios Singapore","c":"Attraction","far":"","d":"Universal Studios Singapore at Resorts World Sentosa has blockbuster rides across themed zones, including the new Minion Land.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFKJT8A1BCM5144ZWTTEEN-1794742284639-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Universal+Studios+Singapore%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"},"wings-time-fireworks":{"n":"Wings of Time Fireworks Symphony","c":"Attraction","far":"3 min walk from Beach Station","d":"Wings of Time is an award-winning night show on Siloso Beach with water jets, lasers, fire and fireworks over the sea. Shows run nightly at 7:40 PM and 8:40 PM and last about 20 minutes.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/1b8d3302d95f4c4170f8ce4854e988a7/doc-01M7FFQ81YP8E4F58TTWER1RM4-1794742404563-1.jpg","map":"https://www.google.com/maps/dir/?api=1&origin=Beach+Station%2C+Sentosa%2C+Singapore&destination=Wings+of+Time+Fireworks+Symphony%2C+Sentosa%2C+Singapore&travelmode=walking","qr":"https://www.sentosa.com.sg","src":"demo"}}};</script>
+<script>/* ============================================================
+   ARC Smart Itinerary — shared plan catalogue, demo popularity
+   and recommendation ranking.
+
+   Loaded by BOTH the kiosk (index.html) and the guest phone page
+   (mobile.html) so the two never drift apart.
+
+   There is no backend. Selection counts live in this browser's
+   localStorage only: a phone and a kiosk do not share them, and
+   they are NOT hotel-wide analytics. See README notes.
+   ============================================================ */
+(function (root) {
+  "use strict";
+
+  var CFG_KEY = "arcPlanCfg.v1";   /* per-plan on / weight / label override */
+  var HIT_KEY = "arcPlanHits.v1";  /* explicit selections, by plan id        */
+
+  var CAT = { plans: {}, stops: {}, ids: [], loaded: false };
+
+  /* ---------- storage (never throws) ---------------------- */
+  function get(k, fb) {
+    try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; }
+    catch (e) { return fb; }
+  }
+  function set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  /* ---------- catalogue ----------------------------------- */
+  function adopt(j) {
+    CAT.plans = (j && j.plans) || {};
+    CAT.stops = (j && j.stops) || {};
+    CAT.ids = Object.keys(CAT.plans);
+    CAT.loaded = CAT.ids.length > 0;
+    return CAT;
+  }
+  function load(url) {
+    return fetch(url || "catalog.json")
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(adopt);
+  }
+  function plan(id) { return CAT.plans[id] || null; }
+  function stop(id) { return CAT.stops[id] || null; }
+  function exists(id) { return !!CAT.plans[id]; }
+
+  /* ---------- demo configuration -------------------------- */
+  /* Catalogue ships the defaults. Saved config may override
+     `on`, `w` and the display label — nothing else, so a catalogue
+     update can never be silently overwritten by stale localStorage. */
+  function cfg() {
+    var saved = get(CFG_KEY, null), by = {};
+    if (saved && typeof saved === "object" && !Array.isArray(saved)) by = saved;
+    return CAT.ids.map(function (id) {
+      var p = CAT.plans[id], o = by[id] || {};
+      return {
+        id: id,
+        label: typeof o.label === "string" && o.label.trim() ? o.label.trim() : p.t,
+        title: p.t,
+        on: typeof o.on === "boolean" ? o.on : !!p.on,
+        w: Number.isFinite(+o.w) ? Math.max(1, Math.min(20, +o.w)) : (+p.w || 1)
+      };
+    });
+  }
+  function cfgSave(list) {
+    var o = {};
+    (list || []).forEach(function (s) {
+      if (!s || !s.id || !CAT.plans[s.id]) return;
+      o[s.id] = { on: !!s.on, w: Math.max(1, Math.min(20, +s.w || 1)) };
+      if (s.label && s.label !== CAT.plans[s.id].t) o[s.id].label = String(s.label).slice(0, 60);
+    });
+    set(CFG_KEY, o);
+  }
+  function cfgReset() { try { localStorage.removeItem(CFG_KEY); } catch (e) {} }
+
+  /* ---------- demo popularity ----------------------------- */
+  /* Incremented ONLY on an explicit guest choice:
+       - tapping a named itinerary shortcut on the kiosk
+       - choosing a plan from "Change plan" on the phone
+     Never on page open, reload, restore or share.            */
+  function hits() { var h = get(HIT_KEY, {}); return (h && typeof h === "object") ? h : {}; }
+  function hit(id) {
+    if (!exists(id)) return 0;
+    var h = hits(); h[id] = (h[id] || 0) + 1; set(HIT_KEY, h); return h[id];
+  }
+  function hitsReset() { set(HIT_KEY, {}); }
+
+  /* ---------- ranking + rotation --------------------------- */
+  /* 1. eligible  = enabled, present in the catalogue, not the active plan
+     2. pop slots = highest selection count; ties by weight, then random
+     3. rest      = weighted random draw, no duplicates
+     4. no counts = weight order, i.e. the configured default ranking   */
+  function pick(opt) {
+    opt = opt || {};
+    var n = opt.n || 4,
+        pop = (opt.pop == null ? 2 : opt.pop),
+        skip = opt.exclude,
+        rnd = opt.rnd || Math.random,
+        only = opt.filter;
+
+    var poolAll = cfg().filter(function (s) {
+      return s.on && exists(s.id) && s.id !== skip && (!only || only(CAT.plans[s.id], s.id));
+    });
+    if (!poolAll.length) return [];
+
+    var H = hits(), out = [], used = {};
+    var seeded = poolAll.some(function (s) { return (H[s.id] || 0) > 0; });
+
+    var head = poolAll.slice().sort(seeded
+      ? function (a, b) { return (H[b.id] || 0) - (H[a.id] || 0) || b.w - a.w || (rnd() - 0.5); }
+      : function (a, b) { return b.w - a.w || (a.id < b.id ? -1 : 1); });
+
+    head.slice(0, Math.min(pop, n)).forEach(function (s) { out.push(s); used[s.id] = 1; });
+
+    var rest = poolAll.filter(function (s) { return !used[s.id]; });
+    while (out.length < n && rest.length) {
+      var tot = 0, i = 0;
+      rest.forEach(function (s) { tot += Math.max(1, s.w); });
+      var r = rnd() * tot;
+      for (; i < rest.length; i++) { r -= Math.max(1, rest[i].w); if (r <= 0) break; }
+      if (i >= rest.length) i = rest.length - 1;
+      var p = rest.splice(i, 1)[0];
+      if (!used[p.id]) { out.push(p); used[p.id] = 1; }
+    }
+    return out;
+  }
+
+  /* which of the returned entries earned their slot from counts */
+  function isPopular(id) { return (hits()[id] || 0) > 0; }
+
+  root.ARC = {
+    CFG_KEY: CFG_KEY, HIT_KEY: HIT_KEY,
+    catalogue: CAT, load: load, adopt: adopt,
+    plan: plan, stop: stop, exists: exists,
+    cfg: cfg, cfgSave: cfgSave, cfgReset: cfgReset,
+    hits: hits, hit: hit, hitsReset: hitsReset,
+    pick: pick, isPopular: isPopular
+  };
+})(typeof window !== "undefined" ? window : this);
+</script>
+<script>/* ============================================================
+   QR encoder — byte mode, error correction level M.
+
+   Port tanpa DOM dari qrcodejs 1.0.0 (Sangmin Shim, lisensi MIT),
+   yang sendiri turunan dari kazuhikoarase/qrcode-generator.
+   Yang dibuang: penggambar canvas, svg-DOM, tabel, deteksi Android.
+   Yang disisakan: model QR, GF(256), blok Reed-Solomon, masking.
+
+   Ditanam di berkas HTML karena QR harus memuat URL halaman itu
+   sendiri (location.href), yang baru diketahui setelah diunggah ke S3.
+   Dibangkitkan di sisi klien, jadi berkasnya bisa diunggah ke mana
+   saja tanpa perlu dibangkitkan ulang.
+   ============================================================ */
+(function (root) {
+  "use strict";
+
+  var MODE_BYTE = 4;
+  var EC_M = 0;                    /* indeks level M di tabel RS */
+
+  /* ---------- GF(256) ---------- */
+  var EXP = new Array(256), LOG = new Array(256);
+  (function () {
+    for (var i = 0; i < 8; i++) EXP[i] = 1 << i;
+    for (i = 8; i < 256; i++) EXP[i] = EXP[i - 4] ^ EXP[i - 5] ^ EXP[i - 6] ^ EXP[i - 8];
+    for (i = 0; i < 255; i++) LOG[EXP[i]] = i;
+  })();
+  function glog(n) { if (n < 1) throw new Error("glog(" + n + ")"); return LOG[n]; }
+  function gexp(n) { while (n < 0) n += 255; while (n >= 256) n -= 255; return EXP[n]; }
+
+  function Poly(num, shift) {
+    var off = 0;
+    while (off < num.length && num[off] === 0) off++;
+    this.num = new Array(num.length - off + shift);
+    for (var i = 0; i < num.length - off; i++) this.num[i] = num[i + off];
+  }
+  Poly.prototype = {
+    get: function (i) { return this.num[i]; },
+    len: function () { return this.num.length; },
+    multiply: function (e) {
+      var n = new Array(this.len() + e.len() - 1).fill(0);
+      for (var i = 0; i < this.len(); i++)
+        for (var j = 0; j < e.len(); j++)
+          n[i + j] ^= gexp(glog(this.get(i)) + glog(e.get(j)));
+      return new Poly(n, 0);
+    },
+    mod: function (e) {
+      if (this.len() - e.len() < 0) return this;
+      var ratio = glog(this.get(0)) - glog(e.get(0));
+      var n = this.num.slice();
+      for (var i = 0; i < e.len(); i++) n[i] ^= gexp(glog(e.get(i)) + ratio);
+      return new Poly(n, 0).mod(e);
+    }
+  };
+
+  function ecPoly(len) {
+    var p = new Poly([1], 0);
+    for (var i = 0; i < len; i++) p = p.multiply(new Poly([1, gexp(i)], 0));
+    return p;
+  }
+
+  /* ---------- tabel blok RS: [jumlah, total codeword, data codeword] ---------- */
+  /* Hanya baris level M (indeks 4*(ver-1)+1 pada tabel asli), versi 1..20. */
+  var RS_M = [
+    [1, 26, 16], [1, 44, 28], [1, 70, 44], [2, 50, 32], [2, 67, 43],
+    [4, 43, 27], [4, 49, 31], [2, 60, 38, 2, 61, 39], [3, 58, 36, 2, 59, 37],
+    [4, 69, 43, 1, 70, 44], [1, 80, 50, 4, 81, 51], [6, 58, 36, 2, 59, 37],
+    [8, 59, 37, 1, 60, 38], [4, 64, 40, 5, 65, 41], [5, 65, 41, 5, 66, 42],
+    [7, 73, 45, 3, 74, 46], [10, 74, 46, 1, 75, 47], [9, 69, 43, 4, 70, 44],
+    [3, 70, 44, 11, 71, 45], [3, 67, 41, 13, 68, 42]
+  ];
+  /* kapasitas byte-mode level M per versi, untuk memilih versi */
+  var CAP_M = [14, 26, 42, 62, 84, 106, 122, 152, 180, 213, 251, 287, 331, 362,
+               412, 450, 504, 560, 624, 666];
+
+  function rsBlocks(ver) {
+    var t = RS_M[ver - 1], out = [];
+    for (var i = 0; i < t.length; i += 3)
+      for (var k = 0; k < t[i]; k++) out.push({ total: t[i + 1], data: t[i + 2] });
+    return out;
+  }
+
+  var ALIGN = [
+    [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34], [6, 22, 38], [6, 24, 42],
+    [6, 26, 46], [6, 28, 50], [6, 30, 54], [6, 32, 58], [6, 34, 62],
+    [6, 26, 46, 66], [6, 26, 48, 70], [6, 26, 50, 74], [6, 30, 54, 78],
+    [6, 30, 56, 82], [6, 30, 58, 86], [6, 34, 62, 90]
+  ];
+
+  var G15 = 0x537, G18 = 0x1f25, G15_MASK = 0x5412;
+  function bchDigit(d) { var n = 0; while (d !== 0) { n++; d >>>= 1; } return n; }
+  function bchTypeInfo(d) {
+    var v = d << 10;
+    while (bchDigit(v) - bchDigit(G15) >= 0) v ^= G15 << (bchDigit(v) - bchDigit(G15));
+    return ((d << 10) | v) ^ G15_MASK;
+  }
+  function bchTypeNumber(d) {
+    var v = d << 12;
+    while (bchDigit(v) - bchDigit(G18) >= 0) v ^= G18 << (bchDigit(v) - bchDigit(G18));
+    return (d << 12) | v;
+  }
+
+  function maskFn(p, i, j) {
+    switch (p) {
+      case 0: return (i + j) % 2 === 0;
+      case 1: return i % 2 === 0;
+      case 2: return j % 3 === 0;
+      case 3: return (i + j) % 3 === 0;
+      case 4: return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 === 0;
+      case 5: return (i * j) % 2 + (i * j) % 3 === 0;
+      case 6: return ((i * j) % 2 + (i * j) % 3) % 2 === 0;
+      case 7: return ((i * j) % 3 + (i + j) % 2) % 2 === 0;
+    }
+    throw new Error("mask " + p);
+  }
+
+  /* ---------- bit buffer ---------- */
+  function Buf() { this.buffer = []; this.length = 0; }
+  Buf.prototype = {
+    putBit: function (b) {
+      var i = Math.floor(this.length / 8);
+      if (this.buffer.length <= i) this.buffer.push(0);
+      if (b) this.buffer[i] |= 0x80 >>> (this.length % 8);
+      this.length++;
+    },
+    put: function (n, len) { for (var i = 0; i < len; i++) this.putBit(((n >>> (len - i - 1)) & 1) === 1); }
+  };
+
+  function toBytes(str) {
+    var out = [], s = unescape(encodeURIComponent(str));
+    for (var i = 0; i < s.length; i++) out.push(s.charCodeAt(i) & 0xff);
+    return out;
+  }
+
+  /* ---------- model ---------- */
+  function Model(ver, data) {
+    this.ver = ver;
+    this.n = ver * 4 + 17;
+    this.data = data;
+    this.modules = null;
+  }
+
+  Model.prototype.make = function (test, mask) {
+    var n = this.n, i, j;
+    this.modules = [];
+    for (i = 0; i < n; i++) { this.modules.push(new Array(n).fill(null)); }
+
+    this.probe(0, 0); this.probe(n - 7, 0); this.probe(0, n - 7);
+    this.alignPatterns();
+    this.timing();
+    this.typeInfo(test, mask);
+    if (this.ver >= 7) this.typeNumber(test);
+    if (this.cache == null) this.cache = createData(this.ver, this.data);
+    this.map(this.cache, mask);
+  };
+
+  Model.prototype.probe = function (row, col) {
+    for (var r = -1; r <= 7; r++) {
+      if (row + r <= -1 || this.n <= row + r) continue;
+      for (var c = -1; c <= 7; c++) {
+        if (col + c <= -1 || this.n <= col + c) continue;
+        this.modules[row + r][col + c] =
+          (r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
+          (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
+          (r >= 2 && r <= 4 && c >= 2 && c <= 4);
+      }
+    }
+  };
+
+  Model.prototype.timing = function () {
+    for (var i = 8; i < this.n - 8; i++) {
+      if (this.modules[i][6] == null) this.modules[i][6] = i % 2 === 0;
+      if (this.modules[6][i] == null) this.modules[6][i] = i % 2 === 0;
+    }
+  };
+
+  Model.prototype.alignPatterns = function () {
+    var pos = ALIGN[this.ver - 1];
+    for (var i = 0; i < pos.length; i++) for (var j = 0; j < pos.length; j++) {
+      var row = pos[i], col = pos[j];
+      if (this.modules[row][col] != null) continue;
+      for (var r = -2; r <= 2; r++) for (var c = -2; c <= 2; c++)
+        this.modules[row + r][col + c] =
+          r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0);
+    }
+  };
+
+  Model.prototype.typeNumber = function (test) {
+    var bits = bchTypeNumber(this.ver), i, mod;
+    for (i = 0; i < 18; i++) {
+      mod = !test && ((bits >> i) & 1) === 1;
+      this.modules[Math.floor(i / 3)][i % 3 + this.n - 8 - 3] = mod;
+    }
+    for (i = 0; i < 18; i++) {
+      mod = !test && ((bits >> i) & 1) === 1;
+      this.modules[i % 3 + this.n - 8 - 3][Math.floor(i / 3)] = mod;
+    }
+  };
+
+  Model.prototype.typeInfo = function (test, mask) {
+    var data = (EC_M << 3) | mask, bits = bchTypeInfo(data), i, mod;
+    for (i = 0; i < 15; i++) {
+      mod = !test && ((bits >> i) & 1) === 1;
+      if (i < 6) this.modules[i][8] = mod;
+      else if (i < 8) this.modules[i + 1][8] = mod;
+      else this.modules[this.n - 15 + i][8] = mod;
+    }
+    for (i = 0; i < 15; i++) {
+      mod = !test && ((bits >> i) & 1) === 1;
+      if (i < 8) this.modules[8][this.n - i - 1] = mod;
+      else if (i < 9) this.modules[8][15 - i - 1 + 1] = mod;
+      else this.modules[8][15 - i - 1] = mod;
+    }
+    this.modules[this.n - 8][8] = !test;
+  };
+
+  Model.prototype.map = function (data, mask) {
+    var inc = -1, row = this.n - 1, bitIndex = 7, byteIndex = 0;
+    for (var col = this.n - 1; col > 0; col -= 2) {
+      if (col === 6) col--;
+      for (;;) {
+        for (var c = 0; c < 2; c++) {
+          if (this.modules[row][col - c] == null) {
+            var dark = false;
+            if (byteIndex < data.length) dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
+            if (maskFn(mask, row, col - c)) dark = !dark;
+            this.modules[row][col - c] = dark;
+            bitIndex--;
+            if (bitIndex === -1) { byteIndex++; bitIndex = 7; }
+          }
+        }
+        row += inc;
+        if (row < 0 || this.n <= row) { row -= inc; inc = -inc; break; }
+      }
+    }
+  };
+
+  function createData(ver, bytes) {
+    var blocks = rsBlocks(ver), buf = new Buf(), i;
+    buf.put(MODE_BYTE, 4);
+    buf.put(bytes.length, ver < 10 ? 8 : 16);
+    for (i = 0; i < bytes.length; i++) buf.put(bytes[i], 8);
+
+    var totalData = 0;
+    for (i = 0; i < blocks.length; i++) totalData += blocks[i].data;
+    if (buf.length > totalData * 8) throw new Error("data terlalu panjang");
+    if (buf.length + 4 <= totalData * 8) buf.put(0, 4);
+    while (buf.length % 8 !== 0) buf.putBit(false);
+    for (;;) {
+      if (buf.length >= totalData * 8) break;
+      buf.put(0xec, 8);
+      if (buf.length >= totalData * 8) break;
+      buf.put(0x11, 8);
+    }
+
+    var off = 0, maxD = 0, maxE = 0, dcs = [], ecs = [];
+    for (i = 0; i < blocks.length; i++) {
+      var dc = blocks[i].data, ec = blocks[i].total - dc;
+      maxD = Math.max(maxD, dc); maxE = Math.max(maxE, ec);
+      dcs[i] = [];
+      for (var k = 0; k < dc; k++) dcs[i][k] = 0xff & buf.buffer[k + off];
+      off += dc;
+      var poly = ecPoly(ec);
+      var mod = new Poly(dcs[i], poly.len() - 1).mod(poly);
+      ecs[i] = [];
+      for (k = 0; k < poly.len() - 1; k++) {
+        var idx = k + mod.len() - (poly.len() - 1);
+        ecs[i][k] = idx >= 0 ? mod.get(idx) : 0;
+      }
+    }
+
+    var total = 0;
+    for (i = 0; i < blocks.length; i++) total += blocks[i].total;
+    var out = new Array(total), p = 0;
+    for (i = 0; i < maxD; i++) for (var b = 0; b < blocks.length; b++)
+      if (i < dcs[b].length) out[p++] = dcs[b][i];
+    for (i = 0; i < maxE; i++) for (var b2 = 0; b2 < blocks.length; b2++)
+      if (i < ecs[b2].length) out[p++] = ecs[b2][i];
+    return out;
+  }
+
+  /* penalti ISO, dipakai hanya untuk memilih mask */
+  function lostPoint(m) {
+    var n = m.length, lost = 0, r, c, i, j;
+    for (r = 0; r < n; r++) for (c = 0; c < n; c++) {
+      var same = 0, dark = m[r][c];
+      for (i = -1; i <= 1; i++) {
+        if (r + i < 0 || n <= r + i) continue;
+        for (j = -1; j <= 1; j++) {
+          if (c + j < 0 || n <= c + j) continue;
+          if (i === 0 && j === 0) continue;
+          if (dark === m[r + i][c + j]) same++;
+        }
+      }
+      if (same > 5) lost += 3 + same - 5;
+    }
+    for (r = 0; r < n - 1; r++) for (c = 0; c < n - 1; c++) {
+      var cnt = 0;
+      if (m[r][c]) cnt++;
+      if (m[r + 1][c]) cnt++;
+      if (m[r][c + 1]) cnt++;
+      if (m[r + 1][c + 1]) cnt++;
+      if (cnt === 0 || cnt === 4) lost += 3;
+    }
+    for (r = 0; r < n; r++) for (c = 0; c < n - 6; c++)
+      if (m[r][c] && !m[r][c + 1] && m[r][c + 2] && m[r][c + 3] && m[r][c + 4] && !m[r][c + 5] && m[r][c + 6]) lost += 40;
+    for (c = 0; c < n; c++) for (r = 0; r < n - 6; r++)
+      if (m[r][c] && !m[r + 1][c] && m[r + 2][c] && m[r + 3][c] && m[r + 4][c] && !m[r + 5][c] && m[r + 6][c]) lost += 40;
+    var dk = 0;
+    for (c = 0; c < n; c++) for (r = 0; r < n; r++) if (m[r][c]) dk++;
+    return lost + 10 * (Math.abs(100 * dk / n / n - 50) / 5);
+  }
+
+  /* ---------- API ---------- */
+  function encode(text, forceMask) {
+    var bytes = toBytes(text), ver = 0;
+    for (var v = 1; v <= 20; v++) if (bytes.length <= CAP_M[v - 1]) { ver = v; break; }
+    if (!ver) throw new Error("teks terlalu panjang untuk QR level M versi 20");
+
+    var model = new Model(ver, bytes), best = null, bestLost = Infinity;
+    if (forceMask != null) {
+      model.make(false, forceMask);
+      return model.modules.map(function (r) { return r.map(function (v) { return v ? 1 : 0; }); });
+    }
+    for (var mk = 0; mk < 8; mk++) {
+      model.make(true, mk);
+      var l = lostPoint(model.modules);
+      if (l < bestLost) { bestLost = l; best = mk; }
+    }
+    model.make(false, best);
+    return model.modules.map(function (r) { return r.map(function (v) { return v ? 1 : 0; }); });
+  }
+
+  /* SVG, satu <path> untuk seluruh modul gelap */
+  function svg(text, opt) {
+    opt = opt || {};
+    var m = encode(text), n = m.length, q = opt.quiet == null ? 2 : opt.quiet;
+    var size = n + q * 2, d = "";
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++)
+      if (m[r][c]) d += "M" + (c + q) + " " + (r + q) + "h1v1h-1z";
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + " " + size +
+      '" shape-rendering="crispEdges" role="img" aria-label="QR code">' +
+      '<rect width="' + size + '" height="' + size + '" fill="' + (opt.bg || "#fff") + '"/>' +
+      '<path d="' + d + '" fill="' + (opt.fg || "#001C2D") + '"/></svg>';
+  }
+
+  root.QR = { encode: encode, svg: svg };
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+<script>/* ============================================================
+   Sentosa Smart Itinerary — kiosk + HP dalam satu berkas.
+
+   Alur:
+     kiosk  → layar "Top ideas" (6 tombol tema)
+            → pencet satu → itinerary + QR
+     HP     → hasil scan QR membuka tema yang sama, lalu tamu bisa
+              Change plan, Edit stops, Share
+
+   Mode ditentukan class html.k / html.m yang dipasang di sini,
+   bukan media query, supaya ?view=kiosk / ?view=m benar-benar memaksa.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  ARC.adopt(window.CATALOG);
+
+  var STATE_KEY = "sentosaPlan.v1";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var el = function (t, c, x) {
+    var n = document.createElement(t);
+    if (c) n.className = c;
+    if (x != null) n.textContent = x;
+    return n;
+  };
+
+  /* ---------- mode ---------- */
+  var params = new URLSearchParams(location.search);
+  var forced = (params.get("view") || "").toLowerCase();
+
+  function isKiosk() {
+    if (forced === "kiosk" || forced === "k") return true;
+    if (forced === "m" || forced === "mobile" || forced === "phone") return false;
+    /* Tinggi ikut dihitung: HP mendatar itu 932x430 — lebar saja
+       akan salah menyebutnya kiosk. */
+    return window.innerWidth >= 900 && window.innerHeight >= 900;
+  }
+  function applyMode() {
+    var k = isKiosk();
+    document.documentElement.classList.toggle("k", k);
+    document.documentElement.classList.toggle("m", !k);
+    return k;
+  }
+
+  /* ---------- state ---------- */
+  var VIEW = { plan: null, stops: null, screen: "ideas" };
+
+  function loadState() {
+    var p = params.get("p"), s = params.get("s");
+    if (p && ARC.exists(p)) {
+      VIEW.plan = p;
+      VIEW.stops = s ? s.split(",").filter(function (id) { return ARC.stop(id); }) : null;
+      if (!VIEW.stops || !VIEW.stops.length) VIEW.stops = defaultStops(p);
+      VIEW.screen = "plan";
+      return;
+    }
+    try {
+      var raw = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
+      if (raw && ARC.exists(raw.plan)) {
+        VIEW.plan = raw.plan;
+        VIEW.stops = (raw.stops || []).filter(function (id) { return ARC.stop(id); });
+        if (!VIEW.stops.length) VIEW.stops = defaultStops(raw.plan);
+        VIEW.screen = "plan";
+      }
+    } catch (e) { /* localStorage bisa dimatikan; bukan alasan gagal */ }
+  }
+  function saveState() {
+    try {
+      localStorage.setItem(STATE_KEY, JSON.stringify({ plan: VIEW.plan, stops: VIEW.stops }));
+    } catch (e) {}
+  }
+  function defaultStops(pid) {
+    return ARC.plan(pid).s.map(function (r) { return r[0]; });
+  }
+  function noteFor(pid, sid) {
+    var row = ARC.plan(pid).s.filter(function (r) { return r[0] === sid; })[0];
+    return row ? row[2] : ARC.stop(sid).d;
+  }
+  function minsFor(pid, sid) {
+    var row = ARC.plan(pid).s.filter(function (r) { return r[0] === sid; })[0];
+    return row ? row[1] : 60;
+  }
+
+  /* ---------- waktu ---------- */
+  function hhmm(mins) {
+    mins = ((mins % 1440) + 1440) % 1440;
+    var h = Math.floor(mins / 60), m = mins % 60;
+    var ap = h < 12 ? "am" : "pm", h12 = h % 12 === 0 ? 12 : h % 12;
+    return h12 + "." + String(m).padStart(2, "0") + " " + ap;
+  }
+  function schedule(pid, stops) {
+    var t = ARC.plan(pid).start, out = [];
+    stops.forEach(function (sid) {
+      var mins = minsFor(pid, sid);
+      out.push({ id: sid, from: t, to: t + mins });
+      t += mins + 20;              /* 20 menit perpindahan antar tempat */
+    });
+    return out;
+  }
+
+  /* ---------- render: top ideas ---------- */
+  function renderIdeas() {
+    var host = $("#screen-ideas");
+    host.innerHTML = "";
+
+    var lede = el("div", "lede");
+    lede.appendChild(el("h1", null, "Top ideas for today"));
+    lede.appendChild(el("p", null,
+      "Pick one and we will lay out the whole day from the Visitor Centre at Beach Station."));
+    host.appendChild(lede);
+
+    var grid = el("div", "ideas");
+    /* Semua tema ditampilkan, tapi urutannya mengikuti peringkat:
+       yang paling sering dipilih tamu naik ke atas. */
+    var ranked = ARC.pick({ n: 99, pop: 2 });
+    ranked.forEach(function (row) {
+      var p = ARC.plan(row.id), cover = ARC.stop(p.cover);
+      var b = el("button", "idea");
+      b.type = "button";
+      b.setAttribute("data-plan", row.id);
+
+      var img = el("img", "idea-img");
+      img.src = cover.img;
+      img.alt = "";
+      img.loading = "lazy";
+      b.appendChild(img);
+
+      var ic = el("span", "idea-icon", p.icon);
+      ic.setAttribute("aria-hidden", "true");
+      b.appendChild(ic);
+
+      var body = el("div", "idea-body");
+      body.appendChild(el("div", "idea-t", row.label));
+      body.appendChild(el("div", "idea-bl", p.bl));
+
+      var meta = el("div", "idea-meta");
+      meta.appendChild(el("span", null, p.s.length + " stops"));
+      meta.appendChild(el("span", "dot"));
+      meta.appendChild(el("span", null, "about " + p.hrs + " hours"));
+      if (ARC.isPopular(row.id)) {
+        var tag = el("span", "tag-pop", "★ Popular");
+        meta.appendChild(tag);
+      }
+      body.appendChild(meta);
+      b.appendChild(body);
+
+      b.addEventListener("click", function () { choose(row.id, true); });
+      grid.appendChild(b);
+    });
+    host.appendChild(grid);
+  }
+
+  /* ---------- render: itinerary ---------- */
+  function renderPlan() {
+    var host = $("#screen-plan");
+    host.innerHTML = "";
+    var pid = VIEW.plan, p = ARC.plan(pid);
+
+    var head = el("div", "plan-head");
+    var left = el("div");
+    left.appendChild(el("h2", null, p.icon + "  " + p.t));
+    left.appendChild(el("p", null, p.bl));
+    head.appendChild(left);
+
+    var back = el("button", "btn btn-ghost", "← All ideas");
+    back.type = "button";
+    back.addEventListener("click", function () { go("ideas"); });
+    head.appendChild(back);
+    host.appendChild(head);
+
+    var list = el("ol", "stops");
+    schedule(pid, VIEW.stops).forEach(function (row) {
+      var s = ARC.stop(row.id);
+      var li = el("li", "stop");
+
+      var img = el("img", "stop-img");
+      img.src = s.img;
+      img.alt = "";
+      img.loading = "lazy";
+      li.appendChild(img);
+
+      var body = el("div", "stop-body");
+      body.appendChild(el("div", "stop-time", hhmm(row.from) + " – " + hhmm(row.to)));
+      body.appendChild(el("div", "stop-n", s.n));
+      body.appendChild(el("div", "stop-note", noteFor(pid, row.id)));
+
+      var sub = el("div", "stop-sub");
+      sub.appendChild(el("span", null, s.c));
+      if (s.far) {
+        sub.appendChild(el("span", "dot"));
+        sub.appendChild(el("span", null, s.far));
+      }
+      body.appendChild(sub);
+
+      var act = el("div", "stop-act");
+      var dir = el("a", "btn", "Directions");
+      dir.href = s.map;
+      dir.target = "_blank";
+      dir.rel = "noopener";
+      act.appendChild(dir);
+      body.appendChild(act);
+
+      li.appendChild(body);
+      list.appendChild(li);
+    });
+    host.appendChild(list);
+
+    /* panel QR, kiosk saja — CSS menyembunyikannya di HP */
+    var qr = el("div", "qr");
+    var box = el("div", "qr-svg");
+    box.innerHTML = QR.svg(shareUrl(), { fg: "#001C2D", bg: "#ffffff", quiet: 1 });
+    qr.appendChild(box);
+    var txt = el("div");
+    txt.appendChild(el("p", "qr-t", "Take this plan with you"));
+    txt.appendChild(el("p", "qr-p",
+      "Scan to open it on your phone. From there you can swap stops, change the whole plan, "
+      + "and tap any place for live directions."));
+    qr.appendChild(txt);
+    host.appendChild(qr);
+  }
+
+  /* ---------- URL untuk QR dan Share ---------- */
+  function shareUrl() {
+    var u = new URL(location.href);
+    u.searchParams.set("view", "m");
+    u.searchParams.set("p", VIEW.plan);
+    u.searchParams.set("s", VIEW.stops.join(","));
+    return u.toString();
+  }
+
+  /* ---------- navigasi ---------- */
+  function go(screen) {
+    VIEW.screen = screen;
+    var ideas = screen === "ideas";
+    $("#screen-ideas").classList.toggle("hide", !ideas);
+    $("#screen-plan").classList.toggle("hide", ideas);
+    $("#bar").classList.toggle("hide", ideas);
+    if (ideas) renderIdeas(); else renderPlan();
+    window.scrollTo(0, 0);
+  }
+
+  function choose(pid, counts) {
+    if (!ARC.exists(pid)) return;
+    /* popularitas hanya naik kalau tamu memang menekan pilihan,
+       bukan saat halaman dibuka ulang atau hasil share dibuka */
+    if (counts) ARC.hit(pid);
+    VIEW.plan = pid;
+    VIEW.stops = defaultStops(pid);
+    saveState();
+    go("plan");
+  }
+
+  /* ---------- lembar: Change plan ---------- */
+  function sheetChangePlan() {
+    openSheet("Change plan", "Same day, a different idea. Your current plan stays until you pick one.",
+      function (body) {
+        var wrap = el("div", "pick");
+        ARC.pick({ n: 99, pop: 2 }).forEach(function (row) {
+          var p = ARC.plan(row.id);
+          var b = el("button", "pick-row");
+          b.type = "button";
+          if (row.id === VIEW.plan) b.setAttribute("aria-current", "true");
+          b.appendChild(el("span", "pick-ic", p.icon));
+          var t = el("div");
+          var head = el("div", "pick-t", row.label + (ARC.isPopular(row.id) ? "  ★" : ""));
+          t.appendChild(head);
+          t.appendChild(el("div", "pick-b", p.s.length + " stops · about " + p.hrs + " hours"));
+          b.appendChild(t);
+          b.addEventListener("click", function () {
+            closeSheet();
+            choose(row.id, true);
+            toast("Switched to " + p.t);
+          });
+          wrap.appendChild(b);
+        });
+        body.appendChild(wrap);
+      });
+  }
+
+  /* ---------- lembar: Edit stops ---------- */
+  function sheetEditStops() {
+    openSheet("Edit stops", "Reorder, remove, or add somewhere else nearby.", function (body) {
+      var p = ARC.plan(VIEW.plan);
+
+      VIEW.stops.forEach(function (sid, i) {
+        var s = ARC.stop(sid);
+        var row = el("div", "edit-row");
+        row.appendChild(el("div", "edit-n", s.n));
+
+        var up = el("button", "icb", "↑");
+        up.type = "button"; up.title = "Move up"; up.disabled = i === 0;
+        up.addEventListener("click", function () { move(i, -1); });
+
+        var dn = el("button", "icb", "↓");
+        dn.type = "button"; dn.title = "Move down"; dn.disabled = i === VIEW.stops.length - 1;
+        dn.addEventListener("click", function () { move(i, 1); });
+
+        var rm = el("button", "icb icb-rm", "✕");
+        rm.type = "button"; rm.title = "Remove";
+        rm.disabled = VIEW.stops.length <= 2;   /* satu hari minimal dua tempat */
+        rm.addEventListener("click", function () {
+          VIEW.stops.splice(i, 1);
+          saveState(); closeSheet(); renderPlan(); sheetEditStops();
+        });
+
+        row.appendChild(up); row.appendChild(dn); row.appendChild(rm);
+        body.appendChild(row);
+      });
+
+      var spare = p.alt.filter(function (id) {
+        return ARC.stop(id) && VIEW.stops.indexOf(id) < 0;
+      });
+      if (spare.length) {
+        var h = el("p", "sub", "Add nearby");
+        h.style.margin = "18px 0 10px";
+        body.appendChild(h);
+        spare.forEach(function (sid) {
+          var s = ARC.stop(sid);
+          var row = el("div", "edit-row");
+          var t = el("div", "edit-n", s.n);
+          row.appendChild(t);
+          var km = el("span", "pick-b", s.far || s.c);
+          km.style.cssText = "flex:none;max-width:40%;text-align:right";
+          row.appendChild(km);
+          var add = el("button", "icb", "+");
+          add.type = "button"; add.title = "Add";
+          add.addEventListener("click", function () {
+            VIEW.stops.push(sid);
+            saveState(); closeSheet(); renderPlan(); sheetEditStops();
+          });
+          row.appendChild(add);
+          body.appendChild(row);
+        });
+      }
+
+      var reset = el("button", "btn", "Reset to the original plan");
+      reset.type = "button";
+      reset.style.cssText = "width:100%;justify-content:center;padding:13px;margin-top:16px";
+      reset.addEventListener("click", function () {
+        VIEW.stops = defaultStops(VIEW.plan);
+        saveState(); closeSheet(); renderPlan(); toast("Plan reset");
+      });
+      body.appendChild(reset);
+    });
+  }
+
+  function move(i, d) {
+    var j = i + d;
+    if (j < 0 || j >= VIEW.stops.length) return;
+    var t = VIEW.stops[i];
+    VIEW.stops[i] = VIEW.stops[j];
+    VIEW.stops[j] = t;
+    saveState(); closeSheet(); renderPlan(); sheetEditStops();
+  }
+
+  /* ---------- Share ---------- */
+  function doShare() {
+    var url = shareUrl(), title = "Sentosa · " + ARC.plan(VIEW.plan).t;
+    if (navigator.share) {
+      navigator.share({ title: title, url: url }).catch(function () {});
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url)
+        .then(function () { toast("Link copied"); })
+        .catch(function () { toast("Could not copy the link"); });
+      return;
+    }
+    toast("Copy the link from your browser bar");
+  }
+
+  /* ---------- lembar + toast ---------- */
+  var sheetEl = null, scrimEl = null;
+  function openSheet(title, sub, fill) {
+    closeSheet();
+    scrimEl = el("div", "scrim");
+    scrimEl.addEventListener("click", closeSheet);
+    sheetEl = el("div", "sheet");
+    sheetEl.setAttribute("role", "dialog");
+    sheetEl.setAttribute("aria-modal", "true");
+    sheetEl.appendChild(el("div", "sheet-grab"));
+    sheetEl.appendChild(el("h3", null, title));
+    sheetEl.appendChild(el("p", "sub", sub));
+    var body = el("div");
+    fill(body);
+    sheetEl.appendChild(body);
+    document.body.appendChild(scrimEl);
+    document.body.appendChild(sheetEl);
+  }
+  function closeSheet() {
+    if (sheetEl) { sheetEl.remove(); sheetEl = null; }
+    if (scrimEl) { scrimEl.remove(); scrimEl = null; }
+  }
+  var toastTimer = null;
+  function toast(msg) {
+    var old = $(".toast");
+    if (old) old.remove();
+    var t = el("div", "toast", msg);
+    document.body.appendChild(t);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.remove(); }, 2200);
+  }
+
+  /* ---------- pasang ---------- */
+  function init() {
+    applyMode();
+    loadState();
+
+    $("#b-edit").addEventListener("click", sheetEditStops);
+    $("#b-change").addEventListener("click", sheetChangePlan);
+    $("#b-share").addEventListener("click", doShare);
+    $("#b-home").addEventListener("click", function () { go("ideas"); });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeSheet();
+    });
+
+    go(VIEW.screen);
+
+    /* Rotasi atau ubah ukuran jendela boleh mengganti mode, tapi tidak
+       boleh melempar tamu kembali ke layar awal. */
+    var last = isKiosk();
+    window.addEventListener("resize", function () {
+      var now = isKiosk();
+      if (now === last) return;
+      last = now;
+      applyMode();
+      closeSheet();
+      go(VIEW.screen);
+    });
+  }
+
+  /* Script ini duduk di akhir <body>, jadi elemennya sudah ada walau
+     readyState masih "loading". Jalankan langsung kalau memang sudah ada;
+     kalau tidak (misalnya berkasnya dipindah ke <head>), tunggu DOM. */
+  if (document.getElementById("bar")) init();
+  else document.addEventListener("DOMContentLoaded", init);
+
+  /* dibuka untuk harness uji */
+  window.__APP = {
+    VIEW: VIEW, isKiosk: isKiosk, applyMode: applyMode, go: go, choose: choose,
+    shareUrl: shareUrl, schedule: schedule, hhmm: hhmm, defaultStops: defaultStops,
+    sheetChangePlan: sheetChangePlan, sheetEditStops: sheetEditStops, closeSheet: closeSheet
+  };
+})();
+</script>
+</body>
+</html>
