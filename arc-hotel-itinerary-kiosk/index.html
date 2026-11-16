@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>ARC Smart Itinerary</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,7 +59,8 @@ a{color:inherit}
 .bars i:nth-child(2){animation-delay:.12s}.bars i:nth-child(3){animation-delay:.24s}.bars i:nth-child(4){animation-delay:.36s}
 @keyframes bar{0%,100%{height:10px}50%{height:34px}}
 .sugg{display:flex;gap:14px;flex-wrap:wrap}
-.sugg button{border:1px solid #cfcdc2;background:#fff;border-radius:999px;padding:18px 26px;font-size:22px;color:#3f463f}
+.sugg button{display:inline-flex;align-items:center;gap:12px;min-height:88px;border:1.5px solid #cfcdc2;background:#fff;border-radius:999px;padding:18px 32px;font-size:24px;font-weight:600;color:#2b322c}
+.sugg .pop{flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(219,184,113,.3)}
 .typein{display:flex;gap:14px}
 .typein input{flex:1;font:inherit;font-size:26px;padding:0 28px;height:96px;border:1.5px solid #cfcdc2;background:#fff;color:var(--ink);outline:none}
 .cta{background:var(--green);color:#fff;min-height:104px;padding:0 44px;font-size:27px;font-weight:650;letter-spacing:.02em;display:inline-flex;align-items:center;justify-content:center;gap:12px}
@@ -200,7 +202,7 @@ body.mobile #mob{display:block;max-width:560px;margin:0 auto}
       <div class="scrim"></div>
       <div class="atop"><div class="wm">ARC HOTEL<small>THE CITY, CURATED FOR YOU</small></div><span class="lang">EN</span></div>
 
-      <div id="home"><div class="bub" id="greet">Hello, welcome to ARC Hotel. How can I help you today?</div><div class="dock"><div class="isugg" id="isugg"></div><div class="qrs" id="qrs"></div></div></div>
+      <div id="home"><div class="bub" id="greet">Hello, welcome to ARC Hotel. How can I help you today?</div><div class="dock"><div class="qrs" id="qrs"></div></div></div>
       <div class="bub" id="say" hidden data-src="VERIFIED · connector asks first (itinerary-clarify)" data-k="ok"></div>
       <div class="rail" id="rail"><button class="rb mic" id="micIdle" aria-label="Microphone"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"/></svg></button><button class="rb" id="kbIdle" aria-label="Keyboard"><svg viewBox="0 0 24 24"><path d="M20 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zM5 8h2v2H5V8zm0 3h2v2H5v-2zm11 5H8v-2h8v2zm0-3h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg></button><button class="rb" id="homeIdle" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg></button></div>
       <button class="backring" id="backBtn" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -209,8 +211,9 @@ body.mobile #mob{display:block;max-width:560px;margin:0 auto}
 
       <div class="sheet" id="voice">
         <div class="srow"><div class="eyebrow" id="voiceE">I’m listening</div><button class="xbtn" id="voiceX">Close</button></div>
-        <div class="listen" id="listen"><div class="bars"><i></i><i></i><i></i><i></i></div><span>Voice is simulated here. Tap what the guest says:</span></div>
+        <div class="listen" id="listen"><div class="bars"><i></i><i></i><i></i><i></i></div><span>Voice is simulated in this prototype.</span></div>
         <div class="typein" id="typein" hidden><input id="inp" placeholder="e.g. Three hours with my partner, something relaxing" autocomplete="off"><button class="cta" id="sendBtn">Send</button></div>
+        <div class="eyebrow" id="suggLead">Choose a plan</div>
         <div class="sugg" id="sugg"></div>
       </div>
 
@@ -271,7 +274,7 @@ const MORE=[
    live in arc-plans.js, shared with the guest phone page so the
    kiosk and the phone can never drift apart.
    ============================================================ */
-const SUG_SHOWN=3;      /* named itinerary shortcuts on the home rail   */
+const SUG_SHOWN=6;      /* named itinerary options offered in stage 2   */
 const SUG_POP=2;        /* how many of those come from selection counts */
 
 /* Fallback catalogue, used only if catalog.json cannot be fetched,
@@ -317,7 +320,7 @@ function avatar(s){const v=$("#av"),src=ASSETS+"av/"+s+".mp4";if(v.getAttribute(
 function say(t){const b=$("#say");b.textContent=t;b.hidden=!t;if(!t)b.style.top=""}
 function show(id){$$(".page").forEach(p=>p.classList.toggle("on",p.id===id));$("#stage").classList.toggle("panelon",!!id);
   $("#home").hidden=!!id||!$("#voice").classList.contains("on")&&false;$$("#helpful button").forEach(b=>b.classList.remove("sel"));window.__screen=id||"avatar"}
-function home(){clearTimeout(home.t);IT=null;show(null);$("#voice").classList.remove("on");$("#thinking").hidden=true;say("");$("#home").hidden=false;avatar("idle");renderSuggest()}
+function home(){clearTimeout(home.t);IT=null;show(null);$("#voice").classList.remove("on");$("#thinking").hidden=true;say("");$("#home").hidden=false;avatar("idle")}
 
 /* 1. ask: Plan Your Day (quick reply, QUERY) or mic/keyboard. The connector asks one question when details are missing. */
 function ask(mode){show(null);$("#home").hidden=true;
@@ -325,14 +328,17 @@ function ask(mode){show(null);$("#home").hidden=true;
   const s=$("#voice");s.classList.add("on");avatar("listening");const typing=mode==="type";
   requestAnimationFrame(()=>{const b=$("#say");if(b&&!b.hidden)b.style.top=(s.offsetHeight+36)+"px"});
   $("#voiceE").textContent=typing?"Tell me what you have in mind":"I’m listening";$("#listen").hidden=typing;$("#typein").hidden=!typing;
-  const picks=ARC.pick({n:4,pop:SUG_POP});
+  $("#suggLead").textContent="Choose a plan";
+  const picks=ARC.pick({n:SUG_SHOWN,pop:SUG_POP});
+  SUG_VIEW=picks;
   $("#sugg").innerHTML=picks.length
-    ? picks.map((s,k)=>{const p=ARC.plan(s.id);
-        return `<button data-sg="${k}">“${esc(p.phrase||p.t)}”</button>`}).join("")
+    ? picks.map((s,k)=>`<button data-sg="${k}">`
+        +`${(ARC.isPopular(s.id)&&k<SUG_POP)?'<span class="pop" aria-hidden="true"></span>':""}`
+        +`${esc(s.label)}</button>`).join("")
     : SAYS.map(([p],k)=>`<button data-sg="s${k}">“${esc(p)}”</button>`).join("");
   $$("#sugg [data-sg]").forEach(b=>b.onclick=()=>{const v=b.dataset.sg;
     if(v[0]==="s")return plan(SAYS[+v.slice(1)][1]);
-    const s=picks[+v];ARC.hit(s.id);plan(s.id)});
+    const s=picks[+v];if(!s)return;ARC.hit(s.id);plan(s.id)});
   if(typing)setTimeout(()=>$("#inp").focus(),50)}
 function fromText(t){t=t.toLowerCase();return /kid|child|family/.test(t)?"family-aquarium":/parent|mother|father|senior|walk/.test(t)?"seniors":/partner|wife|husband|couple|relax/.test(t)?"cafe-date":"bkk-4h"}
 
@@ -384,22 +390,10 @@ function fit(){const f=$("#frame").getBoundingClientRect(),s=Math.min(f.width/10
 /* ---------- guest-facing suggestions: render, count, admin (prototype only) ---------- */
 const itExists=id=>ARC.exists(id);
 let SUG_VIEW=[];
-/* Named itinerary shortcuts. Same catalogue, same ranking and the same
-   rotation the phone uses for its recommended plans. Tapping one opens
-   that itinerary directly, through the existing card and QR flow.      */
-function renderSuggest(){
-  const el=$("#isugg");if(!el)return;
-  SUG_VIEW=ARC.pick({n:SUG_SHOWN,pop:SUG_POP});
-  el.innerHTML=SUG_VIEW.map((s,i)=>{
-    const p=ARC.plan(s.id);if(!p)return "";
-    const hot=ARC.isPopular(s.id)&&i<SUG_POP;
-    const who=p.who.slice(0,2).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(", ");
-    return `<button data-sg="${i}">${hot?'<span class="pop" aria-hidden="true"></span>':""}`
-      +`<span><span class="sx">${esc(p.hrs+"h · "+who)}</span><span class="sp">${esc(s.label)}</span></span></button>`}).join("");
-  $$("#isugg [data-sg]").forEach(b=>b.onclick=()=>{
-    const s=SUG_VIEW[+b.dataset.sg];if(!s)return;
-    ARC.hit(s.id);$("#home").hidden=true;plan(s.id)});
-}
+/* The named itinerary options live in stage 2, after the guest has asked
+   to plan a day — see ask(). Nothing is drawn on the idle screen, which
+   keeps the original seven quick replies as the only dock content.      */
+function renderSuggest(){}
 
 /* demo admin — operator chrome, never part of the guest screen */
 function admDraw(){
