@@ -219,7 +219,7 @@ html.k .stop-sub { font-size: 14px; }
 html.k .stop-act { margin-top: 8px; }
 html.k .stop-act .btn { padding: 10px 18px; font-size: 14px; }
 
-html.k .qr { margin-top: 26px; padding: 26px 30px; }
+html.k .qr { margin: 4px 0 26px; padding: 26px 30px; }
 html.k .qr-svg { width: 168px; height: 168px; padding: 10px; }
 html.k .qr-t { font-size: 22px; }
 html.k .qr-p { font-size: 15px; line-height: 1.5; }
@@ -811,9 +811,12 @@ html.m .qr { display: none !important; }
   function isKiosk() {
     if (forced === "kiosk" || forced === "k") return true;
     if (forced === "m" || forced === "mobile" || forced === "phone") return false;
-    /* Tinggi ikut dihitung: HP mendatar itu 932x430 — lebar saja
-       akan salah menyebutnya kiosk. */
-    return window.innerWidth >= 900 && window.innerHeight >= 900;
+    /* Tinggi ikut dihitung supaya HP mendatar (932x430) tidak salah
+       disebut kiosk. Ambangnya 700, bukan 900: jendela laptop biasa
+       tingginya sekitar 700-800 px, dan dengan ambang 900 layar sebesar
+       itu ikut dianggap HP — QR-nya jadi tidak pernah kelihatan waktu
+       dites di laptop. Kiosk asli 1080x1920 tetap lolos. */
+    return window.innerWidth >= 900 && window.innerHeight >= 700;
   }
   function applyMode() {
     var k = isKiosk();
@@ -948,6 +951,20 @@ html.m .qr { display: none !important; }
     head.appendChild(back);
     host.appendChild(head);
 
+    /* panel QR, kiosk saja — ditaruh DI ATAS daftar stop supaya tamu
+       melihatnya tanpa menggulir. CSS menyembunyikannya di HP. */
+    var qr = el("div", "qr");
+    var box = el("div", "qr-svg");
+    box.innerHTML = QR.svg(shareUrl(), { fg: "#001C2D", bg: "#ffffff", quiet: 1 });
+    qr.appendChild(box);
+    var qtxt = el("div");
+    qtxt.appendChild(el("p", "qr-t", "Take this plan with you"));
+    qtxt.appendChild(el("p", "qr-p",
+      "Scan to open it on your phone. From there you can swap stops, change the whole plan, "
+      + "and tap any place for live directions."));
+    qr.appendChild(qtxt);
+    host.appendChild(qr);
+
     var list = el("ol", "stops");
     schedule(pid, VIEW.stops).forEach(function (row) {
       var s = ARC.stop(row.id);
@@ -985,18 +1002,6 @@ html.m .qr { display: none !important; }
     });
     host.appendChild(list);
 
-    /* panel QR, kiosk saja — CSS menyembunyikannya di HP */
-    var qr = el("div", "qr");
-    var box = el("div", "qr-svg");
-    box.innerHTML = QR.svg(shareUrl(), { fg: "#001C2D", bg: "#ffffff", quiet: 1 });
-    qr.appendChild(box);
-    var txt = el("div");
-    txt.appendChild(el("p", "qr-t", "Take this plan with you"));
-    txt.appendChild(el("p", "qr-p",
-      "Scan to open it on your phone. From there you can swap stops, change the whole plan, "
-      + "and tap any place for live directions."));
-    qr.appendChild(txt);
-    host.appendChild(qr);
   }
 
   /* ---------- URL untuk QR dan Share ---------- */
