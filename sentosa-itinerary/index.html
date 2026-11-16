@@ -811,12 +811,19 @@ html.m .qr { display: none !important; }
   function isKiosk() {
     if (forced === "kiosk" || forced === "k") return true;
     if (forced === "m" || forced === "mobile" || forced === "phone") return false;
-    /* Tinggi ikut dihitung supaya HP mendatar (932x430) tidak salah
-       disebut kiosk. Ambangnya 700, bukan 900: jendela laptop biasa
-       tingginya sekitar 700-800 px, dan dengan ambang 900 layar sebesar
-       itu ikut dianggap HP — QR-nya jadi tidak pernah kelihatan waktu
-       dites di laptop. Kiosk asli 1080x1920 tetap lolos. */
-    return window.innerWidth >= 900 && window.innerHeight >= 700;
+    /* Dipisah pakai sisi TERPENDEK layar, bukan tinggi saja.
+       Dua iterasi sebelumnya meleset: ambang tinggi 900 lalu 700 masih
+       menolak jendela laptop (1440x645) dan tablet tegak.
+
+         HP tegak      390x844   sisi pendek 390  -> HP
+         HP mendatar   932x430   sisi pendek 430  -> HP
+         laptop       1440x645   sisi pendek 645  -> kiosk
+         tablet tegak  820x1180  sisi pendek 820  -> kiosk
+         kiosk asli   1080x1920  sisi pendek 1080 -> kiosk
+
+       Lebar minimum 768 menahan jendela sempit memanjang. */
+    var w = window.innerWidth, h = window.innerHeight;
+    return w >= 768 && Math.min(w, h) >= 500;
   }
   function applyMode() {
     var k = isKiosk();
