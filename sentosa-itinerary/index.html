@@ -822,6 +822,10 @@ html.m .qr { display: none !important; }
          kiosk asli   1080x1920  sisi pendek 1080 -> kiosk
 
        Lebar minimum 768 menahan jendela sempit memanjang. */
+    /* Dibuka di dalam frame = webview kartu ARC di kiosk. Panelnya sempit,
+       jadi aturan ukuran akan salah membacanya sebagai HP. */
+    try { if (window.top !== window.self) return true; } catch (e) { return true; }
+
     var w = window.innerWidth, h = window.innerHeight;
     return w >= 768 && Math.min(w, h) >= 500;
   }
@@ -844,6 +848,12 @@ html.m .qr { display: none !important; }
       VIEW.screen = "plan";
       return;
     }
+    /* Kiosk selalu mulai dari Top ideas. Tamu berikutnya tidak boleh
+       mendarat di rencana tamu sebelumnya — itu yang terjadi waktu
+       kartunya langsung membuka salah satu tema. Di HP state tetap
+       dipulihkan, karena di situ tamunya memang orang yang sama. */
+    if (isKiosk()) { try { localStorage.removeItem(STATE_KEY); } catch (e) {} return; }
+
     try {
       var raw = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
       if (raw && ARC.exists(raw.plan)) {
