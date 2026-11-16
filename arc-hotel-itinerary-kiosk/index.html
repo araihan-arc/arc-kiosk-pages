@@ -42,12 +42,12 @@ a{color:inherit}
 .qr{flex:0 0 auto;display:flex;align-items:center;gap:14px;background:rgba(219,184,113,.44);backdrop-filter:blur(16px);border-radius:24px;padding:12px 26px 12px 12px;font-size:25px;font-weight:600;color:#111;border:1.5px solid rgba(255,255,255,.5)}
 .qr img{width:64px;height:64px;border-radius:16px;object-fit:cover}
 @keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes up{from{transform:translateY(100%)}@keyframes down{from{transform:translateY(-100%)}to{transform:none}}to{transform:none}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 
 /* voice sheet (simulated speech) */
-.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--ivory);z-index:8;padding:52px 72px 56px;display:none;flex-direction:column;gap:28px;box-shadow:0 -20px 60px rgba(0,0,0,.18)}
-.sheet.on{display:flex;animation:up .4s cubic-bezier(.2,.8,.2,1) both}
+.sheet{position:absolute;left:0;right:0;top:0;background:var(--ivory);z-index:8;padding:52px 72px 56px;display:none;flex-direction:column;gap:28px;box-shadow:0 20px 60px rgba(0,0,0,.18)}
+.sheet.on{display:flex;animation:down .4s cubic-bezier(.2,.8,.2,1) both}
 .srow{display:flex;justify-content:space-between;align-items:center;gap:20px}
 .eyebrow{font-size:17px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--accent)}
 .xbtn{font-size:19px;font-weight:650;color:#5f655c;border-bottom:1.5px solid #b9b9ae;padding:6px 0}
@@ -162,17 +162,44 @@ body.mobile{overflow:auto;background:var(--ivory);padding:0}
 body.mobile .outer{display:none}
 body.mobile #mob{display:block;max-width:560px;margin:0 auto}
 #mob{display:none}
+
+/* --- guest-facing suggestion rail (Lionel feedback 1 + 2) --- */
+.isugg{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;margin:0 0 18px}
+.isugg::-webkit-scrollbar{display:none}
+.isugg button{flex:0 0 auto;display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.90);backdrop-filter:blur(16px);border:1.5px solid rgba(255,255,255,.65);border-radius:24px;padding:16px 26px;font-size:24px;font-weight:600;color:#1c1d1f;text-align:left;min-height:88px}
+.isugg button .sx{font-size:16px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:4px}
+.isugg button .sp{display:block;font-weight:600;line-height:1.2}
+.isugg .pop{flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(219,184,113,.3)}
+/* --- demo-only admin, never shown to a guest --- */
+.adm{position:fixed;inset:0;background:rgba(12,13,11,.82);z-index:99;display:none;overflow:auto;padding:28px}
+.adm.on{display:block}
+.admw{max-width:980px;margin:0 auto;background:var(--ivory);color:var(--ink);border-radius:18px;padding:26px 30px 32px;font-size:14px}
+.admw h2{font:400 30px/1.1 var(--serif);margin:0 0 4px}
+.admw .note{color:var(--ink2);margin:0 0 18px;font-size:13px;line-height:1.5}
+.admw table{width:100%;border-collapse:collapse}
+.admw th,.admw td{border-bottom:1px solid var(--line);padding:9px 8px;text-align:left;vertical-align:middle}
+.admw th{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.admw input[type=text]{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:inherit;background:#fff;color:var(--ink)}
+.admw input[type=number]{width:70px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:inherit;background:#fff;color:var(--ink)}
+.admw .hits{font-variant-numeric:tabular-nums;font-weight:700}
+.admw .bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;align-items:center}
+.admw .bar button{border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.admw .bar button.pri{background:var(--green);color:#fff;border-color:var(--green)}
+.admw .prev{margin-top:16px;padding:12px 14px;background:var(--paper);border-radius:10px;font-size:13px;line-height:1.7}
+.admw .prev b{font-weight:700}
+.admw .warn{margin-top:14px;padding:10px 12px;border-left:3px solid var(--accent);background:#fff;color:var(--ink2);font-size:12.5px;line-height:1.55}
+#say.undersheet{top:auto}
 </style>
 
 <div class="outer">
-  <div class="caption"><b>ARC Hotel · True Digital Park</b><span>Itinerary connector prototype · sample data in the connector's format</span><button id="resetBtn">Restart</button><button id="phoneBtn">Phone view</button><button id="labelsBtn">Data labels</button></div>
+  <div class="caption"><b>ARC Hotel · True Digital Park</b><span>Itinerary connector prototype · sample data in the connector's format</span><button id="resetBtn">Restart</button><button id="phoneBtn">Phone view</button><button id="labelsBtn">Data labels</button><button id="admBtn">Suggestions (demo admin)</button></div>
   <div class="frame" id="frame">
     <div class="stage" id="stage">
       <video class="av" id="av" autoplay muted loop playsinline poster="av/poster.jpg" src="av/idle.mp4"></video>
       <div class="scrim"></div>
       <div class="atop"><div class="wm">ARC HOTEL<small>THE CITY, CURATED FOR YOU</small></div><span class="lang">EN</span></div>
 
-      <div id="home"><div class="bub" id="greet">Hello, welcome to ARC Hotel. How can I help you today?</div><div class="dock"><div class="qrs" id="qrs"></div></div></div>
+      <div id="home"><div class="bub" id="greet">Hello, welcome to ARC Hotel. How can I help you today?</div><div class="dock"><div class="isugg" id="isugg"></div><div class="qrs" id="qrs"></div></div></div>
       <div class="bub" id="say" hidden data-src="VERIFIED · connector asks first (itinerary-clarify)" data-k="ok"></div>
       <div class="rail" id="rail"><button class="rb mic" id="micIdle" aria-label="Microphone"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"/></svg></button><button class="rb" id="kbIdle" aria-label="Keyboard"><svg viewBox="0 0 24 24"><path d="M20 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zM5 8h2v2H5V8zm0 3h2v2H5v-2zm11 5H8v-2h8v2zm0-3h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg></button><button class="rb" id="homeIdle" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg></button></div>
       <button class="backring" id="backBtn" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -201,11 +228,31 @@ body.mobile #mob{display:block;max-width:560px;margin:0 auto}
   </div>
 </div>
 <div class="phone" id="phone"><button class="pclose" id="phoneX">Close</button><div class="pwrap"><iframe id="pframe" title="Phone page" style="border:0;width:100%;height:100%;display:block;background:#f8f7f2"></iframe></div></div>
+
+<div class="adm" id="adm"><div class="admw">
+  <h2>Guest suggestions &mdash; demo configuration</h2>
+  <p class="note">Prototype only. Nothing here is a production administration interface, and the counts below are
+  this browser's localStorage, not guest analytics. Suggestions whose itinerary no longer exists are dropped automatically.</p>
+  <table><thead><tr><th style="width:52px">On</th><th>Label shown to the guest</th><th style="width:150px">Itinerary</th><th style="width:90px">Weight</th><th style="width:90px">Selected</th></tr></thead>
+  <tbody id="admBody"></tbody></table>
+  <div class="bar">
+    <button class="pri" id="admSave">Save</button>
+    <button id="admPrev">Preview rotation</button>
+    <button id="admReset">Reset demo analytics</button>
+    <button id="admDefaults">Restore defaults</button>
+    <button id="admClose" style="margin-left:auto">Close</button>
+  </div>
+  <div class="prev" id="admPrevOut" hidden></div>
+  <div class="warn">Ranking: the two highest-selected suggestions take the first slots, the rest rotate by weight so the
+  rail keeps changing. With no selections yet, weight order is the default ranking. Popularity never overrides
+  enabled status or a missing itinerary.</div>
+</div></div>
 <div id="mob" class="mob"></div>
 
 <script>
 const DATA={"stops":{"doc-44":{"n":"Byte All-Day Dining","a":"hotel","km":0,"in":1,"kid":0,"b":2,"h":"Breakfast 06:00 - 10:30 (weekdays), 06:00 - 11:00 (weekends); Lunch 11:30 - 14:30; Dinner 18:00 - 22:30","f":"Level 2","d":"A modern food hall with open kitchens, offering live egg, noodle, and smoothie stations for breakfast."},"doc-46":{"n":"Circuit Coffee","a":"hotel","km":0,"in":1,"kid":0,"b":1,"h":"06:30 - 20:00 daily","f":"Level 2","d":"Circuit Coffee offers specialty coffee made from Thai single-origin beans from Chiang Rai and Nan."},"doc-48":{"n":"Cloud 25 Sky Bar","a":"hotel","km":0,"in":0,"kid":0,"b":3,"h":"5 pm to 1 am daily, last order 12:30 am","f":"Level 25, rooftop","d":"An open-air rooftop bar offering panoramic views of the Bangkok skyline and the Chao Phraya river bend."},"doc-55":{"n":"Rooftop Infinity Pool","a":"hotel","km":0,"in":0,"kid":1,"b":0,"h":"06:00 - 22:00 daily","f":"Level 25","d":"A 30-meter heated infinity pool offering skyline views, an underwater sound system, a shallow kids' pool, sun loungers, shaded daybeds, and smart lockers."},"doc-56":{"n":"Pulse Smart Gym","a":"hotel","km":0,"in":1,"kid":0,"b":0,"h":"24 hours with digital key access; staffed from 06:00 to 22:00","f":"Level 7","d":"A state-of-the-art fitness facility featuring connected cardio and strength machines that remember user settings and sync with Apple Health, Google Fit, and Strava."},"doc-58":{"n":"Reboot Recovery Lounge & Spa","a":"hotel","km":0,"in":1,"kid":0,"b":3,"h":"09:00 - 22:00 daily (Last booking 20:30)","f":"Level 7","d":"Reboot is a wellness facility featuring a recovery lounge with an infrared sauna, cold plunge pool, compression boots, massage chairs, and a quiet sleep-pod room."},"doc-85":{"n":"The Deck Garden Terrace","a":"hotel","km":0,"in":0,"kid":0,"b":0,"h":"The Deck: 06:00 - 22:00 daily","f":"Level 4 (The Deck), Level 6 (Staff only)","d":"Level 4 features The Deck, an open-air garden terrace for hotel guests, offering a 250-meter walking loop, shaded reading areas, a herb garden supplying the Byte restaura"},"doc-188":{"n":"Kids' Lab Playroom","a":"hotel","km":0,"in":1,"kid":0,"b":0,"h":"09:00 - 19:00 daily","f":"Level 5","d":"A supervised STEM playroom offering a variety of educational and fun activities including coding robots, LEGO building, a digital drawing wall, science experiments, and a"},"doc-226":{"n":"Level Up Gaming & VR Lounge","a":"hotel","km":0,"in":1,"kid":0,"b":1,"h":"10:00 - 00:00 daily","f":"Level 5","d":"A gaming and virtual reality lounge featuring a wide range of entertainment options including console gaming, high-end PC gaming, racing simulators, a VR arena, and board"},"doc-80":{"n":"101 True Digital Park Mall","a":"tdp","km":0.3,"in":1,"kid":0,"b":1,"h":"Generally 10:00 - 22:00. Some cafes open from 08:00.","f":"","d":"This shopping mall is directly connected to ARC Hotel TDP via a covered Level 1 walkway, approximately 2 to 5 minutes walk from the hotel lobby."},"doc-118":{"n":"1:2 Coffee","a":"tdp","km":0.3,"in":1,"kid":0,"b":1,"h":"08:00 - 18:00","f":"1F","d":"Specialty coffee bar near the ARC Hotel lobby."},"doc-120":{"n":"Choongman Chicken","a":"tdp","km":0.3,"in":1,"kid":0,"b":1,"h":"10:00 - 22:00","f":"2F","d":"Korean fried chicken restaurant located on the 2nd floor of the East Building in True Digital Park."},"doc-116":{"n":"UNIQLO 101 TDP","a":"tdp","km":0.3,"in":1,"kid":1,"b":1,"h":"10:00 - 22:00","f":"1F","d":"Japanese clothing brand offering everyday LifeWear for women, men, and kids."},"doc-158":{"n":"Seacon Square","a":"east","km":4.1,"in":1,"kid":0,"b":1,"h":"Daily 10:00 - 22:00","f":"","d":"A large shopping center located in Prawet, Bangkok, approximately 4.1 km from the hotel."},"doc-159":{"n":"Science Center for Education","a":"east","km":5.0,"in":1,"kid":0,"b":0,"h":"Tuesday to Sunday 09:00 - 16:00, closed Monday","f":"","d":"A science museum located in Bangkok, Thailand, approximately 5.0 km from the hotel."},"doc-161":{"n":"Suan Luang Rama IX Park","a":"east","km":5.6,"in":0,"kid":0,"b":0,"h":"Daily 05:00 - 21:00","f":"","d":"A public park located in the Bangkok area, approximately 5.6 km from the hotel."},"doc-153":{"n":"Talad Rot Fai Srinakarin","a":"east","km":9.0,"in":0,"kid":0,"b":1,"h":"Daily 17:00 - 00:00","f":"","d":"A large open-air evening market featuring vintage clothes, collectables, classic cars, a substantial food section, dessert shops, and bars with live music."},"doc-152":{"n":"Megabangna","a":"east","km":12.0,"in":1,"kid":0,"b":1,"h":"Daily, 10:00 - 22:00","f":"","d":"A large low-rise shopping centre in the Bang Na area, featuring IKEA (Thailand's first store), Central department store, HomePro, Big C, and Mega Cineplex cinema."},"doc-151":{"n":"Safari World Bangkok","a":"east","km":25.0,"in":0,"kid":0,"b":3,"h":"Daily 09:00 - 17:00","f":"","d":"Safari World is a large animal attraction in Bangkok, Thailand, featuring two main sections: Safari Park and Marine Park."},"doc-22":{"n":"Benjasiri Park","a":"sukhumvit","km":6.9,"in":0,"kid":0,"b":0,"h":"Daily 05:00 - 21:00","f":"","d":"Benjasiri Park is a public park in Thailand, located in the Bangkok area."},"doc-24":{"n":"EMSPHERE","a":"sukhumvit","km":6.9,"in":1,"kid":0,"b":2,"h":"Daily 10:00 - 22:00","f":"","d":"A shopping mall in the Bangkok area with free entry."},"doc-28":{"n":"Terminal 21","a":"sukhumvit","km":8.0,"in":1,"kid":0,"b":1,"h":"Daily 10:00 - 22:00","f":"","d":"Chain of mixed-use complexes located in the Bangkok area, approximately 8.0 km in a straight line from the hotel."},"doc-29":{"n":"Chuvit Garden","a":"sukhumvit","km":8.2,"in":0,"kid":0,"b":0,"h":"Daily 05:00 - 21:00","f":"","d":"Chuvit Garden, also known as Suan Chuwit, is a park located in Bangkok, Thailand."},"doc-35":{"n":"M.R. Kukrit's House Museum","a":"silom","km":9.3,"in":1,"kid":0,"b":1,"h":"Tuesday to Sunday 09:00 - 16:00, closed Monday","f":"","d":"A museum in Bangkok, Thailand, also known as Baan Soi Suan Plu."},"doc-36":{"n":"Central Rama 9","a":"rama9","km":7.0,"in":1,"kid":0,"b":1,"h":"Daily 10:00 - 22:00","f":"","d":"A prominent shopping mall in Bangkok, Thailand, located approximately 9.5 kilometers from the hotel."},"doc-31":{"n":"Wat Phra Ram 9","a":"rama9","km":8.5,"in":0,"kid":0,"b":0,"h":"Daily 08:00 - 17:00","f":"","d":"A Buddhist temple located in Bangkok, Thailand, approximately 8.5 km from the hotel."},"doc-16":{"n":"Erawan Shrine","a":"siam","km":10.0,"in":0,"kid":0,"b":0,"h":"Daily 08:00 - 17:00","f":"","d":"A small open-air shrine dedicated to Phra Phrom, the Thai manifestation of the Hindu god Brahma, situated at the heart of Bangkok's busiest shopping district."},"doc-38":{"n":"Central Chidlom","a":"siam","km":10.0,"in":1,"kid":0,"b":2,"h":"Daily 10:00 - 22:00","f":"","d":"A shopping mall located in Pathum Wan, Bangkok."},"doc-213":{"n":"CentralWorld","a":"siam","km":10.3,"in":1,"kid":0,"b":1,"h":"Daily 10:00 - 22:00","f":"","d":"A prominent mixed-use development located in Bangkok, Thailand, approximately 10.3 km from the hotel."},"doc-220":{"n":"Siam Paragon","a":"siam","km":10.5,"in":1,"kid":0,"b":3,"h":"Daily 10:00 - 22:00","f":"","d":"Siam Paragon is a prominent shopping mall in Bangkok."},"doc-150":{"n":"SEA LIFE Bangkok Ocean World","a":"siam","km":10.5,"in":1,"kid":0,"b":3,"h":"Daily 10:00 - 20:00 (Last entry at 19:00)","f":"Levels B1 and B2","d":"A large indoor aquarium located under Siam Paragon, featuring an ocean tunnel, sharks, rays, and reef fish."},"doc-221":{"n":"Siam Square","a":"siam","km":10.7,"in":0,"kid":0,"b":1,"h":"Daily 10:00 - 22:00","f":"","d":"Siam Square is a prominent shopping area located in Bangkok, Thailand."},"doc-225":{"n":"Siam Discovery","a":"siam","km":11.0,"in":1,"kid":0,"b":2,"h":"Daily 10:00 - 22:00","f":"","d":"A prominent shopping center located in the Bangkok area, approximately 11.0 km in a straight line from the hotel."},"doc-61":{"n":"MBK Center","a":"siam","km":11.0,"in":1,"kid":0,"b":1,"h":"Daily 10:00 - 22:00","f":"","d":"Large shopping mall in Bangkok, Thailand, located approximately 11.0 km from the hotel."},"doc-148":{"n":"Bangkok Art and Culture Centre","a":"siam","km":11.0,"in":1,"kid":0,"b":0,"h":"Tuesday to Sunday, 10:00 to 20:00; closed Mondays, New Year and Songkran holidays.","f":"","d":"The city's public contemporary art centre, located at 939 Rama I Road, Pathum Wan, Bangkok 10330, at the Pathumwan intersection opposite MBK Center."},"doc-216":{"n":"Pathumwananurak Park","a":"siam","km":10.4,"in":0,"kid":0,"b":0,"h":"Daily 05:00 - 21:00","f":"","d":"A public park in Bangkok, Thailand, located approximately 10.4 km in a straight line from the hotel."},"doc-149":{"n":"Mahanakhon SkyWalk","a":"silom","km":11.0,"in":1,"kid":0,"b":3,"h":"Daily 10:00 - Official closing times vary, please check on the day of visit when purchasin","f":"74th, 78th","d":"Thailand's highest observation deck, featuring an indoor viewing floor on the 74th floor and an outdoor rooftop on the 78th floor, including a glass-floor section offerin"},"doc-39":{"n":"Patpong Museum","a":"silom","km":9.8,"in":1,"kid":0,"b":1,"h":"Tuesday to Sunday 09:00 - 16:00, closed Monday","f":"","d":"Patpong Museum (\u0e1e\u0e34\u0e1e\u0e34\u0e18\u0e20\u0e31\u0e13\u0e11\u0e4c\u0e1e\u0e31\u0e12\u0e19\u0e4c\u0e1e\u0e07\u0e28\u0e4c) is a museum located in the Bangkok area, approximately 9.8 km from the hotel."},"doc-217":{"n":"Sri Maha Mariamman Temple","a":"silom","km":10.5,"in":0,"kid":0,"b":0,"h":"Daily 08:00 - 17:00","f":"","d":"A prominent Hindu temple located in Bangkok, Thailand, also known as Wat Phra Sri Maha Uma Devi."},"doc-17":{"n":"Wat Traimit (Golden Buddha)","a":"chinatown","km":12.5,"in":1,"kid":0,"b":1,"h":"Daily 08:00 - 17:00. Museum floors are closed on Mondays.","f":"","d":"Home to Phra Phuttha Maha Suwan Patimakon, a solid gold seated Buddha about 3 meters tall and about 5.5 tonnes, believed to date from the Sukhothai period."},"doc-79":{"n":"Wat Mangkon Kamalawat","a":"chinatown","km":12.7,"in":0,"kid":0,"b":0,"h":"Daily 08:00 - 17:00","f":"","d":"A Buddhist temple located in Bangkok, Thailand, approximately 12.7 km in a straight line from the hotel."},"doc-141":{"n":"The Old Siam Plaza","a":"chinatown","km":13.5,"in":1,"kid":0,"b":1,"h":"10:00 - 22:00 daily","f":"","d":"A shopping mall located in Phra Nakhon, Bangkok, Thailand."},"doc-145":{"n":"Sala Chalermkrung Royal Theatre","a":"chinatown","km":13.5,"in":1,"kid":0,"b":2,"h":"Box office 10:00 - 18:00; show times vary. Note: Hours and prices can change on public hol","f":"","d":"A historic theatre located in Bangkok, Thailand, offering performances."},"doc-70":{"n":"River City Bangkok","a":"riverside","km":11.7,"in":1,"kid":0,"b":2,"h":"Daily 10:00 - 22:00","f":"","d":"A shopping mall located in Bangkok, Thailand, approximately 11.7 km in a straight line from the hotel."},"doc-74":{"n":"Lhong 1919","a":"riverside","km":12.4,"in":0,"kid":0,"b":1,"h":"Open 24 hours","f":"","d":"Lhong 1919 (\u0e25\u0e49\u0e07 1919) is a historical tourist attraction and outdoor landmark in Bangkok, located approximately 12.4 km from the hotel."},"doc-108":{"n":"Wang Lang Market","a":"riverside","km":15.0,"in":0,"kid":0,"b":1,"h":"Daily 17:00 - 00:00","f":"","d":"A vibrant market located in Bangkok, Thailand."},"doc-3":{"n":"Museum of Siam","a":"oldtown","km":14.2,"in":1,"kid":0,"b":1,"h":"Tuesday to Sunday 09:00 - 16:00, closed on Monday","f":"","d":"The Museum of Siam is a discovery museum located in Phra Nakhon District, Bangkok, approximately 14.2 km from the hotel."},"doc-126":{"n":"Wat Suthat","a":"oldtown","km":14.0,"in":0,"kid":0,"b":0,"h":"Daily 08:00 - 17:00","f":"","d":"Buddhist temple located in Bangkok, Thailand."},"doc-0":{"n":"Devasathan","a":"oldtown","km":14.1,"in":0,"kid":0,"b":0,"h":"Daily 08:00 - 17:00","f":"","d":"Devasathan (\u0e40\u0e17\u0e27\u0e2a\u0e16\u0e32\u0e19\u0e42\u0e1a\u0e2a\u0e16\u0e4c\u0e1e\u0e23\u0e32\u0e2b\u0e21\u0e13\u0e4c), also known as Phram Temple, is a significant temple district located in Bangkok, Thailand."},"doc-4":{"n":"Democracy Monument","a":"oldtown","km":14.2,"in":0,"kid":0,"b":0,"h":"Open 24 hours (outdoor landmark)","f":"","d":"A significant monument located in Bangkok, Thailand."},"doc-143":{"n":"Mahakan Fort Park","a":"oldtown","km":13.8,"in":0,"kid":0,"b":0,"h":"Daily 05:00 - 21:00","f":"","d":"A public park located in Bangkok, Thailand, approximately 13.8 km from the hotel."},"doc-125":{"n":"Wat Ratchanatdaram","a":"oldtown","km":13.9,"in":0,"kid":0,"b":0,"h":"Daily 08:00 - 17:00","f":"","d":"A prominent Buddhist temple located in Bangkok, Thailand."},"doc-142":{"n":"King Prajadhipok Museum","a":"oldtown","km":14.0,"in":1,"kid":0,"b":1,"h":"Tuesday to Sunday 09:00 - 16:00, closed on Monday","f":"","d":"A museum in Bangkok, Thailand, dedicated to King Prajadhipok (Rama VII)."},"doc-154":{"n":"Khao San Road","a":"oldtown","km":15.0,"in":0,"kid":0,"b":1,"h":"Shop and bar hours vary; busiest after dark.","f":"","d":"Khao San Road is a vibrant street, approximately 400 meters long, situated in Banglamphu, Phra Nakhon, Bangkok 10200, near the Chao Phraya River and the old town."},"doc-19":{"n":"Bangkok National Museum","a":"oldtown","km":15.0,"in":1,"kid":0,"b":1,"h":"Wednesday to Sunday, 09:00 - 16:00. Closed Monday, Tuesday, and public holidays.","f":"","d":"Thailand's main national museum, opened in 1874 and set in the former Front Palace."},"doc-18":{"n":"Wat Benchamabophit","a":"oldtown","km":13.5,"in":0,"kid":0,"b":0,"h":"Daily 08:00 - 17:00","f":"","d":"A royal temple begun in 1899 under King Rama V, designed by Prince Naris and faced in white Italian Carrara marble, with stained-glass windows showing European influence."},"doc-156":{"n":"Rajadamnern Stadium","a":"oldtown","km":14.0,"in":1,"kid":0,"b":2,"h":"Daily 09:00 - 17:00","f":"","d":"Rajadamnern Stadium, established in 1945, is one of Thailand's oldest Muay Thai stadiums, hosting live Muay Thai events multiple nights each week."},"doc-20":{"n":"Erawan Museum","a":"samutprakan","km":12.0,"in":1,"kid":0,"b":2,"h":"Tuesday to Sunday 09:00 - 16:00, closed Monday. Hours and prices can change on public holi","f":"","d":"The Erawan Museum is a prominent cultural museum located in Samut Prakan, Thailand."},"doc-155":{"n":"The Ancient City (Muang Boran)","a":"samutprakan","km":30.0,"in":0,"kid":0,"b":2,"h":"Daily, approximately 09:00 - 19:00. Please check the official website for current hours an","f":"","d":"A very large open-air museum located at 296/1 Moo 7 Sukhumvit Road, Bang Pu Mai, Mueang Samut Prakan, Samut Prakan 10280."},"doc-247":{"n":"Robot Building","a":"silom","km":9.5,"in":0,"kid":0,"b":0,"h":"Monday to Friday 09:00 - 18:00; exterior viewable anytime. Hours can change on public holi","f":"","d":"An office building located in Bangkok, recognized for its unique robot-like architectural design."},"doc-26":{"n":"Prasart Museum","a":"east","km":7.0,"in":1,"kid":0,"b":1,"h":"Tuesday to Sunday 09:00 - 16:00, closed Monday","f":"","d":"A museum showcasing cultural artifacts and history."},"doc-160":{"n":"Si Nakhon Khuean Khan Botanical Park","a":"east","km":5.2,"in":0,"kid":0,"b":0,"h":"Daily 05:00 - 21:00","f":"","d":"A park and botanical garden located in the Bangkok area, Thailand."}},"its":[{"id":"first-time","t":"First Time in Bangkok","hrs":8,"who":["solo","couple","friends"],"int":["culture","food","photo"],"pace":"balanced","bud":1,"set":"mixed","rainy":0,"start":"09:00","bl":"The classic old-town loop: temples, a museum and Chinatown, back before dinner.","s":[["doc-126",60,["See the Giant Swing outside","Walk the cloister of Buddha images"]],["doc-3",90,["Interactive galleries on Thai identity","Good air-conditioned break"]],["doc-17",60,["The 5.5-tonne Golden Buddha","Chinatown heritage floors"]],["doc-79",45,["Chinatown\u2019s busiest temple","Lantern-lined lanes outside"]],["doc-141",60,["Thai desserts and snacks","Fabric and textile stalls"]]]},{"id":"bkk-2h","t":"Bangkok in 2 Hours","hrs":2,"who":["solo","couple","business"],"int":["shopping","food"],"pace":"relaxed","bud":1,"set":"indoor","rainy":1,"start":"17:00","bl":"Short on time? Stay close: coffee, the mall next door and the hotel terrace.","s":[["doc-118",30,["Pour-over and a pastry","Grab a window seat"]],["doc-80",50,["Browse the lifestyle floors","Pick up a snack for later"]],["doc-85",30,["Sunset walk on the 250 m loop","Quiet reading corner"]]]},{"id":"bkk-4h","t":"Bangkok in 4 Hours","hrs":4,"who":["solo","couple","friends"],"int":["shopping","culture","photo"],"pace":"balanced","bud":1,"set":"mixed","rainy":0,"start":"13:00","bl":"BTS to Siam for art, shopping and the Erawan Shrine, then home by BTS.","s":[["doc-148",60,["Free contemporary exhibitions","Design shops on the lower floors"]],["doc-225",50,["Creative Thai brands","Rooftop-style displays"]],["doc-213",50,["The city\u2019s busiest mall","Food court break"]],["doc-16",20,["Watch the traditional dancers","Offerings of jasmine garlands"]]]},{"id":"half-day","t":"Half-Day Highlights","hrs":6,"who":["solo","couple","friends","seniors"],"int":["culture","photo"],"pace":"balanced","bud":1,"set":"mixed","rainy":0,"start":"09:00","bl":"Royal temples and the old city in one comfortable morning-to-afternoon.","s":[["doc-18",45,["Italian marble halls","Calm courtyard for photos"]],["doc-19",90,["Royal treasures and old chariots","Plenty of seating inside"]],["doc-0",30,["Brahmin shrines rarely visited","Quick and quiet stop"]],["doc-126",45,["Giant Swing landmark","Cloister of 156 Buddha images"]],["doc-143",30,["Old city wall and fort","Shade and benches"]]]},{"id":"full-day","t":"Full-Day Discovery","hrs":12,"who":["friends","couple","solo"],"int":["culture","food","shopping","nightlife"],"pace":"active","bud":2,"set":"mixed","rainy":0,"start":"09:00","bl":"From temples to the riverside to a skywalk at night: Bangkok in one long day.","s":[["doc-125",45,["Loha Prasat\u2019s 37 spires","Climb to the top terrace"]],["doc-3",90,["Thai history, made playful","Cool down indoors"]],["doc-17",60,["The Golden Buddha","Chinatown heritage exhibits"]],["doc-141",60,["Lunch on Thai desserts","Old-style market hall"]],["doc-74",90,["Riverside heritage warehouses","Caf\u00e9s and art shops"]],["doc-70",60,["Antiques and galleries","River views at dusk"]],["doc-149",60,["Glass tray 314 m up","City lights at night"]]]},{"id":"family-aquarium","t":"Family Aquarium Adventure","hrs":4,"who":["family"],"int":["family","nature"],"pace":"relaxed","bud":2,"set":"indoor","rainy":1,"start":"10:00","bl":"SEA LIFE first, lunch in the same building, a slow mall wander after.","s":[["doc-150",120,["Shark tunnel and penguins","Allow at least 90 minutes"]],["doc-220",60,["Family lunch in the food hall","Rest and refresh"]],["doc-225",30,["Playful design floors","Easy, short walk"]]]},{"id":"kids-learning","t":"Kids Learning & Discovery","hrs":6,"who":["family"],"int":["family","art"],"pace":"relaxed","bud":0,"set":"indoor","rainy":1,"start":"09:30","bl":"Hands-on science nearby, lunch and the in-hotel Kids\u2019 Lab to finish.","s":[["doc-159",150,["Planetarium and science halls","Hands-on exhibits for 6+"]],["doc-158",60,["Lunch and a play break","Indoor, air-conditioned"]],["doc-188",90,["Coding robots and STEM play","Supervised sessions"]]]},{"id":"toddlers","t":"Bangkok with Toddlers","hrs":3,"who":["family"],"int":["family","nature"],"pace":"relaxed","bud":0,"set":"mixed","rainy":0,"start":"09:00","bl":"Short distances, nap-friendly timing and lots of space to run.","s":[["doc-85",40,["Stroller-friendly loop","Shaded morning walk"]],["doc-188",60,["Soft play and simple activities","Close to the room"]],["doc-44",50,["Kid-friendly lunch","High chairs available (check)"]]]},{"id":"family-shopping","t":"Family-Friendly Shopping","hrs":4,"who":["family"],"int":["shopping","family"],"pace":"relaxed","bud":1,"set":"indoor","rainy":1,"start":"11:00","bl":"One big mall with play zones, food and everything under one roof.","s":[["doc-152",150,["Toy and kids\u2019 floors","Big family food court"]],["doc-158",60,["Second stop for snacks","Short taxi ride"]]]},{"id":"seniors","t":"Easy Bangkok with Seniors","hrs":4,"who":["seniors"],"int":["culture","shopping"],"pace":"relaxed","bud":1,"set":"indoor","rainy":1,"start":"10:00","bl":"Air-conditioned, seats everywhere and only one taxi ride each way.","s":[["doc-142",60,["Small, calm museum","Seating in every room"]],["doc-3",60,["Easy galleries at ground level","Caf\u00e9 nearby"]],["doc-141",60,["Lunch on traditional sweets","Indoor market hall"]]]},{"id":"minimal-walking","t":"Minimal Walking Experience","hrs":3,"who":["seniors","family","business"],"int":["wellness","food"],"pace":"relaxed","bud":2,"set":"indoor","rainy":1,"start":"14:00","bl":"Never leave the building: spa, coffee and a view, all by lift.","s":[["doc-46",30,["Coffee in the lobby","Lift access"]],["doc-58",90,["Recovery lounge and massage","Book ahead"]],["doc-48",50,["Early drink with a view","Seats by the window"]]]},{"id":"accessible-indoor","t":"Accessible Indoor Attractions","hrs":4,"who":["seniors","family"],"int":["shopping","art"],"pace":"relaxed","bud":1,"set":"indoor","rainy":1,"start":"11:00","bl":"Large indoor venues with lifts. Accessibility details: please confirm with each venue.","s":[["doc-148",60,["Wide ramps through the galleries","Check lift access on arrival"]],["doc-220",90,["Spacious walkways","Lunch inside"]],["doc-150",60,["Mostly level route (confirm)","Seats near the tanks"]]]},{"id":"romantic-sunset","t":"Romantic Sunset","hrs":4,"who":["couple"],"int":["photo","nightlife"],"pace":"relaxed","bud":3,"set":"mixed","rainy":0,"start":"16:00","bl":"Golden hour on the river, then the city from 314 metres up.","s":[["doc-74",75,["Riverside piers at golden hour","Photo walls and caf\u00e9s"]],["doc-70",45,["Sunset over the river","Quiet galleries"]],["doc-149",60,["Glass tray at dusk","Rooftop bar (check hours)"]]]},{"id":"cafe-date","t":"Couples' Caf\u00e9 Date","hrs":3,"who":["couple"],"int":["food","photo"],"pace":"relaxed","bud":1,"set":"mixed","rainy":0,"start":"14:00","bl":"Slow coffee, a park bench and the hotel terrace for the last light.","s":[["doc-118",45,["Specialty coffee for two","Share a pastry"]],["doc-22",60,["Lake walk and sculptures","Easy taxi ride"]],["doc-85",40,["Sunset on The Deck","Quiet corners"]]]},{"id":"riverside-night","t":"Riverside Date Night","hrs":4,"who":["couple","friends"],"int":["nightlife","food","photo"],"pace":"balanced","bud":2,"set":"outdoor","rainy":0,"start":"17:30","bl":"Heritage piers, a night market across the river and the lights on the water.","s":[["doc-74",75,["Lanterns and courtyards","Dinner by the river"]],["doc-108",75,["Thonburi night market","Street snacks to share"]],["doc-70",40,["Night views by the water","Last drink nearby"]]]},{"id":"romantic-dinner","t":"Romantic Dinner Experience","hrs":3,"who":["couple"],"int":["food","nightlife","wellness"],"pace":"relaxed","bud":3,"set":"indoor","rainy":1,"start":"17:30","bl":"No traffic tonight: spa for two, dinner and drinks upstairs.","s":[["doc-58",75,["Couples\u2019 ritual (book ahead)","Steam and sauna"]],["doc-44",60,["Dinner at Byte","Try the Thai street-food station"]],["doc-48",45,["Cocktails on Level 25","City lights"]]]},{"id":"street-food","t":"Street Food Trail","hrs":4,"who":["friends","solo","couple"],"int":["food","nightlife"],"pace":"active","bud":0,"set":"outdoor","rainy":0,"start":"17:00","bl":"Chinatown by night: temples, sweets and the city\u2019s most famous food streets.","s":[["doc-17",40,["Start before closing time","Golden Buddha"]],["doc-79",30,["Temple of the Dragon Lotus","Lantern lanes"]],["doc-141",60,["Thai desserts and kanom","Grab a seat inside"]],["doc-108",90,["Night market grazing","Cash and QR both useful"]]]},{"id":"hidden-gems","t":"Local Hidden Gems","hrs":6,"who":["solo","couple","friends"],"int":["culture","art","photo"],"pace":"balanced","bud":1,"set":"mixed","rainy":0,"start":"10:00","bl":"Places most visitors miss: a teak house, an antique museum and quiet shrines.","s":[["doc-35",60,["Thai teak houses and garden","Classical art collection"]],["doc-26",60,["Private antique collection","Book a guided visit"]],["doc-0",30,["Brahmin shrine","Rarely crowded"]],["doc-143",40,["City wall walk","Old community nearby"]],["doc-142",60,["Story of Thai democracy","Calm and cool"]]]},{"id":"rainy-day","t":"Rainy Day Bangkok","hrs":6,"who":["family","couple","solo","seniors","friends"],"int":["art","shopping","family"],"pace":"relaxed","bud":1,"set":"indoor","rainy":1,"start":"10:00","bl":"Everything indoors and linked by BTS skywalks around Siam.","s":[["doc-148",90,["Free exhibitions","Art bookshops"]],["doc-150",90,["Aquarium in the dry","Great for all ages"]],["doc-220",90,["Lunch and shopping","Gourmet market"]],["doc-213",60,["More shops via skywalk","Dessert stop"]]]},{"id":"art-culture","t":"Art & Culture Trail","hrs":6,"who":["solo","couple","seniors"],"int":["art","culture"],"pace":"balanced","bud":1,"set":"indoor","rainy":1,"start":"10:00","bl":"Galleries, a national museum and a royal theatre in the old city.","s":[["doc-148",75,["Contemporary Thai art","Free entry for most shows"]],["doc-19",90,["National collection","Allow time for the main hall"]],["doc-3",60,["Interactive Thai culture","Caf\u00e9 break"]],["doc-145",45,["Art deco theatre","Check show times"]]]},{"id":"shopping","t":"Shopping Lover's Guide","hrs":8,"who":["friends","couple","solo"],"int":["shopping","food"],"pace":"active","bud":2,"set":"indoor","rainy":1,"start":"11:00","bl":"Sukhumvit to Siam: themed floors, local designers and luxury, all on the BTS.","s":[["doc-28",75,["Each floor is a world city","Pier 21 food court"]],["doc-24",75,["New flagship stores","Dining hall"]],["doc-225",60,["Thai designers","Creative concepts"]],["doc-220",90,["Luxury and gourmet market","Lunch break"]],["doc-61",75,["Bargains and souvenirs","Phones and gadgets"]]]},{"id":"budget","t":"Bangkok on a Budget","hrs":6,"who":["solo","friends"],"int":["culture","nature","food"],"pace":"balanced","bud":0,"set":"mixed","rainy":0,"start":"08:30","bl":"Free parks, free temples and street food. Transport is the main cost.","s":[["doc-161",75,["Bangkok\u2019s biggest park","Morning walk or bike"]],["doc-31",40,["Free temple visit","Dress modestly"]],["doc-29",30,["Pocket park and city views","Free entry"]],["doc-22",60,["Lake and sculptures","Picnic spot"]]]},{"id":"luxury","t":"Luxury Bangkok","hrs":6,"who":["couple","solo"],"int":["shopping","wellness","food"],"pace":"relaxed","bud":3,"set":"indoor","rainy":1,"start":"12:00","bl":"Spa first, flagship shopping, then dinner above the city.","s":[["doc-58",90,["Signature massage","Recovery lounge"]],["doc-38",75,["Department store icons","Personal shopping"]],["doc-220",75,["Luxury avenue","Gourmet market"]],["doc-149",60,["SkyWalk at dusk","Rooftop drinks (check)"]]]},{"id":"business","t":"Business Traveler After-Work","hrs":2,"who":["business","solo"],"int":["wellness","food","nightlife"],"pace":"relaxed","bud":2,"set":"indoor","rainy":1,"start":"18:30","bl":"Two hours, zero commute: gym, dinner and a drink, all inside the hotel.","s":[["doc-56",40,["Quick workout","24-hour digital key"]],["doc-44",45,["Dinner at Byte","Order by table tablet"]],["doc-48",35,["Nightcap on Level 25","Last order 00:30"]]]},{"id":"around-hotel","t":"Around the Hotel in 1 Hour","hrs":1,"who":["business","solo","couple","family","seniors","friends"],"int":["food","shopping"],"pace":"relaxed","bud":1,"set":"indoor","rainy":1,"start":"12:00","bl":"Coffee, a quick bite and a look around 101 True Digital Park.","s":[["doc-118",20,["Coffee to go","East Building"]],["doc-120",25,["Korean fried chicken","Quick lunch"]],["doc-80",15,["Quick browse","Back via the skywalk"]]]},{"id":"nature-day","t":"Green Bangkok","hrs":6,"who":["family","couple","solo","seniors"],"int":["nature","photo","wellness"],"pace":"relaxed","bud":0,"set":"outdoor","rainy":0,"start":"07:30","bl":"Start early before the heat: two big parks and a botanical garden.","s":[["doc-161",90,["Gardens from around the world","Cycle hire inside (check)"]],["doc-160",60,["Botanical garden","Shaded paths"]],["doc-55",60,["Back for a swim","Rooftop pool"]]]},{"id":"weekend-market","t":"Night Market Evening","hrs":4,"who":["friends","couple","family","solo"],"int":["food","shopping","nightlife"],"pace":"balanced","bud":0,"set":"outdoor","rainy":0,"start":"17:30","bl":"The closest big night market: food, vintage finds and live music.","s":[["doc-153",150,["Street food rows","Vintage and souvenir stalls"]],["doc-158",45,["Cool down indoors","Dessert stop"]]]}]};
 const MOBILE_BASE="https://araihan-arc.github.io/arc-kiosk-pages/arc-hotel-itinerary-kiosk/";
+const ASSETS="";  /* same folder on GitHub Pages */
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const MORE=[
@@ -217,6 +264,88 @@ const MORE=[
  {t:"Byte Restaurant Menu",img:"img/qr-byte.jpg",s:"Byte, our all-day food hall on Level 2: breakfast from 06:00, lunch 11:30 to 14:30, dinner 18:00 to 22:30."},
  {t:"Flight Status",img:"img/qr-flight.jpg",s:"In this prototype only Plan Your Day is connected."}
 ];
+/* ============================================================
+   ARC Smart Itinerary — guest-facing suggestion labels
+   Prototype-local. No backend, no production analytics.
+   ============================================================ */
+const SUG_KEY="arcSuggestCfg.v1", HIT_KEY="arcSuggestHits.v1";
+
+/* Default configuration. Each entry:
+   id        stable key, used for the hit counter
+   label     what the guest sees on the home rail
+   phrase    what the guest "says" in the simulated voice sheet
+   it        itinerary id in DATA.its  (must exist, else dropped)
+   on        enabled
+   w         rotation weight (higher = more likely when rotating)     */
+const SUG_DEFAULTS=[
+ {id:"relax-partner", label:"A relaxed afternoon for two", phrase:"Three hours with my partner, something relaxing", it:"cafe-date",         on:true, w:8},
+ {id:"rainy-kids",    label:"Rainy day with the kids",     phrase:"A rainy afternoon with my kids",          it:"family-aquarium", on:true, w:7},
+ {id:"easy-seniors",  label:"Gentle pace, little walking", phrase:"Half a day with my parents, not much walking", it:"seniors",    on:true, w:6},
+ {id:"surprise-4h",   label:"Surprise me — about 4 hours", phrase:"Surprise me, about four hours",           it:"bkk-4h",          on:true, w:6},
+ {id:"two-hours",     label:"Only two hours to spare",     phrase:"I only have two hours before dinner",     it:"bkk-2h",          on:true, w:5},
+ {id:"first-time",    label:"First time in Bangkok",       phrase:"It is my first time in Bangkok",          it:"first-time",      on:true, w:5},
+ {id:"street-food",   label:"Street food after dark",      phrase:"Where should I eat tonight, somewhere local", it:"street-food",  on:true, w:4},
+ {id:"near-hotel",    label:"Stay close to the hotel",     phrase:"Something close by, I do not want to travel", it:"around-hotel", on:true, w:4},
+ {id:"art-culture",   label:"Galleries and museums",       phrase:"I would like art and museums",            it:"art-culture",     on:true, w:3},
+ {id:"green-bkk",     label:"Parks and fresh air",         phrase:"Somewhere green, away from the malls",    it:"nature-day",      on:false,w:3}
+];
+
+const SUG_SHOWN=4;      /* how many appear on the home rail            */
+const SUG_POP=2;        /* how many of those are taken by popularity   */
+
+function sugStore(k,fallback){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fallback}catch(e){return fallback}}
+function sugSave(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+function sugCfg(){
+  const saved=sugStore(SUG_KEY,null);
+  if(!Array.isArray(saved))return SUG_DEFAULTS.map(s=>({...s}));
+  /* merge: keep saved edits, add any new defaults, drop unknown ids */
+  const byId={};saved.forEach(s=>{if(s&&s.id)byId[s.id]=s});
+  return SUG_DEFAULTS.map(d=>({...d,...(byId[d.id]||{}),id:d.id,it:d.it}));
+}
+function sugCfgSave(list){sugSave(SUG_KEY,list)}
+function sugHits(){const h=sugStore(HIT_KEY,{});return (h&&typeof h==="object")?h:{}}
+function sugHit(id){const h=sugHits();h[id]=(h[id]||0)+1;sugSave(HIT_KEY,h);return h[id]}
+function sugResetHits(){sugSave(HIT_KEY,{})}
+
+/* eligible = enabled AND points at an itinerary that actually exists */
+function sugEligible(valid){
+  return sugCfg().filter(s=>s.on && valid(s.it));
+}
+
+/* Ranking + rotation.
+   1. popular slots  : highest hit count first; ties broken by weight, then random
+   2. rotation slots : weighted random from whatever is left, no duplicates
+   3. no hits at all : falls back to weight order (the configured default ranking) */
+function sugPick(valid,n,rnd){
+  rnd=rnd||Math.random;
+  n=n||SUG_SHOWN;
+  const pool=sugEligible(valid), hits=sugHits();
+  if(!pool.length)return [];
+  const any=pool.some(s=>(hits[s.id]||0)>0);
+  const out=[],used={};
+
+  if(any){
+    const ranked=pool.slice().sort((a,b)=>
+      (hits[b.id]||0)-(hits[a.id]||0) || b.w-a.w || (rnd()-0.5));
+    ranked.slice(0,Math.min(SUG_POP,n)).forEach(s=>{out.push(s);used[s.id]=1});
+  }else{
+    const byW=pool.slice().sort((a,b)=>b.w-a.w);
+    byW.slice(0,Math.min(SUG_POP,n)).forEach(s=>{out.push(s);used[s.id]=1});
+  }
+
+  const rest=pool.filter(s=>!used[s.id]);
+  while(out.length<n && rest.length){
+    let tot=0;rest.forEach(s=>tot+=Math.max(1,s.w));
+    let r=rnd()*tot,i=0;
+    for(;i<rest.length;i++){r-=Math.max(1,rest[i].w);if(r<=0)break}
+    if(i>=rest.length)i=rest.length-1;
+    const pick=rest.splice(i,1)[0];
+    if(!used[pick.id]){out.push(pick);used[pick.id]=1}
+  }
+  return out;
+}
+
 /* what the guest says (simulated) -> which sample connector output is returned */
 const SAYS=[
  ["Three hours with my partner, something relaxing","cafe-date"],
@@ -234,23 +363,30 @@ let IT=null,START=0;const BUF=15;
 const pad=n=>String(n).padStart(2,"0"),fmt=m=>pad(Math.floor(m/60)%24)+":"+pad(m%60);
 const nowBkk=()=>{const d=new Date(Date.now()+7*3600e3);return d.getUTCHours()*60+d.getUTCMinutes()};
 const dur=m=>{const h=Math.floor(m/60),r=m%60;return h?(h+"h"+(r?" "+r+"m":"")):r+" min"};
-const img=id=>"img/"+id+".jpg";
+const img=id=>ASSETS+"img/"+id+".jpg";
 function times(it,start){let t=start;return it.stops.map((s,i)=>{const a=t;t+=s.duration+(i<it.stops.length-1?BUF:0);return {from:a,to:a+s.duration}})}
 function total(it){return it.stops.reduce((a,s)=>a+s.duration,0)+BUF*(it.stops.length-1)}
 
-function avatar(s){const v=$("#av"),src="av/"+s+".mp4";if(v.getAttribute("src")!==src){v.src=src;v.play().catch(()=>{})}}
-function say(t){$("#say").textContent=t;$("#say").hidden=!t}
+function avatar(s){const v=$("#av"),src=ASSETS+"av/"+s+".mp4";if(v.getAttribute("src")!==src){v.src=src;v.play().catch(()=>{})}}
+function say(t){const b=$("#say");b.textContent=t;b.hidden=!t;if(!t)b.style.top=""}
 function show(id){$$(".page").forEach(p=>p.classList.toggle("on",p.id===id));$("#stage").classList.toggle("panelon",!!id);
   $("#home").hidden=!!id||!$("#voice").classList.contains("on")&&false;$$("#helpful button").forEach(b=>b.classList.remove("sel"));window.__screen=id||"avatar"}
-function home(){clearTimeout(home.t);IT=null;show(null);$("#voice").classList.remove("on");$("#thinking").hidden=true;say("");$("#home").hidden=false;avatar("idle")}
+function home(){clearTimeout(home.t);IT=null;show(null);$("#voice").classList.remove("on");$("#thinking").hidden=true;say("");$("#home").hidden=false;avatar("idle");renderSuggest()}
 
 /* 1. ask: Plan Your Day (quick reply, QUERY) or mic/keyboard. The connector asks one question when details are missing. */
 function ask(mode){show(null);$("#home").hidden=true;
   if(mode==="plan")say("I’d love to plan your day. Who’s joining you, and what would you enjoy?");else say("");
   const s=$("#voice");s.classList.add("on");avatar("listening");const typing=mode==="type";
+  requestAnimationFrame(()=>{const b=$("#say");if(b&&!b.hidden)b.style.top=(s.offsetHeight+36)+"px"});
   $("#voiceE").textContent=typing?"Tell me what you have in mind":"I’m listening";$("#listen").hidden=typing;$("#typein").hidden=!typing;
-  $("#sugg").innerHTML=SAYS.map(([p],k)=>`<button data-k="${k}">“${esc(p)}”</button>`).join("");
-  $$("#sugg [data-k]").forEach(b=>b.onclick=()=>plan(SAYS[+b.dataset.k][1]));if(typing)setTimeout(()=>$("#inp").focus(),50)}
+  const picks=sugPick(itExists,4);
+  $("#sugg").innerHTML=picks.length
+    ? picks.map((s,k)=>`<button data-sg="${k}">“${esc(s.phrase)}”</button>`).join("")
+    : SAYS.map(([p],k)=>`<button data-sg="s${k}">“${esc(p)}”</button>`).join("");
+  $$("#sugg [data-sg]").forEach(b=>b.onclick=()=>{const v=b.dataset.sg;
+    if(v[0]==="s")return plan(SAYS[+v.slice(1)][1]);
+    const s=picks[+v];sugHit(s.id);plan(s.it)});
+  if(typing)setTimeout(()=>$("#inp").focus(),50)}
 function fromText(t){t=t.toLowerCase();return /kid|child|family/.test(t)?"family-aquarium":/parent|mother|father|senior|walk/.test(t)?"seniors":/partner|wife|husband|couple|relax/.test(t)?"cafe-date":"bkk-4h"}
 
 /* 2. connector composes one itinerary */
@@ -297,7 +433,53 @@ function bridge(ev){if(window.ArcBridge&&ArcBridge.sendMessage)try{ArcBridge.sen
 window.ArcItinerary={load,get:()=>IT};
 function fit(){const f=$("#frame").getBoundingClientRect(),s=Math.min(f.width/1080,f.height/1920);$("#stage").style.transform=`translate(-50%,-50%) scale(${s})`}
 
-$("#qrs").innerHTML=MORE.map((q,i)=>`<button class="qr" data-m="${i}"><img src="${q.img}" alt="">${esc(q.t)}</button>`).join("");
+
+/* ---------- guest-facing suggestions: render, count, admin (prototype only) ---------- */
+const itExists=id=>DATA.its.some(x=>x.id===id);
+let SUG_VIEW=[];
+function renderSuggest(){
+  const el=$("#isugg");if(!el)return;
+  SUG_VIEW=sugPick(itExists,SUG_SHOWN);
+  const hits=sugHits();
+  el.innerHTML=SUG_VIEW.map((s,i)=>{
+    const hot=(hits[s.id]||0)>0 && i<SUG_POP;
+    return `<button data-sg="${i}">${hot?'<span class="pop" aria-hidden="true"></span>':""}`
+      +`<span><span class="sx">Suggested</span><span class="sp">${esc(s.label)}</span></span></button>`}).join("");
+  $$("#isugg [data-sg]").forEach(b=>b.onclick=()=>{
+    const s=SUG_VIEW[+b.dataset.sg];if(!s)return;
+    sugHit(s.id);$("#home").hidden=true;plan(s.it)});
+}
+
+/* demo admin — operator chrome, never part of the guest screen */
+function admDraw(){
+  const cfg=sugCfg(),hits=sugHits();
+  $("#admBody").innerHTML=cfg.map((s,i)=>`<tr data-i="${i}">
+    <td><input type="checkbox" ${s.on?"checked":""} data-f="on"></td>
+    <td><input type="text" value="${esc(s.label)}" data-f="label"></td>
+    <td>${esc(s.it)}${itExists(s.it)?"":' <b style="color:#9c2f25">missing</b>'}</td>
+    <td><input type="number" min="1" max="20" value="${s.w}" data-f="w"></td>
+    <td class="hits">${hits[s.id]||0}</td></tr>`).join("");
+}
+function admRead(){
+  const cfg=sugCfg();
+  $$("#admBody tr").forEach(tr=>{const i=+tr.dataset.i;
+    cfg[i].on=tr.querySelector('[data-f="on"]').checked;
+    cfg[i].label=tr.querySelector('[data-f="label"]').value.trim()||cfg[i].label;
+    cfg[i].w=Math.max(1,Math.min(20,+tr.querySelector('[data-f="w"]').value||1))});
+  return cfg;
+}
+$("#admBtn").onclick=()=>{admDraw();$("#adm").classList.add("on")};
+$("#admClose").onclick=()=>$("#adm").classList.remove("on");
+$("#admSave").onclick=()=>{sugCfgSave(admRead());renderSuggest();$("#adm").classList.remove("on");toast("Suggestions saved for this browser.")};
+$("#admReset").onclick=()=>{sugResetHits();admDraw();renderSuggest();toast("Demo analytics reset.")};
+$("#admDefaults").onclick=()=>{sugCfgSave(SUG_DEFAULTS.map(s=>({...s})));admDraw();renderSuggest();toast("Defaults restored.")};
+$("#admPrev").onclick=()=>{sugCfgSave(admRead());
+  const out=$("#admPrevOut");out.hidden=false;
+  out.innerHTML="<b>Five draws with the current settings</b><br>"+
+    Array.from({length:5},()=>sugPick(itExists,SUG_SHOWN).map(s=>esc(s.label)).join(" &middot; ")).join("<br>");
+  admDraw()};
+
+$("#qrs").innerHTML=MORE.map((q,i)=>`<button class="qr" data-m="${i}"><img src="${ASSETS+q.img}" alt="">${esc(q.t)}</button>`).join("");
 $$("#qrs [data-m]").forEach(b=>b.onclick=()=>{const q=MORE[+b.dataset.m];if(q.plan)ask("plan");else{$("#greet").textContent=q.s}});
 $("#micIdle").onclick=()=>ask("voice");$("#kbIdle").onclick=()=>ask("type");$("#homeIdle").onclick=home;$("#voiceX").onclick=home;
 $("#sendBtn").onclick=()=>{const v=$("#inp").value.trim();if(v){$("#inp").value="";plan(fromText(v))}};$("#inp").addEventListener("keydown",e=>{if(e.key==="Enter")$("#sendBtn").click()});
