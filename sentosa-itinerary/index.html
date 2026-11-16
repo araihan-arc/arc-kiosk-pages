@@ -1022,8 +1022,29 @@ html.m .qr { display: none !important; }
   }
 
   /* ---------- URL untuk QR dan Share ---------- */
+  /* Kiosk ARC tidak memuat halaman ini langsung. Dia memakainya lewat
+     proxy arcwrap, dan nama hostnya ditulis ulang:
+
+       araihan-arc.github.io  ->  araihan--arc-github-io.arcwrap.amityrobotics.com
+
+     Host proxy itu menolak permintaan dari luar kiosk, jawabannya
+     "arc kiosk only". Jadi QR TIDAK BOLEH memakai location.href apa
+     adanya — HP yang memindainya akan mendarat di halaman mati.
+
+     Di sini penulisan ulang itu dibalik: titik jadi tanda hubung, dan
+     tanda hubung asli jadi dua tanda hubung. Jadi dibaca mundur. */
+  function publicBase() {
+    var m = location.hostname.match(/^(.+)\.arcwrap\.amityrobotics\.com$/i);
+    if (!m) return location.origin + location.pathname;
+    var host = m[1]
+      .replace(/--/g, "\u0000")   /* amankan tanda hubung asli */
+      .replace(/-/g, ".")          /* sisanya dulunya titik      */
+      .replace(/\u0000/g, "-");
+    return location.protocol + "//" + host + location.pathname;
+  }
+
   function shareUrl() {
-    var u = new URL(location.href);
+    var u = new URL(publicBase());
     u.searchParams.set("view", "m");
     u.searchParams.set("p", VIEW.plan);
     u.searchParams.set("s", VIEW.stops.join(","));
