@@ -22,8 +22,9 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .mh img{width:100%;height:100%;object-fit:cover;display:block}
 .mh::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(20,22,19,.80),rgba(20,22,19,.12) 58%,transparent)}
 .mh .b{position:absolute;top:20px;left:22px;z-index:2;color:#fff;font-size:12px;letter-spacing:.3em;font-weight:700}
-.mh h1{position:absolute;left:22px;right:22px;bottom:20px;z-index:2;margin:0;color:#fff;font:400 38px/1.08 var(--serif);letter-spacing:-.02em}
-.mh .k{position:absolute;left:22px;bottom:70px;z-index:2;color:var(--gold);font-size:11px;letter-spacing:.26em;font-weight:700;text-transform:uppercase}
+.mh h1{position:absolute;left:22px;right:22px;bottom:42px;z-index:2;margin:0;color:#fff;font:400 38px/1.08 var(--serif);letter-spacing:-.02em}
+.mh .bl{position:absolute;left:22px;right:22px;bottom:18px;z-index:2;margin:0;color:rgba(255,255,255,.88);font-size:13px;line-height:1.4}
+.mh .k{position:absolute;left:22px;bottom:94px;z-index:2;color:var(--gold);font-size:11px;letter-spacing:.26em;font-weight:700;text-transform:uppercase}
 
 /* meta */
 .mm{display:flex;border-bottom:1px solid var(--line);background:#fff}
@@ -46,7 +47,6 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .mi p{margin:0 0 5px;font-size:13px;color:var(--ink2);line-height:1.45}
 .mi .s{font-size:11.5px;color:var(--muted);letter-spacing:.04em}
 .mi a.dir{display:inline-block;margin-top:7px;font-size:13px;font-weight:600;color:var(--green);text-decoration:none;border-bottom:1px solid rgba(48,71,58,.3);padding-bottom:1px}
-.mi.gone{opacity:.4}
 
 /* edit row */
 .ops{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
@@ -68,15 +68,16 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .sh{position:fixed;inset:0;z-index:50;display:none}
 .sh.on{display:block}
 .sh .bg{position:absolute;inset:0;background:rgba(20,22,19,.5)}
-.sh .pan{position:absolute;left:0;right:0;bottom:0;max-height:88vh;background:var(--ivory);border-radius:18px 18px 0 0;display:flex;flex-direction:column;animation:up .28s ease-out both}
+.sh .pan{position:absolute;left:0;right:0;bottom:0;max-height:90vh;background:var(--ivory);border-radius:18px 18px 0 0;display:flex;flex-direction:column;animation:up .28s ease-out both}
 @keyframes up{from{transform:translateY(100%)}to{transform:none}}
-.sh .hd{padding:18px 20px 12px;border-bottom:1px solid var(--line)}
+.sh .hd{padding:18px 20px 12px;border-bottom:1px solid var(--line);background:var(--ivory);border-radius:18px 18px 0 0}
 .sh .hd .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sh h2{margin:0;font:400 23px/1.15 var(--serif)}
+.sh .sub{margin:5px 0 0;font-size:13px;color:var(--ink2);line-height:1.45}
 .sh .x{min-height:44px;padding:0 14px;font-size:14px;font-weight:600;color:var(--ink2)}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:12px 20px;scrollbar-width:none;border-bottom:1px solid var(--line);background:#fff}
 .chips::-webkit-scrollbar{display:none}
-.chips button{flex:0 0 auto;min-height:40px;padding:0 15px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:var(--ink2)}
+.chips button{flex:0 0 auto;min-height:44px;padding:0 15px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:var(--ink2)}
 .chips button.on{background:var(--green);color:#fff;border-color:var(--green)}
 .opts{overflow:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .opt{display:flex;gap:13px;padding:14px 20px;border-bottom:1px solid var(--line);align-items:center;width:100%;text-align:left;background:#fff;min-height:88px}
@@ -85,6 +86,31 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .opt p{margin:0;font-size:12px;color:var(--muted)}
 .opt .add{margin-left:auto;flex:0 0 auto;font-size:22px;color:var(--green);font-weight:300}
 .empty{padding:32px 20px;text-align:center;color:var(--muted);font-size:14px}
+
+/* plan cards in Change plan */
+.sec{padding:16px 20px 8px;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);background:var(--ivory)}
+.sec span{display:block;margin-top:5px;font:400 12.5px/1.45 var(--sans);letter-spacing:0;text-transform:none;color:var(--ink2)}
+.pc{display:flex;gap:13px;width:100%;text-align:left;padding:14px 20px;border-bottom:1px solid var(--line);background:#fff;align-items:flex-start;min-height:92px}
+.pc img{flex:0 0 76px;width:76px;height:76px;object-fit:cover;border-radius:4px;background:var(--paper)}
+.pc .c{flex:1;min-width:0}
+.pc h3{margin:0 0 3px;font:400 18px/1.2 var(--serif);display:flex;align-items:center;gap:7px}
+.pc p{margin:0 0 5px;font-size:12.5px;color:var(--ink2);line-height:1.42}
+.pc .tags{font-size:11px;color:var(--muted);letter-spacing:.03em}
+.pc.cur{background:var(--paper)}
+.pc .now{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+.dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--gold)}
+
+/* confirm + reset blocks */
+.cf{padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px));background:#fff}
+.cf h3{margin:0 0 8px;font:400 21px/1.2 var(--serif)}
+.cf p{margin:0 0 16px;font-size:13.5px;color:var(--ink2);line-height:1.5}
+.cf .row{display:flex;gap:10px}
+.cf button{flex:1;min-height:52px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:14px;font-weight:650}
+.cf button.pri{background:var(--green);color:#fff;border-color:var(--green)}
+.rs{padding:8px 0 calc(16px + env(safe-area-inset-bottom,0px));background:#fff}
+.rs button{display:block;width:100%;text-align:left;padding:17px 20px;border-bottom:1px solid var(--line);min-height:72px}
+.rs b{display:block;font-size:15px;font-weight:650;margin-bottom:3px}
+.rs small{display:block;font-size:12.5px;color:var(--muted);line-height:1.45}
 
 .toast{position:fixed;left:50%;bottom:104px;transform:translate(-50%,14px);z-index:60;background:var(--ink);color:#fff;padding:13px 20px;border-radius:9px;font-size:13.5px;opacity:0;transition:.24s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
@@ -96,37 +122,60 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 <div class="wrap" id="app"></div>
 <div class="bar" id="bar" hidden></div>
 <div class="sh" id="sheet"><div class="bg" id="shBg"></div><div class="pan">
-  <div class="hd"><div class="row"><h2 id="shTitle">Add a stop</h2><button class="x" id="shX">Close</button></div></div>
+  <div class="hd"><div class="row"><div><h2 id="shTitle">Add a stop</h2><p class="sub" id="shSub" hidden></p></div><button class="x" id="shX">Close</button></div></div>
   <div class="chips" id="shChips"></div>
   <div class="opts" id="shList"></div>
 </div></div>
 <div class="toast" id="toast"></div>
 
+<script src="arc-plans.js"></script>
 <script>
 "use strict";
 /* ============================================================
    ARC Smart Itinerary — guest mobile planner
-   Static page. No backend. Catalogue loaded from stops.json.
-   ============================================================ */
-var BUF = 15;                    /* minutes allowed between stops  */
-var MAXH = 8000;                 /* refuse absurd hashes           */
-var LS = "arcItinerary.v1";
-var CATS = ["All","Culture","Dining","Cafe","Shopping","Outdoors","Family","Temple","Wellness","Attraction"];
+   Static page, no backend. Catalogue + ranking from arc-plans.js.
 
-var CATALOG = null;              /* {id: {n,c,a,km,in,b,h,f,d}}    */
-var PLAN = null;                 /* {t,st,s:[{id,name,dur,cat,act}]} */
-var ORIGINAL = null;             /* for Reset                      */
-var UNDO = [];                   /* stack of plan snapshots        */
-var EDIT = false;
-var SHEET = { mode:null, index:-1, cat:"All" };
+   Two guest journeys:
+     Edit stops   — change destinations inside the current plan
+     Change plan  — swap the whole themed itinerary
+   ============================================================ */
+var BUF  = 15;                 /* minutes assumed between stops   */
+var MAXH = 8000;               /* refuse absurd hashes            */
+var LS   = "arcItinerary.v2";
+var CATS = ["All","Culture","Dining","Cafe","Shopping","Outdoors","Family","Temple","Wellness","Attraction"];
+var REC_N = 3, REC_POP = 2;    /* recommended cards / how many by count */
+
+/* Browse-all filters. `f` runs against a catalogue plan record. */
+var PFILTERS = [
+  { k:"all",      label:"All plans" },
+  { k:"short",    label:"Under 3h",   f:function(p){ return p.hrs <  3 } },
+  { k:"half",     label:"3–5 hours",  f:function(p){ return p.hrs >= 3 && p.hrs <= 5 } },
+  { k:"long",     label:"6 hours +",  f:function(p){ return p.hrs >= 6 } },
+  { k:"family",   label:"Family",     f:function(p){ return p.who.indexOf("family")>=0 } },
+  { k:"couple",   label:"Couples",    f:function(p){ return p.who.indexOf("couple")>=0 } },
+  { k:"friends",  label:"Friends",    f:function(p){ return p.who.indexOf("friends")>=0 } },
+  { k:"solo",     label:"Solo",       f:function(p){ return p.who.indexOf("solo")>=0 } },
+  { k:"business", label:"Business",   f:function(p){ return p.who.indexOf("business")>=0 } },
+  { k:"seniors",  label:"Seniors",    f:function(p){ return p.who.indexOf("seniors")>=0 } },
+  { k:"rainy",    label:"Good in rain", f:function(p){ return !!p.rainy } }
+];
+
+var CATALOG = null;   /* stops, from arc-plans.js                        */
+var PLAN  = null;     /* {pid,t,bl,cover,st,s:[{id,name,dur,cat,act}]}   */
+var KIOSK = null;     /* the itinerary the kiosk handed over — kept      */
+var UNDO  = [];
+var EDIT  = false;
+var SHEET = { mode:null, index:-1, cat:"All", filter:"all", confirm:null };
 
 var $ = function(s){ return document.querySelector(s) };
+var all = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)) };
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){
   return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c] }) }
 function pad(n){ return String(n).padStart(2,"0") }
 function fmt(m){ m=((m%1440)+1440)%1440; return pad(Math.floor(m/60))+":"+pad(m%60) }
 function dur(m){ var h=Math.floor(m/60), r=m%60; return h ? (h+"h"+(r?" "+r+"m":"")) : r+" min" }
 function img(id){ return "img/"+id+".jpg" }
+function first(s){ return String(s||"").split(". ")[0] }
 
 /* ---------- url payloads ---------------------------------- */
 function b64e(o){ return btoa(unescape(encodeURIComponent(JSON.stringify(o))))
@@ -134,43 +183,76 @@ function b64e(o){ return btoa(unescape(encodeURIComponent(JSON.stringify(o))))
 function b64d(s){ return JSON.parse(decodeURIComponent(escape(
   atob(String(s).replace(/-/g,"+").replace(/_/g,"/")) ))) }
 
-/* kiosk handoff  #i=  {t,st,c,s:[[id,name,dur,cat,[acts]]]}  — unchanged */
+/* kiosk handoff  #i=  {t,st,c,s:[[id,name,dur,cat,[acts]]]}  — format unchanged */
 function readKiosk(raw){
   var o = b64d(raw);
   if(!o || !Array.isArray(o.s) || !o.s.length) throw new Error("no stops");
   return {
-    t: String(o.t||"Your day"),
-    st: Number.isFinite(+o.st) ? +o.st : 540,
-    s: o.s.slice(0,12).map(function(x){
+    pid: o.p ? String(o.p) : "",
+    t:   String(o.t||"Your day"),
+    bl:  "",
+    cover: "",
+    st:  Number.isFinite(+o.st) ? +o.st : 540,
+    s:   o.s.slice(0,12).map(function(x){
       if(!Array.isArray(x) || !x[0]) throw new Error("bad stop");
       return { id:String(x[0]), name:String(x[1]||x[0]), dur:Math.max(5,Math.min(480,+x[2]||45)),
                cat:String(x[3]||""), act:String((Array.isArray(x[4])?x[4][0]:x[4])||"") } })
   };
 }
-/* edited / shared  #p=  {v,t,st,s:[[id,dur,act]],o:[[id,dur,act]]} */
+/* edited / shared  #p=  v2 {v,pid,t,st,s:[[id,dur,act]],o:{pid,t,st,s}}
+   v1 (no pid, flat o:[]) is still accepted so old links keep working.  */
 function readEdited(raw){
   var o = b64d(raw);
-  if(!o || o.v!==1 || !Array.isArray(o.s)) throw new Error("bad payload");
-  var mk = function(a){ return a.slice(0,12).map(function(x){
+  if(!o || !Array.isArray(o.s)) throw new Error("bad payload");
+  if(o.v!==1 && o.v!==2) throw new Error("bad version");
+  var mk = function(a){ return (a||[]).slice(0,12).map(function(x){
       return { id:String(x[0]), name:"", dur:Math.max(5,Math.min(480,+x[1]||45)), cat:"", act:String(x[2]||"") } }) };
-  return { plan:{ t:String(o.t||"Your day"), st:+o.st||540, s:mk(o.s) },
-           orig: Array.isArray(o.o) ? { t:String(o.t||"Your day"), st:+o.st||540, s:mk(o.o) } : null };
+  var plan = { pid:String(o.pid||""), t:String(o.t||"Your day"), bl:"", cover:"",
+               st:+o.st||540, s:mk(o.s) };
+  var kiosk = null;
+  if(o.v===2 && o.o && Array.isArray(o.o.s)){
+    kiosk = { pid:String(o.o.pid||""), t:String(o.o.t||plan.t), bl:"", cover:"",
+              st:+o.o.st||plan.st, s:mk(o.o.s) };
+  } else if(Array.isArray(o.o)){
+    kiosk = { pid:"", t:plan.t, bl:"", cover:"", st:plan.st, s:mk(o.o) };
+  }
+  return { plan:plan, kiosk:kiosk };
 }
 function writeEdited(){
-  var m = function(p){ return p.s.map(function(x){ return [x.id, x.dur, (x.act||"").slice(0,90)] }) };
-  return "#p=" + b64e({ v:1, t:PLAN.t, st:PLAN.st, s:m(PLAN), o:m(ORIGINAL||PLAN) });
+  var m = function(p){ return p.s.map(function(x){ return [x.id, x.dur, (x.act||"").slice(0,80)] }) };
+  var k = KIOSK || PLAN;
+  return "#p=" + b64e({ v:2, pid:PLAN.pid||"", t:PLAN.t, st:PLAN.st, s:m(PLAN),
+                        o:{ pid:k.pid||"", t:k.t, st:k.st, s:m(k) } });
 }
 
 /* ---------- catalogue helpers ----------------------------- */
-function hydrate(p){                                   /* fill name/cat from catalogue */
+function hydrate(p){
   p.s = p.s.filter(function(x){ return CATALOG[x.id] });
   p.s.forEach(function(x){
     var c = CATALOG[x.id];
     if(!x.name) x.name = c.n;
-    if(!x.cat)  x.cat  = c.c;
-    if(!x.act)  x.act  = String(c.d||"").split(". ")[0];
+    x.cat = c.c;                                   /* category always from catalogue */
+    if(!x.act)  x.act  = first(c.d);
   });
+  var cp = ARC.plan(p.pid);
+  if(cp){ if(!p.bl) p.bl = cp.bl; if(!p.cover) p.cover = cp.cover; if(!p.t) p.t = cp.t; }
+  if(!p.cover && p.s.length) p.cover = p.s[0].id;
   return p;
+}
+/* build a fresh plan straight from a catalogue theme */
+function fromTheme(pid){
+  var cp = ARC.plan(pid); if(!cp) return null;
+  return hydrate({
+    pid: pid, t: cp.t, bl: cp.bl, cover: cp.cover, st: cp.start,
+    s: cp.s.filter(function(x){ return CATALOG[x[0]] }).map(function(x){
+         return { id:x[0], name:CATALOG[x[0]].n, dur:x[1], cat:CATALOG[x[0]].c, act:x[2] } })
+  });
+}
+function sig(p){ return p ? p.s.map(function(x){ return x.id+":"+x.dur }).join("|")+"@"+p.st : "" }
+/* has the guest touched the plan, compared with its own theme defaults? */
+function edited(){
+  var base = PLAN.pid ? fromTheme(PLAN.pid) : KIOSK;
+  return !!base && sig(base) !== sig(PLAN);
 }
 function used(){ var u={}; PLAN.s.forEach(function(x){ u[x.id]=1 }); return u }
 function pool(cat){
@@ -180,16 +262,15 @@ function pool(cat){
     .sort(function(a,b){ return (CATALOG[a].km||0)-(CATALOG[b].km||0) });
 }
 function total(){ return PLAN.s.reduce(function(a,x){return a+x.dur},0) + BUF*Math.max(0,PLAN.s.length-1) }
-function times(){ var t=PLAN.st,out=[]; PLAN.s.forEach(function(s,i){ out.push({from:t,to:t+s.dur}); t+=s.dur+BUF }); return out }
+function times(){ var t=PLAN.st,out=[]; PLAN.s.forEach(function(s){ out.push({from:t,to:t+s.dur}); t+=s.dur+BUF }); return out }
 
 /* ---------- state ----------------------------------------- */
 function snapshot(){ UNDO.push(JSON.stringify(PLAN)); if(UNDO.length>25) UNDO.shift() }
 function undo(){ if(!UNDO.length) return toast("Nothing to undo.");
   PLAN = JSON.parse(UNDO.pop()); save(); render(); toast("Last change undone.") }
-function save(){ try{ localStorage.setItem(LS, JSON.stringify({plan:PLAN, orig:ORIGINAL})) }catch(e){} }
-function clearSave(){ try{ localStorage.removeItem(LS) }catch(e){} }
+function save(){ try{ localStorage.setItem(LS, JSON.stringify({plan:PLAN, kiosk:KIOSK})) }catch(e){} }
 
-/* ---------- actions --------------------------------------- */
+/* ---------- stop-level actions ---------------------------- */
 function remove(i){
   if(PLAN.s.length<=1) return toast("Keep at least one stop.");
   snapshot(); var n=PLAN.s[i].name; PLAN.s.splice(i,1); save(); render(); toast("Removed "+n+".");
@@ -201,38 +282,38 @@ function move(i,d){
 function addStop(id){
   var c=CATALOG[id]; if(!c) return;
   snapshot();
-  PLAN.s.push({ id:id, name:c.n, cat:c.c, dur:60, act:String(c.d||"").split(". ")[0] });
+  PLAN.s.push({ id:id, name:c.n, cat:c.c, dur:60, act:first(c.d) });
   save(); closeSheet(); render(); toast("Added "+c.n+".");
 }
 function replaceStop(i,id){
-  var c=CATALOG[id]; if(!c) return;
+  var c=CATALOG[id]; if(!c || !PLAN.s[i]) return;
   snapshot();
   var old=PLAN.s[i].name;
-  PLAN.s[i]={ id:id, name:c.n, cat:c.c, dur:PLAN.s[i].dur, act:String(c.d||"").split(". ")[0] };
+  PLAN.s[i]={ id:id, name:c.n, cat:c.c, dur:PLAN.s[i].dur, act:first(c.d) };
   save(); closeSheet(); render(); toast(old+" → "+c.n);
 }
-/* Surprise me: swap one stop for a relevant, unused alternative.
-   Prefers the same category, then the same area, then anything.
-   Keeps the slot's duration so the day does not grow.          */
-function surprise(i){
-  var target = (i>=0) ? i : Math.floor(Math.random()*PLAN.s.length);
-  var cur = PLAN.s[target], curCat = cur.cat || (CATALOG[cur.id]||{}).c;
-  var curArea = (CATALOG[cur.id]||{}).a;
-  var same = pool(curCat);
-  var area = pool("All").filter(function(id){ return CATALOG[id].a===curArea });
-  var any  = pool("All");
-  var list = same.length ? same : (area.length ? area : any);
-  if(!list.length) return toast("No other stop available to swap in.");
-  var pick = list[Math.floor(Math.random()*Math.min(list.length,12))];
+
+/* ---------- whole-plan actions ---------------------------- */
+/* One snapshot, so Undo puts the guest's customised plan back intact. */
+function choosePlan(pid){
+  var p = fromTheme(pid);
+  if(!p) return toast("That plan is not available.");
+  ARC.hit(pid);                       /* explicit guest selection only */
   snapshot();
-  var c=CATALOG[pick], old=cur.name;
-  PLAN.s[target]={ id:pick, name:c.n, cat:c.c, dur:cur.dur, act:String(c.d||"").split(". ")[0] };
-  save(); render(); toast(old+" → "+c.n+" · tap Undo to put it back");
+  PLAN = p;
+  save(); closeSheet(); render();
+  toast("Now showing " + p.t + " · tap Undo to go back.");
 }
-function reset(){
-  if(!ORIGINAL) return toast("No original plan stored.");
-  snapshot(); PLAN = JSON.parse(JSON.stringify(ORIGINAL)); save(); render();
-  toast("Back to the plan ARC suggested.");
+function resetTheme(){
+  var p = PLAN.pid ? fromTheme(PLAN.pid) : null;
+  if(!p) return restoreKiosk();
+  snapshot(); PLAN = p; save(); closeSheet(); render();
+  toast("Back to the standard " + p.t + ".");
+}
+function restoreKiosk(){
+  if(!KIOSK) return toast("No kiosk plan stored on this phone.");
+  snapshot(); PLAN = JSON.parse(JSON.stringify(KIOSK)); save(); closeSheet(); render();
+  toast("Back to the plan the kiosk suggested.");
 }
 function share(){
   var url = location.origin + location.pathname + writeEdited();
@@ -249,34 +330,132 @@ function copy(text,ok){
 
 /* ---------- sheet ----------------------------------------- */
 function openSheet(mode,index){
-  SHEET={ mode:mode, index:(index==null?-1:index), cat:"All" };
-  $("#shTitle").textContent = mode==="add" ? "Add a stop" : "Replace "+(PLAN.s[index]?PLAN.s[index].name:"this stop");
-  $("#shChips").innerHTML = CATS.map(function(c){
-    return '<button data-c="'+esc(c)+'"'+(c==="All"?' class="on"':'')+'>'+esc(c)+"</button>" }).join("");
-  Array.prototype.forEach.call(document.querySelectorAll("#shChips [data-c]"), function(b){
-    b.onclick=function(){ SHEET.cat=b.dataset.c;
-      Array.prototype.forEach.call(document.querySelectorAll("#shChips [data-c]"),function(x){
-        x.classList.toggle("on", x===b) }); drawSheet() } });
+  SHEET = { mode:mode, index:(index==null?-1:index), cat:"All", filter:"all", confirm:null };
+  var H=$("#shTitle"), S=$("#shSub");
+  if(mode==="plans"){
+    H.textContent="Explore other plans";
+    S.textContent="Discover another way to experience Bangkok."; S.hidden=false;
+    chips(PFILTERS.map(function(f){ return {k:f.k,label:f.label} }), "all", function(k){
+      SHEET.filter=k; drawSheet() });
+  } else if(mode==="reset"){
+    H.textContent="Start again"; S.hidden=true;
+    $("#shChips").innerHTML="";
+  } else {
+    H.textContent = mode==="add" ? "Add a stop"
+      : "Replace " + (PLAN.s[index] ? PLAN.s[index].name : "this stop");
+    S.hidden=true;
+    chips(CATS.map(function(c){ return {k:c,label:c} }), "All", function(k){
+      SHEET.cat=k; drawSheet() });
+  }
   drawSheet(); $("#sheet").classList.add("on");
 }
+function chips(list,active,fn){
+  $("#shChips").innerHTML = list.map(function(c){
+    return '<button data-c="'+esc(c.k)+'"'+(c.k===active?' class="on"':'')+'>'+esc(c.label)+"</button>" }).join("");
+  all("#shChips [data-c]").forEach(function(b){
+    b.onclick=function(){
+      all("#shChips [data-c]").forEach(function(x){ x.classList.toggle("on", x===b) });
+      fn(b.dataset.c) } });
+}
+function planCard(pid,popular,current){
+  var p = ARC.plan(pid); if(!p) return "";
+  var who = p.who.slice(0,2).map(function(w){ return w.charAt(0).toUpperCase()+w.slice(1) }).join(", ");
+  return '<button class="pc'+(current?" cur":"")+'" data-pid="'+esc(pid)+'"'+(current?' disabled':'')+'>'
+    + '<img src="'+esc(img(p.cover))+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'
+    + '<div class="c"><h3>'+(popular?'<span class="dot" aria-hidden="true"></span>':"")+esc(p.t)+"</h3>"
+    + "<p>"+esc(p.bl)+"</p>"
+    + '<div class="tags">'+(current?'<span class="now">Your current plan</span>'
+        : esc(p.hrs+"h · "+p.s.length+" stops · "+who+(p.rainy?" · good in rain":"")))+"</div></div></button>";
+}
 function drawSheet(){
+  var L = $("#shList");
+
+  if(SHEET.confirm){                                  /* confirm before discarding edits */
+    var np = ARC.plan(SHEET.confirm);
+    L.innerHTML = '<div class="cf"><h3>Replace your edited plan?</h3>'
+      + "<p>You have changed <b>"+esc(PLAN.t)+"</b>. Choosing <b>"+esc(np?np.t:"this plan")
+      + "</b> replaces every stop in it. One tap of Undo brings your version back.</p>"
+      + '<div class="row"><button id="cfNo">Keep mine</button>'
+      + '<button class="pri" id="cfYes">Replace plan</button></div></div>';
+    $("#cfNo").onclick=function(){ SHEET.confirm=null; drawSheet() };
+    $("#cfYes").onclick=function(){ var id=SHEET.confirm; SHEET.confirm=null; choosePlan(id) };
+    return;
+  }
+
+  if(SHEET.mode==="reset"){
+    var hasTheme = !!(PLAN.pid && ARC.plan(PLAN.pid));
+    L.innerHTML = '<div class="rs">'
+      + (hasTheme ? '<button id="rsTheme"><b>Reset this plan</b><small>Put the standard '
+          + esc(ARC.plan(PLAN.pid).t)+" stops, order and start time back.</small></button>" : "")
+      + (KIOSK ? '<button id="rsKiosk"><b>Restore the kiosk plan</b><small>Go back to '
+          + esc(KIOSK.t)+", the itinerary the ARC kiosk handed to this phone.</small></button>" : "")
+      + '<button id="rsNo"><b>Cancel</b><small>Keep the plan as it is now.</small></button></div>';
+    if($("#rsTheme")) $("#rsTheme").onclick = resetTheme;
+    if($("#rsKiosk")) $("#rsKiosk").onclick = restoreKiosk;
+    $("#rsNo").onclick = closeSheet;
+    return;
+  }
+
+  if(SHEET.mode==="plans"){
+    var fdef = PFILTERS.filter(function(f){ return f.k===SHEET.filter })[0] || PFILTERS[0];
+    var html = "";
+
+    if(SHEET.filter==="all"){
+      var rec = ARC.pick({ n:REC_N, pop:REC_POP, exclude:PLAN.pid });
+      if(rec.length){
+        html += '<div class="sec">Recommended for you<span>Based on what guests at this kiosk have chosen, '
+             +  "with a couple of slots kept open so the list keeps changing.</span></div>"
+             +  rec.map(function(s){ return planCard(s.id, ARC.isPopular(s.id), false) }).join("");
+      }
+      var recIds = {}; rec.forEach(function(s){ recIds[s.id]=1 });
+      var rest = ARC.cfg().filter(function(s){ return s.on && !recIds[s.id] });
+      html += '<div class="sec">Browse all plans<span>'+(rest.length+rec.length)
+           +  " itineraries built from ARC Hotel's own destination list.</span></div>"
+           +  rest.map(function(s){ return planCard(s.id, false, s.id===PLAN.pid) }).join("");
+    } else {
+      var list = ARC.cfg().filter(function(s){
+        var p=ARC.plan(s.id); return s.on && p && (!fdef.f || fdef.f(p)) });
+      html = list.length
+        ? '<div class="sec">'+esc(fdef.label)+"<span>"+list.length+" matching itinerar"
+          + (list.length===1?"y":"ies")+".</span></div>"
+          + list.map(function(s){ return planCard(s.id, false, s.id===PLAN.pid) }).join("")
+        : '<div class="empty">No plan matches that filter.</div>';
+    }
+    L.innerHTML = html;
+    all("#shList [data-pid]").forEach(function(b){
+      b.onclick=function(){
+        var pid=b.dataset.pid;
+        if(pid===PLAN.pid) return;
+        if(edited()){ SHEET.confirm=pid; drawSheet(); L.scrollTop=0; }
+        else choosePlan(pid);
+      } });
+    L.scrollTop = 0;
+    return;
+  }
+
+  /* add / replace a single stop */
   var ids = pool(SHEET.cat);
-  $("#shList").innerHTML = ids.length ? ids.map(function(id){ var c=CATALOG[id];
+  L.innerHTML = ids.length ? ids.map(function(id){ var c=CATALOG[id];
     return '<button class="opt" data-id="'+esc(id)+'">'
       + '<img src="'+esc(img(id))+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'
       + '<div><h3>'+esc(c.n)+"</h3><p>"+esc(c.c)+(c.km?" · "+c.km+" km away":"")+"</p></div>"
       + '<span class="add">+</span></button>' }).join("")
     : '<div class="empty">Nothing left in this category — every option is already in your day.</div>';
-  Array.prototype.forEach.call(document.querySelectorAll("#shList [data-id]"), function(b){
+  all("#shList [data-id]").forEach(function(b){
     b.onclick=function(){ SHEET.mode==="add" ? addStop(b.dataset.id) : replaceStop(SHEET.index,b.dataset.id) } });
 }
-function closeSheet(){ $("#sheet").classList.remove("on") }
+function closeSheet(){ SHEET.confirm=null; $("#sheet").classList.remove("on") }
 
 /* ---------- render ---------------------------------------- */
 function render(){
-  var T = times(), lead = PLAN.s[0];
-  var head = '<div class="mh"><img src="'+esc(img(lead.id))+'" alt="" onerror="this.style.visibility=\'hidden\'">'
-    + '<span class="b">ARC HOTEL</span><span class="k">Your day, planned</span><h1>'+esc(PLAN.t)+"</h1></div>"
+  var T = times();
+  var cover = PLAN.cover && CATALOG[PLAN.cover] ? PLAN.cover : PLAN.s[0].id;
+
+  var head = '<div class="mh"><img src="'+esc(img(cover))+'" alt="" '
+    + 'onerror="this.onerror=null;this.src=\''+esc(img(PLAN.s[0].id))+'\'">'
+    + '<span class="b">ARC HOTEL</span><span class="k">Your day, planned</span>'
+    + "<h1>"+esc(PLAN.t)+"</h1>"
+    + (PLAN.bl ? '<p class="bl">'+esc(PLAN.bl)+"</p>" : "") + "</div>"
     + '<div class="mm"><div><strong>'+dur(total())+"</strong>in total</div>"
     + "<div><strong>"+PLAN.s.length+" stop"+(PLAN.s.length===1?"":"s")+"</strong>in your day</div>"
     + "<div><strong>"+fmt(PLAN.st)+"</strong>start</div></div>"
@@ -288,7 +467,6 @@ function render(){
         + '<button class="ic" data-up="'+i+'" '+(i===0?"disabled":"")+' aria-label="Move up">&#8593;</button>'
         + '<button class="ic" data-dn="'+i+'" '+(i===PLAN.s.length-1?"disabled":"")+' aria-label="Move down">&#8595;</button>'
         + '<button data-rep="'+i+'">Replace</button>'
-        + '<button data-sur="'+i+'">Surprise me</button>'
         + '<button class="rm" data-del="'+i+'">Remove</button></div>' : "";
     return '<div class="mi"><div class="t">'+fmt(T[i].from)+"<small>0"+(i+1)+"</small></div>"
       + '<img src="'+esc(img(s.id))+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'
@@ -312,34 +490,32 @@ function render(){
   $("#bar").innerHTML = EDIT
     ? '<button class="sm" id="bUndo" aria-label="Undo" title="Undo">&#8630;</button>'
       + '<button id="bAdd">Add stop</button>'
-      + '<button id="bReset">Reset</button>'
+      + '<button id="bReset">Start again</button>'
       + '<button class="pri" id="bDone">Done</button>'
-    : '<button id="bEdit">Customise plan</button>'
-      + '<button id="bSur">Surprise me</button>'
+    : '<button id="bEdit">Edit stops</button>'
+      + '<button id="bPlans">Change plan</button>'
       + '<button class="pri" id="bShare">Share</button>';
   wire();
-  window.scrollTo({top:0,behavior:"instant"});
+  if(window.scrollTo) window.scrollTo(0,0);
 }
 function wire(){
   var on=function(sel,fn){ var e=$(sel); if(e) e.onclick=fn };
-  on("#bEdit", function(){ EDIT=true; render(); toast("Tap the controls under each stop to change your day.") });
-  on("#bDone", function(){ EDIT=false; render() });
-  on("#bAdd",  function(){ openSheet("add") });
-  on("#bUndo", undo);
-  on("#bReset",reset);
-  on("#bSur",  function(){ surprise(-1) });
-  on("#bShare",share);
-  var each=function(attr,fn){ Array.prototype.forEach.call(document.querySelectorAll("["+attr+"]"),function(b){
+  on("#bEdit",  function(){ EDIT=true; render(); toast("Tap the controls under each stop to change your day.") });
+  on("#bDone",  function(){ EDIT=false; render() });
+  on("#bAdd",   function(){ openSheet("add") });
+  on("#bUndo",  undo);
+  on("#bReset", function(){ openSheet("reset") });
+  on("#bPlans", function(){ openSheet("plans") });
+  on("#bShare", share);
+  var each=function(attr,fn){ all("["+attr+"]").forEach(function(b){
     b.onclick=function(){ fn(+b.getAttribute(attr)) } }) };
   each("data-up", function(i){ move(i,-1) });
   each("data-dn", function(i){ move(i, 1) });
   each("data-rep",function(i){ openSheet("replace",i) });
-  each("data-sur",function(i){ surprise(i) });
   each("data-del",remove);
 }
 var tt; function toast(t){ var e=$("#toast"); e.textContent=t; e.classList.add("on");
   clearTimeout(tt); tt=setTimeout(function(){ e.classList.remove("on") },2800) }
-
 function fail(h,p){ $("#app").innerHTML='<div class="err"><h1>'+esc(h)+"</h1><p>"+esc(p)+"</p></div>"; $("#bar").hidden=true }
 
 /* ---------- boot ------------------------------------------ */
@@ -349,24 +525,24 @@ function boot(){
   var mi = hash.match(/[#&]i=([^&]+)/), mp = hash.match(/[#&]p=([^&]+)/);
 
   try{
-    if(mp){                                   /* shared / edited link wins */
+    if(mp){                                     /* a shared / edited link always wins */
       var r = readEdited(mp[1]);
-      PLAN = hydrate(r.plan);
-      ORIGINAL = r.orig ? hydrate(r.orig) : JSON.parse(JSON.stringify(PLAN));
-    } else if(mi){                            /* fresh from the kiosk */
-      PLAN = hydrate(readKiosk(mi[1]));
-      ORIGINAL = JSON.parse(JSON.stringify(PLAN));
-      try{                                    /* same plan reopened? restore edits */
+      PLAN  = hydrate(r.plan);
+      KIOSK = r.kiosk ? hydrate(r.kiosk) : JSON.parse(JSON.stringify(PLAN));
+    } else if(mi){                              /* fresh scan from the kiosk */
+      PLAN  = hydrate(readKiosk(mi[1]));
+      KIOSK = JSON.parse(JSON.stringify(PLAN));
+      try{                                      /* same kiosk plan reopened? restore edits */
         var st = JSON.parse(localStorage.getItem(LS)||"null");
-        if(st && st.orig && JSON.stringify(st.orig.s.map(function(x){return x.id}))
-                         === JSON.stringify(ORIGINAL.s.map(function(x){return x.id}))){
-          PLAN = hydrate(st.plan); ORIGINAL = hydrate(st.orig);
+        if(st && st.kiosk && sig(st.kiosk)===sig(KIOSK)){
+          PLAN = hydrate(st.plan); KIOSK = hydrate(st.kiosk);
         }
       }catch(e){}
-    } else {                                  /* no hash — last saved plan */
+    } else {                                    /* no hash — last saved plan */
       var s2 = JSON.parse(localStorage.getItem(LS)||"null");
       if(!s2 || !s2.plan) return fail("No itinerary yet","Scan the QR code on the ARC Hotel kiosk to open your plan here.");
-      PLAN = hydrate(s2.plan); ORIGINAL = s2.orig ? hydrate(s2.orig) : JSON.parse(JSON.stringify(PLAN));
+      PLAN  = hydrate(s2.plan);
+      KIOSK = s2.kiosk ? hydrate(s2.kiosk) : JSON.parse(JSON.stringify(PLAN));
     }
   }catch(e){ return fail("This link could not be read","It may be incomplete. Scan the QR code on the kiosk again.") }
 
@@ -374,8 +550,8 @@ function boot(){
   save(); render();
 }
 
-fetch("stops.json").then(function(r){ return r.json() }).then(function(j){
-  CATALOG = (j && j.stops) ? j.stops : {};
+ARC.load("catalog.json").then(function(c){
+  CATALOG = c.stops;
   boot();
 }).catch(function(){
   fail("Could not load the destination list","Please check your connection and reload this page.");
@@ -384,5 +560,9 @@ fetch("stops.json").then(function(r){ return r.json() }).then(function(j){
 $("#shX").onclick = closeSheet;
 $("#shBg").onclick = closeSheet;
 window.addEventListener("hashchange", function(){ UNDO=[]; boot() });
+
+/* exposed for the automated tests only */
+window.__arc = { get plan(){return PLAN}, get kiosk(){return KIOSK}, get undo(){return UNDO},
+                 fromTheme:fromTheme, edited:edited, sig:sig, writeEdited:writeEdited, boot:boot };
 </script>
 </body></html>

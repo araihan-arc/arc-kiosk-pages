@@ -4,6 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="arc-plans.js"></script>
 <style>
 :root{
   --ivory:#f8f7f2;--paper:#f1efe8;--ink:#242822;--ink2:#5e6259;--muted:#878a81;--green:#30473a;--line:#e2e0d7;--accent:#9b7a4e;--gold:#dbb871;--bad:#9c2f25;
@@ -265,85 +266,25 @@ const MORE=[
  {t:"Flight Status",img:"img/qr-flight.jpg",s:"In this prototype only Plan Your Day is connected."}
 ];
 /* ============================================================
-   ARC Smart Itinerary — guest-facing suggestion labels
-   Prototype-local. No backend, no production analytics.
+   ARC Smart Itinerary — named itinerary shortcuts
+   The catalogue, the demo selection counts and the ranking all
+   live in arc-plans.js, shared with the guest phone page so the
+   kiosk and the phone can never drift apart.
    ============================================================ */
-const SUG_KEY="arcSuggestCfg.v1", HIT_KEY="arcSuggestHits.v1";
+const SUG_SHOWN=3;      /* named itinerary shortcuts on the home rail   */
+const SUG_POP=2;        /* how many of those come from selection counts */
 
-/* Default configuration. Each entry:
-   id        stable key, used for the hit counter
-   label     what the guest sees on the home rail
-   phrase    what the guest "says" in the simulated voice sheet
-   it        itinerary id in DATA.its  (must exist, else dropped)
-   on        enabled
-   w         rotation weight (higher = more likely when rotating)     */
-const SUG_DEFAULTS=[
- {id:"relax-partner", label:"A relaxed afternoon for two", phrase:"Three hours with my partner, something relaxing", it:"cafe-date",         on:true, w:8},
- {id:"rainy-kids",    label:"Rainy day with the kids",     phrase:"A rainy afternoon with my kids",          it:"family-aquarium", on:true, w:7},
- {id:"easy-seniors",  label:"Gentle pace, little walking", phrase:"Half a day with my parents, not much walking", it:"seniors",    on:true, w:6},
- {id:"surprise-4h",   label:"Surprise me — about 4 hours", phrase:"Surprise me, about four hours",           it:"bkk-4h",          on:true, w:6},
- {id:"two-hours",     label:"Only two hours to spare",     phrase:"I only have two hours before dinner",     it:"bkk-2h",          on:true, w:5},
- {id:"first-time",    label:"First time in Bangkok",       phrase:"It is my first time in Bangkok",          it:"first-time",      on:true, w:5},
- {id:"street-food",   label:"Street food after dark",      phrase:"Where should I eat tonight, somewhere local", it:"street-food",  on:true, w:4},
- {id:"near-hotel",    label:"Stay close to the hotel",     phrase:"Something close by, I do not want to travel", it:"around-hotel", on:true, w:4},
- {id:"art-culture",   label:"Galleries and museums",       phrase:"I would like art and museums",            it:"art-culture",     on:true, w:3},
- {id:"green-bkk",     label:"Parks and fresh air",         phrase:"Somewhere green, away from the malls",    it:"nature-day",      on:false,w:3}
-];
-
-const SUG_SHOWN=4;      /* how many appear on the home rail            */
-const SUG_POP=2;        /* how many of those are taken by popularity   */
-
-function sugStore(k,fallback){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fallback}catch(e){return fallback}}
-function sugSave(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-
-function sugCfg(){
-  const saved=sugStore(SUG_KEY,null);
-  if(!Array.isArray(saved))return SUG_DEFAULTS.map(s=>({...s}));
-  /* merge: keep saved edits, add any new defaults, drop unknown ids */
-  const byId={};saved.forEach(s=>{if(s&&s.id)byId[s.id]=s});
-  return SUG_DEFAULTS.map(d=>({...d,...(byId[d.id]||{}),id:d.id,it:d.it}));
-}
-function sugCfgSave(list){sugSave(SUG_KEY,list)}
-function sugHits(){const h=sugStore(HIT_KEY,{});return (h&&typeof h==="object")?h:{}}
-function sugHit(id){const h=sugHits();h[id]=(h[id]||0)+1;sugSave(HIT_KEY,h);return h[id]}
-function sugResetHits(){sugSave(HIT_KEY,{})}
-
-/* eligible = enabled AND points at an itinerary that actually exists */
-function sugEligible(valid){
-  return sugCfg().filter(s=>s.on && valid(s.it));
-}
-
-/* Ranking + rotation.
-   1. popular slots  : highest hit count first; ties broken by weight, then random
-   2. rotation slots : weighted random from whatever is left, no duplicates
-   3. no hits at all : falls back to weight order (the configured default ranking) */
-function sugPick(valid,n,rnd){
-  rnd=rnd||Math.random;
-  n=n||SUG_SHOWN;
-  const pool=sugEligible(valid), hits=sugHits();
-  if(!pool.length)return [];
-  const any=pool.some(s=>(hits[s.id]||0)>0);
-  const out=[],used={};
-
-  if(any){
-    const ranked=pool.slice().sort((a,b)=>
-      (hits[b.id]||0)-(hits[a.id]||0) || b.w-a.w || (rnd()-0.5));
-    ranked.slice(0,Math.min(SUG_POP,n)).forEach(s=>{out.push(s);used[s.id]=1});
-  }else{
-    const byW=pool.slice().sort((a,b)=>b.w-a.w);
-    byW.slice(0,Math.min(SUG_POP,n)).forEach(s=>{out.push(s);used[s.id]=1});
-  }
-
-  const rest=pool.filter(s=>!used[s.id]);
-  while(out.length<n && rest.length){
-    let tot=0;rest.forEach(s=>tot+=Math.max(1,s.w));
-    let r=rnd()*tot,i=0;
-    for(;i<rest.length;i++){r-=Math.max(1,rest[i].w);if(r<=0)break}
-    if(i>=rest.length)i=rest.length-1;
-    const pick=rest.splice(i,1)[0];
-    if(!used[pick.id]){out.push(pick);used[pick.id]=1}
-  }
-  return out;
+/* Fallback catalogue, used only if catalog.json cannot be fetched,
+   so the kiosk still runs. Built from the same inline sample data. */
+function localCatalog(){
+  const stops={},plans={};
+  Object.keys(DATA.stops).forEach(id=>{const v=DATA.stops[id];
+    stops[id]={n:v.n,c:CATRX(id),a:v.a,km:v.km,in:v.in,b:v.b,h:v.h||"",f:v.f||"",d:v.d||""}});
+  DATA.its.forEach(it=>{const [h,m]=it.start.split(":");
+    plans[it.id]={t:it.t,bl:it.bl,cover:it.s[0][0],start:(+h)*60+(+m),hrs:it.hrs,who:it.who,
+      int:it.int,pace:it.pace,bud:it.bud,set:it.set,rainy:it.rainy,phrase:it.t,on:true,w:5,
+      s:it.s.map(x=>[x[0],x[1],(x[2]&&x[2][0])||(DATA.stops[x[0]].d||"").split(". ")[0]])}});
+  return {plans,stops};
 }
 
 /* what the guest says (simulated) -> which sample connector output is returned */
@@ -353,11 +294,16 @@ const SAYS=[
  ["Half a day with my parents, not much walking","seniors"],
  ["Surprise me, about four hours","bkk-4h"]
 ];
-const CAT=id=>{const t=(DATA.stops[id].n+" "+DATA.stops[id].d).toLowerCase();
+const CATRX=id=>{const t=(DATA.stops[id].n+" "+DATA.stops[id].d).toLowerCase();
   return /spa|wellness|massage|sauna/.test(t)?"Wellness":/caf|coffee|tea|bakery/.test(t)?"Cafe":/restaurant|dining|food|dinner|eat/.test(t)?"Dining":/museum|gallery|art|culture/.test(t)?"Culture":/temple|shrine|wat /.test(t)?"Temple":/aquarium|zoo|kid|play/.test(t)?"Family":/park|garden|river|outdoor/.test(t)?"Outdoors":/mall|shop|market|plaza/.test(t)?"Shopping":"Attraction"};
+const CAT=id=>{const c=ARC.stop(id);return (c&&c.c)?c.c:CATRX(id)};
 /* sample output in the exact connector format: {title, stops:[{id,name,category,duration,activities}]} */
-function sample(itId){const it=DATA.its.find(x=>x.id===itId);
-  return {title:it.t,stops:it.s.slice(0,6).map(([id,mins,acts])=>({id,name:DATA.stops[id].n,category:CAT(id),duration:mins,activities:acts&&acts.length?acts:[DATA.stops[id].d.split(". ")[0]]}))}}
+function sample(itId){
+  const p=ARC.plan(itId);
+  if(p)return{id:itId,title:p.t,stops:p.s.slice(0,6).map(([id,mins,act])=>
+    ({id,name:(ARC.stop(id)||DATA.stops[id]).n,category:CAT(id),duration:mins,activities:[act]}))};
+  const it=DATA.its.find(x=>x.id===itId); if(!it)return null;
+  return {id:itId,title:it.t,stops:it.s.slice(0,6).map(([id,mins,acts])=>({id,name:DATA.stops[id].n,category:CAT(id),duration:mins,activities:acts&&acts.length?acts:[DATA.stops[id].d.split(". ")[0]]}))}}
 
 let IT=null,START=0;const BUF=15;
 const pad=n=>String(n).padStart(2,"0"),fmt=m=>pad(Math.floor(m/60)%24)+":"+pad(m%60);
@@ -379,13 +325,14 @@ function ask(mode){show(null);$("#home").hidden=true;
   const s=$("#voice");s.classList.add("on");avatar("listening");const typing=mode==="type";
   requestAnimationFrame(()=>{const b=$("#say");if(b&&!b.hidden)b.style.top=(s.offsetHeight+36)+"px"});
   $("#voiceE").textContent=typing?"Tell me what you have in mind":"I’m listening";$("#listen").hidden=typing;$("#typein").hidden=!typing;
-  const picks=sugPick(itExists,4);
+  const picks=ARC.pick({n:4,pop:SUG_POP});
   $("#sugg").innerHTML=picks.length
-    ? picks.map((s,k)=>`<button data-sg="${k}">“${esc(s.phrase)}”</button>`).join("")
+    ? picks.map((s,k)=>{const p=ARC.plan(s.id);
+        return `<button data-sg="${k}">“${esc(p.phrase||p.t)}”</button>`}).join("")
     : SAYS.map(([p],k)=>`<button data-sg="s${k}">“${esc(p)}”</button>`).join("");
   $$("#sugg [data-sg]").forEach(b=>b.onclick=()=>{const v=b.dataset.sg;
     if(v[0]==="s")return plan(SAYS[+v.slice(1)][1]);
-    const s=picks[+v];sugHit(s.id);plan(s.it)});
+    const s=picks[+v];ARC.hit(s.id);plan(s.id)});
   if(typing)setTimeout(()=>$("#inp").focus(),50)}
 function fromText(t){t=t.toLowerCase();return /kid|child|family/.test(t)?"family-aquarium":/parent|mother|father|senior|walk/.test(t)?"seniors":/partner|wife|husband|couple|relax/.test(t)?"cafe-date":"bkk-4h"}
 
@@ -394,7 +341,7 @@ function plan(itId){$("#voice").classList.remove("on");say("");$("#thinking").hi
   setTimeout(()=>{$("#thinking").hidden=true;load(sample(itId))},1500)}
 
 /* 3. the itinerary card (what the templateUrl page would render) */
-function load(json){if(!json||!json.stops||!json.stops.length)return false;IT={title:json.title,stops:json.stops.slice(0,6)};
+function load(json){if(!json||!json.stops||!json.stops.length)return false;IT={id:json.id||"",title:json.title,stops:json.stops.slice(0,6)};
   START=Math.ceil((nowBkk()+15)/30)*30;if(START>20*60)START=13*60;renderPlan();show("pgPlan");avatar("presenting");
   say("");bridge("itinerary_opened");bridge("qr_shown");return true}
 function renderPlan(){const T=times(IT,START),lead=IT.stops[0];
@@ -414,7 +361,7 @@ function renderPlan(){const T=times(IT,START),lead=IT.stops[0];
 /* 4. QR: the link carries the whole plan, so no server storage is needed */
 function b64e(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
 function b64d(s){return JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/")))))}
-function hash(){return "#i="+b64e({t:IT.title,st:START,c:"Bangkok",s:IT.stops.map(s=>[s.id,s.name,s.duration,s.category,s.activities.slice(0,3)])})}
+function hash(){return "#i="+b64e({p:IT.id||"",t:IT.title,st:START,c:"Bangkok",s:IT.stops.map(s=>[s.id,s.name,s.duration,s.category,s.activities.slice(0,3)])})}
 function link(){return MOBILE_BASE+"mobile.html"+hash()}
 
 /* phone page, rendered only from the link */
@@ -435,34 +382,38 @@ function fit(){const f=$("#frame").getBoundingClientRect(),s=Math.min(f.width/10
 
 
 /* ---------- guest-facing suggestions: render, count, admin (prototype only) ---------- */
-const itExists=id=>DATA.its.some(x=>x.id===id);
+const itExists=id=>ARC.exists(id);
 let SUG_VIEW=[];
+/* Named itinerary shortcuts. Same catalogue, same ranking and the same
+   rotation the phone uses for its recommended plans. Tapping one opens
+   that itinerary directly, through the existing card and QR flow.      */
 function renderSuggest(){
   const el=$("#isugg");if(!el)return;
-  SUG_VIEW=sugPick(itExists,SUG_SHOWN);
-  const hits=sugHits();
+  SUG_VIEW=ARC.pick({n:SUG_SHOWN,pop:SUG_POP});
   el.innerHTML=SUG_VIEW.map((s,i)=>{
-    const hot=(hits[s.id]||0)>0 && i<SUG_POP;
+    const p=ARC.plan(s.id);if(!p)return "";
+    const hot=ARC.isPopular(s.id)&&i<SUG_POP;
+    const who=p.who.slice(0,2).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(", ");
     return `<button data-sg="${i}">${hot?'<span class="pop" aria-hidden="true"></span>':""}`
-      +`<span><span class="sx">Suggested</span><span class="sp">${esc(s.label)}</span></span></button>`}).join("");
+      +`<span><span class="sx">${esc(p.hrs+"h · "+who)}</span><span class="sp">${esc(s.label)}</span></span></button>`}).join("");
   $$("#isugg [data-sg]").forEach(b=>b.onclick=()=>{
     const s=SUG_VIEW[+b.dataset.sg];if(!s)return;
-    sugHit(s.id);$("#home").hidden=true;plan(s.it)});
+    ARC.hit(s.id);$("#home").hidden=true;plan(s.id)});
 }
 
 /* demo admin — operator chrome, never part of the guest screen */
 function admDraw(){
-  const cfg=sugCfg(),hits=sugHits();
+  const cfg=ARC.cfg(),hits=ARC.hits();
   $("#admBody").innerHTML=cfg.map((s,i)=>`<tr data-i="${i}">
     <td><input type="checkbox" ${s.on?"checked":""} data-f="on"></td>
     <td><input type="text" value="${esc(s.label)}" data-f="label"></td>
-    <td>${esc(s.it)}${itExists(s.it)?"":' <b style="color:#9c2f25">missing</b>'}</td>
+    <td>${esc(s.id)}</td>
     <td><input type="number" min="1" max="20" value="${s.w}" data-f="w"></td>
     <td class="hits">${hits[s.id]||0}</td></tr>`).join("");
 }
 function admRead(){
-  const cfg=sugCfg();
-  $$("#admBody tr").forEach(tr=>{const i=+tr.dataset.i;
+  const cfg=ARC.cfg();
+  $$("#admBody tr").forEach(tr=>{const i=+tr.dataset.i;if(!cfg[i])return;
     cfg[i].on=tr.querySelector('[data-f="on"]').checked;
     cfg[i].label=tr.querySelector('[data-f="label"]').value.trim()||cfg[i].label;
     cfg[i].w=Math.max(1,Math.min(20,+tr.querySelector('[data-f="w"]').value||1))});
@@ -470,13 +421,13 @@ function admRead(){
 }
 $("#admBtn").onclick=()=>{admDraw();$("#adm").classList.add("on")};
 $("#admClose").onclick=()=>$("#adm").classList.remove("on");
-$("#admSave").onclick=()=>{sugCfgSave(admRead());renderSuggest();$("#adm").classList.remove("on");toast("Suggestions saved for this browser.")};
-$("#admReset").onclick=()=>{sugResetHits();admDraw();renderSuggest();toast("Demo analytics reset.")};
-$("#admDefaults").onclick=()=>{sugCfgSave(SUG_DEFAULTS.map(s=>({...s})));admDraw();renderSuggest();toast("Defaults restored.")};
-$("#admPrev").onclick=()=>{sugCfgSave(admRead());
+$("#admSave").onclick=()=>{ARC.cfgSave(admRead());renderSuggest();$("#adm").classList.remove("on");toast("Saved for this browser only.")};
+$("#admReset").onclick=()=>{ARC.hitsReset();admDraw();renderSuggest();toast("Demo selection counts reset.")};
+$("#admDefaults").onclick=()=>{ARC.cfgReset();admDraw();renderSuggest();toast("Catalogue defaults restored.")};
+$("#admPrev").onclick=()=>{ARC.cfgSave(admRead());
   const out=$("#admPrevOut");out.hidden=false;
   out.innerHTML="<b>Five draws with the current settings</b><br>"+
-    Array.from({length:5},()=>sugPick(itExists,SUG_SHOWN).map(s=>esc(s.label)).join(" &middot; ")).join("<br>");
+    Array.from({length:5},()=>ARC.pick({n:SUG_SHOWN,pop:SUG_POP}).map(s=>esc(s.label)).join(" &middot; ")).join("<br>");
   admDraw()};
 
 $("#qrs").innerHTML=MORE.map((q,i)=>`<button class="qr" data-m="${i}"><img src="${ASSETS+q.img}" alt="">${esc(q.t)}</button>`).join("");
@@ -488,6 +439,10 @@ $$("#helpful button").forEach(b=>b.onclick=()=>{$$("#helpful button").forEach(x=
 $("#resetBtn").onclick=home;$("#phoneBtn").onclick=phone;$("#phoneX").onclick=()=>$("#phone").classList.remove("on");
 $("#labelsBtn").onclick=()=>{const on=$("#stage").classList.toggle("labels");$("#labelsBtn").classList.toggle("on",on)};
 const m=location.hash.match(/i=([^&]+)/);
-if(m){try{document.body.classList.add("mobile");$("#mob").innerHTML=mobile(b64d(m[1]))}catch(e){document.body.classList.remove("mobile")}}
-if(!document.body.classList.contains("mobile")){addEventListener("resize",fit);fit();home()}
+function start(){
+  if(m){try{document.body.classList.add("mobile");$("#mob").innerHTML=mobile(b64d(m[1]))}catch(e){document.body.classList.remove("mobile")}}
+  if(!document.body.classList.contains("mobile")){addEventListener("resize",fit);fit();home()}
+}
+ARC.load("catalog.json").then(start).catch(()=>{ARC.adopt(localCatalog());start()});
+window.__arcKiosk={get it(){return IT},sample,hash,renderSuggest,start};
 </script>
