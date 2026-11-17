@@ -185,8 +185,10 @@ html.k .qrp .tx span{font-size:11.5px;line-height:1.45;color:var(--ink2)}
 
 .foot{padding:22px 24px 36px;font-size:11px;line-height:1.7;color:var(--muted);text-align:center}
 .foot b{color:var(--ink2)}
-.pill{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);z-index:60;
-  background:var(--ink);color:#fff;font-size:11px;padding:6px 12px;border-radius:999px;opacity:.72}
+/* testing-override badge: top-right so it never covers the thumbnail rail */
+.pill{position:fixed;right:10px;top:10px;z-index:60;pointer-events:none;
+  background:var(--deep);color:#fff;font-size:10.5px;letter-spacing:.06em;
+  padding:6px 12px;border-radius:999px;opacity:.78}
 </style></head>
 <body>
 <div id="app"></div>
@@ -203,11 +205,21 @@ function pagesOf(id){ return A.pages[id] || [] }
 
 /* ---------- testing override: ?view=kiosk | ?view=mobile ---------- */
 var FORCED=((location.search||"").match(/[?&]view=(kiosk|mobile)/)||[])[1]||null;
+function inFrame(){
+  /* The ARC kiosk card opens this page inside a webview panel, which is far
+     narrower than the kiosk screen. Measuring the viewport therefore reports a
+     phone and the QR panel stays hidden — exactly what happened on the tablet.
+     Being framed at all means we are inside the kiosk. */
+  try { return window.top !== window.self } catch(e) { return true }
+}
 function setMode(){
-  /* The kiosk is 1080x1920 — big in BOTH directions. A phone held sideways is
-     wide but short, so width alone would misclassify it and show it the QR. */
+  /* 900x900 was too strict: it also rejected a normal laptop window and a
+     tablet held upright. The shortest side is what separates a phone from a
+     kiosk: phone portrait 390, phone landscape 430, laptop 645, tablet 820,
+     kiosk 1080. A minimum width keeps tall narrow windows out. */
+  var w = window.innerWidth, h = window.innerHeight;
   var kiosk = FORCED ? FORCED==="kiosk"
-            : (window.innerWidth>=900 && window.innerHeight>=900);
+            : (inFrame() || (w>=768 && Math.min(w,h)>=500));
   var r=document.documentElement;
   r.classList.toggle("k", kiosk); r.classList.toggle("m", !kiosk);
 }
