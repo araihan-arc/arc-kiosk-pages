@@ -156,6 +156,37 @@ img{display:block}
 .pc-now{color:var(--blush);font-weight:700;letter-spacing:.12em;text-transform:uppercase}
 .sheet-none{color:var(--ink2);padding:18px 2px}
 
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:60;
+  background:var(--plum);color:var(--paper);padding:11px 18px;border-radius:999px;
+  font-weight:600;font-size:13px;box-shadow:var(--shadow-lg);max-width:88vw;text-align:center}
+#shareBtn{display:none}
+html.m #shareBtn{display:inline-block}
+
+/* ---------- menyunting perhentian (hanya mode HP) ---------- */
+.stop-act{display:none}
+html.m .stop-act{display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+  border:1px solid var(--line);border-radius:999px;padding:7px 13px;color:var(--plum);
+  background:var(--card);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+.stop-act:hover{background:var(--paper)}
+.addwrap{display:none}
+html.m .addwrap{display:block;padding:16px 0 4px}
+.addbtn{width:100%;border:1px dashed var(--blush);border-radius:14px;padding:15px;
+  color:var(--plum);background:var(--card);font-weight:700;letter-spacing:.09em;text-transform:uppercase;font-size:12px}
+.addbtn:hover{background:var(--paper)}
+.edited-note{display:none}
+html.m .edited-note{display:flex;align-items:center;gap:8px;margin:14px 0 0;padding:11px 14px;
+  background:var(--paper);border-radius:12px;color:var(--ink2);font-size:12.5px;line-height:1.4}
+.menu-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;padding:15px 16px;color:var(--ink);font-weight:600}
+.menu-row:hover{border-color:var(--blush);background:var(--paper)}
+.menu-row.danger{color:var(--bad,#9C2F25)}
+.menu-row[disabled]{opacity:.42;cursor:default}
+.menu-row .mi{width:22px;text-align:center;flex:none}
+.menu-head{color:var(--muted);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+  font-weight:700;padding:2px 2px 2px}
+
 /* ---------- kiosk ---------- */
 html.k{font-size:17px}
 html.k .top{padding:18px 30px}
@@ -228,6 +259,10 @@ html.m .stop-sub{font-size:12.5px}
 html.m .stop-hrs{font-size:12.5px}
 html.m .stop-hrs b{font-size:10.5px}
 html.m .btn{padding:9px 16px;font-size:12px}
+/* empat tombol harus muat di 390px: Ideas · Undo · Share · Change plan */
+html.m .bar{gap:7px;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px))}
+html.m .bar .btn{padding:9px 11px;font-size:10.5px;letter-spacing:.06em;white-space:nowrap}
+html.m .bar .spacer{flex:1 1 0;min-width:0}
 html.m .qrblock{display:none}      /* the guest is already on the phone */
 html.m .top-note{display:none}
 /* di HP sheet naik dari bawah, bukan dari samping */
@@ -263,8 +298,11 @@ html.m .pc-m,html.m .pc-now{font-size:11.5px}
 <nav class="bar hide" id="bar">
   <button type="button" class="btn btn-ghost" id="backBtn">All ideas</button>
   <span class="spacer"></span>
+  <button type="button" class="btn btn-ghost hide" id="undoBtn">Undo</button>
+  <button type="button" class="btn btn-ghost" id="shareBtn">Share</button>
   <button type="button" class="btn" id="swapBtn">Change plan</button>
 </nav>
+<div class="toast hide" id="toast"></div>
 
 <div class="sheet hide" id="sheet" role="dialog" aria-modal="true" aria-label="Explore other plans">
   <div class="sheet-back" id="sheetBack"></div>
@@ -451,9 +489,43 @@ html.m .pc-m,html.m .pc-now{font-size:11.5px}
     return { kiosk: k, mobile: m };
   }
   var MODE = applyMode();
+  /* di 390px "All ideas" membelah dua baris begitu Undo dan Share ikut muncul */
+  if (MODE.mobile) document.getElementById("backBtn").textContent = "Ideas";
   if (!VIEW_PARAM) window.addEventListener("resize", function () { MODE = applyMode(); render(); });
 
-  var STATE = { plan: null };
+  var STATE = { plan: null, stops: null, undo: false };
+  var EDIT_KEY = "arcCarltonEdits.v1";
+
+  /* Suntingan tamu hidup di HP-nya sendiri. Kios tidak pernah menyimpannya —
+     layar lobi dipakai bergantian, jadi rencana tamu sebelumnya tidak boleh
+     menempel di sana. */
+  function loadEdits() {
+    if (!MODE.mobile) return {};
+    try { return JSON.parse(localStorage.getItem(EDIT_KEY) || "{}") || {}; }
+    catch (e) { return {}; }
+  }
+  function saveEdits() {
+    if (!MODE.mobile) return;
+    try {
+      var all = loadEdits();
+      if (STATE.stops) all[STATE.plan] = STATE.stops; else delete all[STATE.plan];
+      localStorage.setItem(EDIT_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
+  function baseStops(p) { return p.s.map(function (r) { return r.slice(); }); }
+  function curStops() {
+    var p = ARC.plan(STATE.plan);
+    return STATE.stops ? STATE.stops : (p ? baseStops(p) : []);
+  }
+  function setStops(rows) {
+    /* false = belum ada yang bisa dibatalkan; null = batalkan ke rencana asli */
+    STATE.undo = STATE.stops ? STATE.stops.map(function (r) { return r.slice(); }) : null;
+    STATE.stops = rows;
+    saveEdits();
+    renderPlan();
+    syncUrl();
+  }
 
   /* ---------- time ---------- */
   function hhmm(mins) {
@@ -465,18 +537,19 @@ html.m .pc-m,html.m .pc-now{font-size:11.5px}
     var h = Math.floor(mins / 60), m = mins % 60;
     return (h ? h + "h" : "") + (h && m ? " " : "") + (m ? m + "m" : (h ? "" : "0m"));
   }
-  function schedule(p) {
+  function schedule(p, rows) {
     var t = p.start, out = [];
-    p.s.forEach(function (row, i) {
+    (rows || p.s).forEach(function (row, i) {
       out.push({ id: row[0], mins: row[1], why: row[2], from: t, to: t + row[1], i: i + 1 });
       t += row[1] + TRANSFER;
     });
     return out;
   }
-  function totalMins(p) {
+  function totalMins(p) { return minsOf(p.s); }
+  function minsOf(rows) {
     var sum = 0;
-    p.s.forEach(function (r) { sum += r[1]; });
-    return sum + TRANSFER * Math.max(0, p.s.length - 1);
+    rows.forEach(function (r) { sum += r[1]; });
+    return sum + TRANSFER * Math.max(0, rows.length - 1);
   }
 
   /* ---------- stage 1 ---------- */
@@ -553,10 +626,12 @@ html.m .pc-m,html.m .pc-now{font-size:11.5px}
     hero.appendChild(txt);
     host.appendChild(hero);
 
-    var rows = schedule(p);
+    var now = curStops();
+    var rows = schedule(p, now);
     var stats = el("div", "pstats");
-    [[dur(totalMins(p)), "in total"],
-     [p.s.length + (p.s.length === 1 ? " stop" : " stops"), "chosen for you"],
+    [[dur(minsOf(now)), "in total"],
+     [now.length + (now.length === 1 ? " stop" : " stops"),
+      STATE.stops ? "in your plan" : "chosen for you"],
      [hhmm(p.start), "suggested start"]].forEach(function (c) {
       var cell = el("div", "pstat");
       cell.appendChild(el("b", null, c[0]));
@@ -622,18 +697,75 @@ html.m .pc-m,html.m .pc-now{font-size:11.5px}
         body.appendChild(a);
       }
 
+      /* Menyunting hanya ditawarkan di HP. Di kios layarnya dipakai bergantian,
+         jadi perubahan satu tamu tidak boleh menempel untuk tamu berikutnya. */
+      if (MODE.mobile) {
+        var act = el("button", "stop-act", "Change this stop");
+        act.type = "button";
+        act.addEventListener("click", function () { openSheet("menu", r.i - 1); });
+        body.appendChild(act);
+      }
+
       li.appendChild(body);
       list.appendChild(li);
     });
     host.appendChild(list);
 
+    if (MODE.mobile) {
+      var aw = el("div", "addwrap");
+      var ab = el("button", "addbtn", "+  Add a stop");
+      ab.type = "button";
+      ab.addEventListener("click", function () { openSheet("pool", -1); });
+      aw.appendChild(ab);
+      host.appendChild(aw);
+
+      if (STATE.stops) {
+        var note = el("div", "edited-note");
+        note.appendChild(el("span", null,
+          "You have changed this plan. The times update as you go. "
+          + "Tap Undo to step back, or Change plan to start from a fresh one."));
+        host.appendChild(note);
+      }
+    }
+
+    $("#undoBtn").classList.toggle("hide", !(MODE.mobile && STATE.undo !== false));
+
     if (!MODE.mobile) host.appendChild(qrBlock());
   }
 
+  /* base64url, aman untuk judul ber-aksen */
+  function packEdits(rows) {
+    var s = JSON.stringify(rows.map(function (r) { return [r[0], r[1]]; }));
+    return btoa(unescape(encodeURIComponent(s)))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function unpackEdits(v) {
+    try {
+      var b = v.replace(/-/g, "+").replace(/_/g, "/");
+      var rows = JSON.parse(decodeURIComponent(escape(atob(b))));
+      if (!Array.isArray(rows) || !rows.length) return null;
+      var out = [];
+      for (var i = 0; i < rows.length; i++) {
+        var id = rows[i][0], mins = +rows[i][1];
+        if (!ARC.stop(id) || !(mins > 0)) return null;   /* satu saja cacat, tolak semua */
+        out.push([id, mins, (ARC.stop(id).d || "")]);
+      }
+      return out;
+    } catch (e) { return null; }
+  }
+  function syncUrl() {
+    var u = new URL(location.href);
+    u.searchParams.set("plan", STATE.plan);
+    if (STATE.stops) u.searchParams.set("e", packEdits(STATE.stops));
+    else u.searchParams.delete("e");
+    history.replaceState(null, "", u);
+  }
   function shareUrl() {
     var u = new URL(location.href);
     u.searchParams.set("plan", STATE.plan);
     u.searchParams.set("view", "m");
+    if (STATE.stops) u.searchParams.set("e", packEdits(STATE.stops));
+    else u.searchParams.delete("e");
     return u.toString();
   }
   function qrBlock() {
@@ -730,17 +862,175 @@ html.m .pc-m,html.m .pc-now{font-size:11.5px}
     list.forEach(function (row) { host.appendChild(planCard(row.id)); });
   }
 
-  function openSheet() {
-    FILTER = "all";
-    drawChips(); drawSheet();
+  var SHEET = { kind: "plans", idx: -1 };
+  var POOLCAT = "All";
+
+  function openSheet(kind, idx) {
+    SHEET = { kind: kind || "plans", idx: (idx == null ? -1 : idx) };
+    if (SHEET.kind === "plans") { FILTER = "all"; }
+    if (SHEET.kind === "pool")  { POOLCAT = "All"; }
+    drawAll();
     $("#sheet").classList.remove("hide");
     document.body.style.overflow = "hidden";
+  }
+  function drawAll() {
+    var titles = { plans: "Explore other plans", menu: "Change this stop",
+                   pool: SHEET.idx >= 0 ? "Replace this stop" : "Add a stop" };
+    $("#sheet h2").textContent = titles[SHEET.kind] || "";
+    $("#chips").classList.toggle("hide", SHEET.kind === "menu");
+    if (SHEET.kind === "plans") { drawChips(); drawSheet(); }
+    else if (SHEET.kind === "pool") { drawPoolChips(); drawPool(); }
+    else { drawMenu(); }
+  }
+
+  /* ---------- menu satu perhentian ---------- */
+  function drawMenu() {
+    var host = $("#sheetBody"), rows = curStops(), i = SHEET.idx;
+    host.innerHTML = "";
+    var s = ARC.stop(rows[i] && rows[i][0]);
+    if (!s) return closeSheet();
+    host.appendChild(el("div", "menu-head", s.n));
+
+    function row(icon, label, on, disabled, danger) {
+      var b = el("button", "menu-row" + (danger ? " danger" : ""));
+      b.type = "button";
+      if (disabled) b.disabled = true;
+      b.appendChild(el("span", "mi", icon));
+      b.appendChild(el("span", null, label));
+      if (!disabled) b.addEventListener("click", on);
+      host.appendChild(b);
+    }
+    row("⇄", "Replace with somewhere else", function () { openSheet("pool", i); });
+    row("↑", "Move earlier", function () {
+      var n = rows.map(function (r) { return r.slice(); });
+      var tmp = n[i - 1]; n[i - 1] = n[i]; n[i] = tmp;
+      setStops(n); closeSheet(); toast("Moved earlier");
+    }, i === 0);
+    row("↓", "Move later", function () {
+      var n = rows.map(function (r) { return r.slice(); });
+      var tmp = n[i + 1]; n[i + 1] = n[i]; n[i] = tmp;
+      setStops(n); closeSheet(); toast("Moved later");
+    }, i >= rows.length - 1);
+    row("✕", "Remove from my day", function () {
+      var n = rows.map(function (r) { return r.slice(); });
+      n.splice(i, 1);
+      setStops(n); closeSheet(); toast("Stop removed");
+    }, rows.length <= 1, true);
+  }
+
+  /* ---------- kolam 94 perhentian ---------- */
+  function poolList() {
+    var inplan = {};
+    curStops().forEach(function (r) { inplan[r[0]] = 1; });
+    var all = ARC.catalogue.stops, out = [];
+    Object.keys(all).forEach(function (id) {
+      if (inplan[id] && !(SHEET.idx >= 0 && curStops()[SHEET.idx][0] === id)) return;
+      var s = all[id];
+      if (POOLCAT !== "All" && s.c !== POOLCAT) return;
+      out.push({ id: id, s: s, far: farMins(s) });
+    });
+    /* terdekat dulu; yang jaraknya tidak pernah diukur ditaruh di belakang */
+    out.sort(function (a, b) { return a.far - b.far; });
+    return out;
+  }
+  function farMins(s) {
+    var m = /(\d+)\s*min walk/.exec(s.far || "");
+    if (m) return +m[1];
+    return s.far ? 900 : 9000;
+  }
+  function drawPoolChips() {
+    var host = $("#chips");
+    host.innerHTML = "";
+    var counts = {}, all = ARC.catalogue.stops;
+    Object.keys(all).forEach(function (id) {
+      counts[all[id].c] = (counts[all[id].c] || 0) + 1;
+    });
+    var cats = ["All"].concat(Object.keys(counts).sort());
+    cats.forEach(function (c) {
+      var b = el("button", "chip", c);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(POOLCAT === c));
+      b.addEventListener("click", function () { POOLCAT = c; drawPoolChips(); drawPool(); });
+      host.appendChild(b);
+      if (POOLCAT === c && c !== "All" && b.scrollIntoView) {
+        try { b.scrollIntoView({ block: "nearest", inline: "center" }); } catch (e) {}
+      }
+    });
+  }
+  function drawPool() {
+    var host = $("#sheetBody"), list = poolList();
+    host.innerHTML = "";
+    if (!list.length) {
+      host.appendChild(el("p", "sheet-none", "Nothing left in that category."));
+      return;
+    }
+    list.forEach(function (row) {
+      var s = row.s, b = el("button", "pc");
+      b.type = "button";
+      if (s.img) { var im = el("img"); im.src = s.img; im.alt = ""; im.loading = "lazy"; b.appendChild(im); }
+      var body = el("div", "pc-b");
+      body.appendChild(el("div", "pc-t", s.n));
+      if (s.d) body.appendChild(el("div", "pc-bl", s.d));
+      var m = el("div", "pc-m");
+      if (s.c) m.appendChild(el("span", null, s.c));
+      if (s.far) { if (s.c) m.appendChild(el("span", "dot")); m.appendChild(el("span", "who", s.far)); }
+      body.appendChild(m);
+      b.appendChild(body);
+      b.addEventListener("click", function () {
+        var rows = curStops().map(function (r) { return r.slice(); });
+        /* perhentian baru mewarisi lama kunjungan yang digantikannya; kalau
+           ditambahkan, 60 menit sebagai titik awal yang bisa tamu geser sendiri */
+        if (SHEET.idx >= 0) rows[SHEET.idx] = [row.id, rows[SHEET.idx][1], s.d || ""];
+        else rows.push([row.id, 60, s.d || ""]);
+        setStops(rows); closeSheet();
+        toast(SHEET.idx >= 0 ? "Stop replaced" : "Stop added");
+      });
+      host.appendChild(b);
+    });
+  }
+
+  /* ---------- toast ---------- */
+  var toastT = null;
+  function toast(msg) {
+    var n = $("#toast");
+    n.textContent = msg;
+    n.classList.remove("hide");
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { n.classList.add("hide"); }, 2200);
   }
   function closeSheet() {
     $("#sheet").classList.add("hide");
     document.body.style.overflow = "";
   }
-  $("#swapBtn").addEventListener("click", openSheet);
+  $("#swapBtn").addEventListener("click", function () { openSheet("plans"); });
+
+  $("#undoBtn").addEventListener("click", function () {
+    if (STATE.undo === false) return;
+    STATE.stops = STATE.undo;          /* null berarti kembali ke rencana asli */
+    STATE.undo = false;
+    saveEdits(); renderPlan(); syncUrl();
+    toast("Change undone");
+  });
+
+  /* Share membawa rencana APA ADANYA di layar tamu, suntingan ikut — kalau
+     tidak, teman yang menerima tautan membuka hari yang berbeda dari yang
+     sedang dibicarakan. */
+  $("#shareBtn").addEventListener("click", function () {
+    var url = shareUrl(), p = ARC.plan(STATE.plan);
+    var title = "Carlton Hotel Singapore — " + (p ? p.t : "Smart Itinerary");
+    if (navigator.share) {
+      navigator.share({ title: title, text: title, url: url })
+        .catch(function () {});
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url)
+        .then(function () { toast("Link copied"); })
+        .catch(function () { toast("Could not copy the link"); });
+      return;
+    }
+    toast("Copy the link from your browser's address bar");
+  });
   $("#sheetX").addEventListener("click", closeSheet);
   $("#sheetBack").addEventListener("click", closeSheet);
   document.addEventListener("keydown", function (e) {
@@ -755,16 +1045,17 @@ html.m .pc-m,html.m .pc-now{font-size:11.5px}
     $("#bar").classList.toggle("hide", ideas);
     window.scrollTo(0, 0);
   }
-  function choose(id, count) {
+  function choose(id, count, rows) {
     if (!ARC.exists(id)) return;
     STATE.plan = id;
+    STATE.undo = false;
+    /* tautan yang dibagikan menang atas apa pun yang tersimpan di HP ini */
+    STATE.stops = rows || loadEdits()[id] || null;
     /* popularity moves only on a real choice, never on open, reload or share */
     if (count !== false) ARC.hit(id);
     renderPlan();
     go("plan");
-    var u = new URL(location.href);
-    u.searchParams.set("plan", id);
-    history.replaceState(null, "", u);
+    syncUrl();
   }
   function render() {
     renderIdeas();
@@ -772,9 +1063,9 @@ html.m .pc-m,html.m .pc-now{font-size:11.5px}
   }
 
   $("#backBtn").addEventListener("click", function () {
-    STATE.plan = null;
+    STATE.plan = null; STATE.stops = null; STATE.undo = false;
     var u = new URL(location.href);
-    u.searchParams.delete("plan");
+    u.searchParams.delete("plan"); u.searchParams.delete("e");
     history.replaceState(null, "", u);
     go("ideas");
   });
@@ -789,9 +1080,11 @@ html.m .pc-m,html.m .pc-now{font-size:11.5px}
     var cat = embedded("arc-catalog"), stp = embedded("arc-stops");
     ARC.adopt({ plans: cat.plans, stops: stp });
     renderIdeas();
-    var want = new URLSearchParams(location.search).get("plan");
+    var qs = new URLSearchParams(location.search);
+    var want = qs.get("plan"), ed = qs.get("e");
     /* arriving by QR or a shared link is not a choice, so it must not count */
-    if (want && ARC.exists(want)) choose(want, false); else go("ideas");
+    if (want && ARC.exists(want)) choose(want, false, ed ? unpackEdits(ed) : null);
+    else go("ideas");
   } catch (e) {
     $("#screen-ideas").innerHTML =
       '<div class="lede"><h1>Itinerary unavailable</h1><p>The plan list could not be loaded. '
