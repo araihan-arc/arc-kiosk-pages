@@ -185,10 +185,6 @@ html.k .qrp .tx span{font-size:11.5px;line-height:1.45;color:var(--ink2)}
 
 .foot{padding:22px 24px 36px;font-size:11px;line-height:1.7;color:var(--muted);text-align:center}
 .foot b{color:var(--ink2)}
-/* testing-override badge: top-right so it never covers the thumbnail rail */
-.pill{position:fixed;right:10px;top:10px;z-index:60;pointer-events:none;
-  background:var(--deep);color:#fff;font-size:10.5px;letter-spacing:.06em;
-  padding:6px 12px;border-radius:999px;opacity:.78}
 </style></head>
 <body>
 <div id="app"></div>
@@ -472,11 +468,6 @@ function draw(){
 window.addEventListener("hashchange",draw);
 draw();
 
-if(/[?&]view=/.test(location.search)){
-  var p=document.createElement("div"); p.className="pill";
-  p.textContent=(location.search.match(/view=(\w+)/)[1])+" view (testing override)";
-  document.body.appendChild(p);
-}
 window.__carlton={ goto:goto, resolve:resolve, view:VIEW, show:show };
 </script>
 </body></html>
