@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Carlton Hotel Singapore · Smart Itinerary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<!-- ============================================================
+     Carlton Hotel Singapore · Smart Itinerary
+
+     Two screens, as agreed:
+       #screen-ideas  — stage 1, the card list of itineraries (Tanglin / Sentosa shape)
+       #screen-plan   — stage 2, the plan card (arc-hotel-itinerary-kiosk design)
+
+     This is the WebView page the ARC kiosk opens through Interactive KM —
+     the same kind of page as carlton-dining. It deliberately carries NO avatar,
+     microphone or voice sheet: that chrome belongs to the kiosk application.
+
+     Mode is set by class html.k / html.m from ?view=kiosk or ?view=m,
+     not by media query, so the parameter genuinely forces a mode.
+
+     Colour comes from carltonhotel.sg computed style, read from the live site:
+       #615450 primary text · #372B4F h2 and action background
+       #EAE6E3 card background and action text · #C4A397 accent · #D3CFCC rules
+     Montserrat is the hotel's own typeface. Newsreader is used for ONE thing,
+     the plan name on stage 2, because that is the only place the kiosk needs a
+     headline readable from two metres away.
+     ============================================================ -->
+
+<style>
+:root{
+  --ivory:#F7F5F3; --paper:#EAE6E3; --card:#FFFFFF;
+  --ink:#4A403C; --ink2:#7B6F6B; --muted:#8C8A88;
+  --plum:#372B4F; --plum-d:#2A2039; --blush:#C4A397; --line:#D3CFCC;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --sans:Montserrat,"Helvetica Neue",Arial,sans-serif;
+  --shadow:0 2px 10px rgba(55,43,79,.07);
+  --shadow-lg:0 14px 38px rgba(55,43,79,.13);
+}
+*{box-sizing:border-box}
+[hidden],.hide{display:none!important}
+html,body{margin:0;background:var(--ivory);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+a{color:inherit}
+img{display:block}
+
+/* ---------- header ---------- */
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+     gap:16px;background:var(--card);border-bottom:1px solid var(--line);padding:14px 22px}
+.brand img{height:34px;width:auto}
+.top-note{color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:600;font-size:11px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:26px 20px 90px}
+
+/* ---------- stage 1: ideas ---------- */
+.lede{margin:4px 0 22px}
+.lede h1{margin:0 0 8px;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--plum);font-size:24px}
+.lede p{margin:0;color:var(--ink2);font-size:15px;line-height:1.55;max-width:60ch}
+.ideas{display:grid;gap:16px}
+.idea{position:relative;display:flex;overflow:hidden;text-align:left;background:var(--card);
+      border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
+      transition:transform .16s,box-shadow .16s,border-color .16s}
+.idea:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--blush)}
+.idea-img{object-fit:cover;background:var(--paper);flex:none}
+.idea-icon{position:absolute;background:var(--card);border-radius:10px;display:grid;place-items:center;box-shadow:var(--shadow)}
+.idea-body{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;padding:18px 20px}
+.idea-t{color:var(--ink);font-weight:600;letter-spacing:.005em}
+.idea-bl{color:var(--ink2);font-weight:400;line-height:1.5;flex:1}
+.idea-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:var(--plum);font-weight:600}
+.dot{width:3px;height:3px;border-radius:50%;background:currentColor;opacity:.5}
+.tag-pop{background:var(--blush);color:#3A2B25;border-radius:999px;padding:2px 9px;font-weight:700;letter-spacing:.06em}
+.who{color:var(--muted);font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+
+/* ---------- stage 2: plan ---------- */
+.phero{position:relative;border-radius:18px;overflow:hidden;background:var(--paper)}
+.phero img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.phero .scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(26,20,34,.86) 0,rgba(26,20,34,.30) 52%,rgba(26,20,34,.42) 100%)}
+.phero .pmark{position:absolute;top:22px;left:24px;z-index:2}
+.phero .pmark img{position:static;height:26px;width:auto;object-fit:contain}
+.phero .ptxt{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:flex-end;height:100%;padding:26px 28px}
+.eyebrow{color:#EFE1DB;font-weight:700;letter-spacing:.28em;text-transform:uppercase;margin:0 0 10px}
+.phero h1{margin:0;font-family:var(--serif);font-weight:400;color:#fff;line-height:1.08;letter-spacing:.005em}
+
+.pstats{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);
+        border:1px solid var(--line);border-top:0;border-radius:0 0 14px 14px;overflow:hidden}
+.pstat{padding:16px 18px;border-left:1px solid var(--line)}
+.pstat:first-child{border-left:0}
+.pstat b{display:block;font-weight:600;color:var(--plum)}
+.pstat span{color:var(--muted)}
+
+.tl{list-style:none;margin:22px 0 0;padding:0}
+.stop{display:grid;grid-template-columns:auto auto 1fr;gap:18px;align-items:start;
+      padding:18px 2px;border-bottom:1px solid var(--line)}
+.stop:last-child{border-bottom:0}
+.stop-when{text-align:right;white-space:nowrap}
+.stop-when b{display:block;color:var(--plum);font-weight:600}
+.stop-when span{color:var(--blush);font-weight:700;letter-spacing:.18em}
+.stop-img{object-fit:cover;border-radius:10px;background:var(--paper)}
+.stop.nopic{grid-template-columns:auto 1fr}
+.stop-body{min-width:0}
+.stop-body h3{margin:0 0 5px;font-weight:600;color:var(--ink);line-height:1.25}
+.stop-why{margin:0 0 7px;color:var(--ink2);line-height:1.5}
+.stop-sub{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:var(--muted)}
+.stop-hrs{margin:7px 0 0;color:var(--ink2);line-height:1.45}
+.stop-hrs b{color:var(--plum);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.btn{display:inline-block;margin-top:11px;background:var(--plum);color:var(--paper);
+     border-radius:999px;text-decoration:none;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+.btn:hover{background:var(--plum-d)}
+.btn-ghost{background:none;color:var(--plum);border:1px solid var(--line)}
+.btn-ghost:hover{background:var(--paper)}
+
+.qrblock{display:flex;gap:28px;align-items:center;margin-top:26px;padding:26px;
+         background:var(--paper);border-radius:16px}
+.qrbox{background:#fff;padding:12px;border-radius:12px;flex:none;line-height:0}
+.qrbox img,.qrbox canvas{display:block}
+.qr-e{color:var(--plum);font-weight:700;letter-spacing:.24em;text-transform:uppercase;margin:0 0 8px}
+.qr-t{margin:0 0 8px;font-family:var(--serif);font-weight:400;color:var(--ink);line-height:1.15}
+.qr-p{margin:0;color:var(--ink2);line-height:1.5}
+
+/* ---------- bottom bar ---------- */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:12px;align-items:center;
+     background:var(--card);border-top:1px solid var(--line);padding:12px 20px;
+     padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
+.bar .spacer{flex:1}
+
+/* ---------- lapisan peta (kios) ---------- */
+.mapov{position:fixed;inset:0;z-index:70;display:none;background:rgba(26,20,34,.62)}
+.mapov.on{display:flex;align-items:stretch;justify-content:center}
+.mapbox{position:relative;background:var(--card);width:min(1100px,100%);margin:0 auto;
+  display:flex;flex-direction:column}
+.maphd{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:18px 20px;border-bottom:1px solid var(--line)}
+.maphd b{font-weight:600;color:var(--ink);font-size:20px;line-height:1.3;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapcl{flex:none;min-height:52px;padding:0 24px;border:1px solid var(--line);
+  border-radius:999px;background:var(--ivory);color:var(--ink);font-weight:600;font-size:17px}
+.mapfr{flex:1 1 auto;width:100%;border:0;display:block;background:var(--paper)}
+/* ---------- sheet: ganti rencana ---------- */
+.sheet{position:fixed;inset:0;z-index:50;display:flex}
+.sheet-back{position:absolute;inset:0;background:rgba(26,20,34,.52)}
+.sheet-panel{position:relative;background:var(--ivory);display:flex;flex-direction:column;
+             margin-left:auto;width:min(560px,100%);box-shadow:-18px 0 50px rgba(26,20,34,.26)}
+.sheet-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;
+            padding:20px 22px 12px;border-bottom:1px solid var(--line);background:var(--card)}
+.sheet-head h2{margin:0;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--plum)}
+.sheet-x{color:var(--ink2);line-height:1;padding:4px 8px;border-radius:8px}
+.sheet-x:hover{background:var(--paper)}
+.chips{flex:none;display:flex;flex-wrap:wrap;gap:8px;padding:14px 22px;background:var(--card);
+       border-bottom:1px solid var(--line)}
+.chip{border:1px solid var(--line);border-radius:999px;padding:7px 14px;color:var(--ink2);
+      background:var(--ivory);white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--plum);border-color:var(--plum);color:var(--paper);font-weight:600}
+.sheet-body{flex:1 1 auto;min-height:0;overflow:auto;padding:16px 22px 28px;display:grid;gap:12px;align-content:start;grid-auto-rows:min-content}
+.pc{display:flex;gap:14px;text-align:left;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.pc:hover{border-color:var(--blush)}
+.pc img{width:108px;min-height:96px;object-fit:cover;background:var(--paper);flex:none;align-self:stretch}
+.pc-b{padding:13px 14px 14px;min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
+.pc-t{font-weight:600;color:var(--ink);line-height:1.25}
+.pc-bl{color:var(--ink2);line-height:1.45}
+.pc-m{display:flex;align-items:center;flex-wrap:wrap;gap:7px;color:var(--plum);font-weight:600}
+.pc.cur{background:var(--paper);border-color:var(--blush);cursor:default}
+.pc.cur:hover{border-color:var(--blush)}
+.pc-now{color:var(--blush);font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.sheet-none{color:var(--ink2);padding:18px 2px}
+
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:60;
+  background:var(--plum);color:var(--paper);padding:11px 18px;border-radius:999px;
+  font-weight:600;font-size:13px;box-shadow:var(--shadow-lg);max-width:88vw;text-align:center}
+#shareBtn{display:none}
+html.m #shareBtn{display:inline-block}
+
+/* ---------- menyunting perhentian (hanya mode HP) ---------- */
+.stop-act{display:none}
+html.m .stop-act{display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+  border:1px solid var(--line);border-radius:999px;padding:7px 13px;color:var(--plum);
+  background:var(--card);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+.stop-act:hover{background:var(--paper)}
+.addwrap{display:none}
+html.m .addwrap{display:block;padding:16px 0 4px}
+.addbtn{width:100%;border:1px dashed var(--blush);border-radius:14px;padding:15px;
+  color:var(--plum);background:var(--card);font-weight:700;letter-spacing:.09em;text-transform:uppercase;font-size:12px}
+.addbtn:hover{background:var(--paper)}
+.edited-note{display:none}
+html.m .edited-note{display:flex;align-items:center;gap:8px;margin:14px 0 0;padding:11px 14px;
+  background:var(--paper);border-radius:12px;color:var(--ink2);font-size:12.5px;line-height:1.4}
+.menu-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;padding:15px 16px;color:var(--ink);font-weight:600}
+.menu-row:hover{border-color:var(--blush);background:var(--paper)}
+.menu-row.danger{color:var(--bad,#9C2F25)}
+.menu-row[disabled]{opacity:.42;cursor:default}
+.menu-row .mi{width:22px;text-align:center;flex:none}
+.menu-head{color:var(--muted);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+  font-weight:700;padding:2px 2px 2px}
+
+/* ---------- kiosk ---------- */
+html.k{font-size:17px}
+html.k .top{padding:18px 30px}
+html.k .brand img{height:44px}
+html.k .wrap{max-width:none;padding:30px 36px 110px}
+html.k .lede h1{font-size:34px}
+html.k .lede p{font-size:19px}
+html.k .ideas{grid-template-columns:1fr}
+html.k .idea{flex-direction:row}
+html.k .idea-img{width:290px;height:190px}
+html.k .idea-icon{top:18px;left:18px;width:50px;height:50px;font-size:24px}
+html.k .idea-body{padding:24px 26px;gap:7px}
+html.k .idea-t{font-size:27px}
+html.k .idea-bl{font-size:17px}
+html.k .idea-meta{font-size:15px;padding-top:2px}
+html.k .phero{height:340px}
+html.k .phero h1{font-size:54px}
+html.k .eyebrow{font-size:14px}
+html.k .pstat b{font-size:30px}
+html.k .pstat span{font-size:15px}
+html.k .stop-img{width:190px;height:130px}
+html.k .stop-when b{font-size:24px}
+html.k .stop-when span{font-size:13px}
+html.k .stop-body h3{font-size:26px}
+html.k .stop-why{font-size:17px}
+html.k .stop-sub{font-size:15px}
+html.k .stop-hrs{font-size:15px}
+html.k .stop-hrs b{font-size:12px}
+html.k .btn{padding:11px 22px;font-size:14px}
+html.k .qr-t{font-size:34px}
+html.k .qr-p{font-size:17px}
+html.k .qr-e{font-size:13px}
+html.k .sheet-head h2{font-size:21px}
+html.k .sheet-x{font-size:30px}
+html.k .chip{font-size:15px}
+html.k .pc img{width:132px}
+html.k .pc-t{font-size:21px}
+html.k .pc-bl{font-size:15px}
+html.k .pc-m,html.k .pc-now{font-size:13px}
+html.k .sheet-panel{width:min(640px,100%)}
+
+/* ---------- phone ---------- */
+html.m{font-size:16px}
+html.m .wrap{padding:18px 16px 96px}
+html.m .lede h1{font-size:20px}
+html.m .lede p{font-size:14px}
+html.m .ideas{grid-template-columns:1fr;gap:12px}
+html.m .idea{flex-direction:column}
+html.m .idea-img{width:100%;height:124px}
+html.m .idea-icon{top:12px;left:12px;width:38px;height:38px;font-size:18px}
+html.m .idea-body{padding:14px 16px}
+html.m .idea-t{font-size:18px}
+html.m .idea-bl{font-size:14px}
+html.m .idea-meta{font-size:12.5px}
+html.m .phero{height:210px;border-radius:14px}
+html.m .phero .ptxt{padding:18px}
+html.m .phero h1{font-size:30px}
+html.m .eyebrow{font-size:10.5px;letter-spacing:.22em}
+html.m .pstats{grid-template-columns:repeat(3,1fr)}
+html.m .pstat{padding:12px}
+html.m .pstat b{font-size:18px}
+html.m .pstat span{font-size:11.5px}
+html.m .stop{gap:12px;padding:14px 0}
+html.m .stop-img{width:84px;height:84px}
+html.m .stop-when b{font-size:15px}
+html.m .stop-when span{font-size:10px}
+html.m .stop-body h3{font-size:17px}
+html.m .stop-why{font-size:14px}
+html.m .stop-sub{font-size:12.5px}
+html.m .stop-hrs{font-size:12.5px}
+html.m .stop-hrs b{font-size:10.5px}
+html.m .btn{padding:9px 16px;font-size:12px}
+/* empat tombol harus muat di 390px: Ideas · Undo · Share · Change plan */
+html.m .bar{gap:7px;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px))}
+html.m .bar .btn{padding:9px 11px;font-size:10.5px;letter-spacing:.06em;white-space:nowrap}
+html.m .bar .spacer{flex:1 1 0;min-width:0}
+html.m .qrblock{display:none}      /* the guest is already on the phone */
+html.m .top-note{display:none}
+/* di HP sheet naik dari bawah, bukan dari samping */
+html.m .sheet-panel{margin:auto 0 0;width:100%;max-height:88vh;border-radius:18px 18px 0 0;
+                    box-shadow:0 -16px 44px rgba(26,20,34,.3)}
+html.m .sheet-head{padding:16px 16px 10px;border-radius:18px 18px 0 0}
+html.m .sheet-head h2{font-size:15px}
+html.m .sheet-x{font-size:26px}
+html.m .chips{padding:11px 16px;gap:7px;flex-wrap:nowrap;overflow-x:auto}
+html.m .chip{font-size:12.5px;padding:6px 12px}
+html.m .sheet-body{padding:13px 16px calc(22px + env(safe-area-inset-bottom,0px))}
+html.m .pc img{width:92px}
+html.m .pc-t{font-size:16px}
+html.m .pc-bl{font-size:13px}
+html.m .pc-m,html.m .pc-now{font-size:11.5px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <img src="https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794917145768_irmw12.png"
+         alt="Carlton Hotel Singapore">
+  </div>
+  <div class="top-note">Smart Itinerary</div>
+</header>
+
+<main class="wrap">
+  <section id="screen-ideas"></section>
+  <section id="screen-plan" class="hide"></section>
+</main>
+
+<nav class="bar hide" id="bar">
+  <button type="button" class="btn btn-ghost" id="backBtn">All ideas</button>
+  <span class="spacer"></span>
+  <button type="button" class="btn btn-ghost hide" id="undoBtn">Undo</button>
+  <button type="button" class="btn btn-ghost" id="shareBtn">Share</button>
+  <button type="button" class="btn" id="swapBtn">Change plan</button>
+</nav>
+<div class="toast hide" id="toast"></div>
+
+<div class="sheet hide" id="sheet" role="dialog" aria-modal="true" aria-label="Explore other plans">
+  <div class="sheet-back" id="sheetBack"></div>
+  <div class="sheet-panel">
+    <div class="sheet-head">
+      <h2>Explore other plans</h2>
+      <button type="button" class="sheet-x" id="sheetX" aria-label="Close">&times;</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
+<!-- Data ditanam di sini, bukan diambil lewat fetch(). Alasannya: halaman ini
+     harus bisa dibuka langsung dari berkas (file://), dan browser memblokir
+     fetch() dari file:// sebagai lintas-asal. Tanglin dan Sentosa memakai
+     bentuk yang sama. Jangan sunting tangan — dihasilkan oleh build_data.py. -->
+<script id="arc-catalog" type="application/json">{"generated":"2026-11-18","origin":"Carlton Hotel Singapore, 76 Bras Basah Road","plans":{"museum-quarter":{"t":"Museum Quarter on Foot","bl":"Four national museums, all of them closer to the front door than the nearest MRT station.","icon":"🏛","start":600,"mins":360,"hrs":6.0,"on":true,"w":9,"who":["solo","couple","family"],"rainy":1,"cover":"national-museum-of-singapore","s":[["national-museum-of-singapore",90,"The country's oldest museum, nine minutes up Bras Basah Road"],["peranakan-museum",60,"Straits Chinese heritage in a restored 1912 schoolhouse"],["chijmes",60,"Lunch in a Gothic chapel courtyard, two minutes from the hotel"],["national-gallery-singapore",90,"Southeast Asian art inside the old Supreme Court"]]},"first-day":{"t":"First Day in Singapore","bl":"Built for an arrival afternoon: the landmarks everyone comes for, finishing on the water after dark.","icon":"🗺","start":780,"mins":405,"hrs":6.8,"on":true,"w":10,"who":["solo","couple","friends"],"cover":"fort-canning-park","s":[["fort-canning-park",60,"Start high, on the hill the city grew around"],["merlion-park",40,"The photograph you are expected to come home with"],["singapore-river-cruise",45,"See the quays from the water before walking them"],["gardens-by-the-bay",150,"Supertrees and the two cooled conservatories"],["spectra-a-light-and-water-show",30,"Finish with the free light show on the waterfront promenade"]]},"family-close":{"t":"Family Day Close to Home","bl":"Short legs, short distances: three of the four stops are inside ten minutes' walk.","icon":"🧸","start":600,"mins":375,"hrs":6.2,"on":true,"w":9,"who":["family"],"cover":"mint-museum-of-toys","s":[["mint-museum-of-toys",75,"Five floors of vintage toys, four minutes from the lobby"],["childrens-museum-singapore",90,"Built for under-12s — book ahead, entry is by timed ticket"],["funan",60,"Lunch and an indoor climbing wall under one roof"],["future-world",90,"The permanent teamLab installation inside ArtScience Museum"]]},"after-meeting":{"t":"After the Meeting","bl":"Three hours between the last session and dinner, with no transport to arrange.","icon":"🌆","start":1095,"mins":195,"hrs":3.2,"on":true,"w":8,"who":["business","solo"],"cover":"esplanade-theatres-on-the-bay","s":[["esplanade-theatres-on-the-bay",45,"Check the free Concourse programme on your way past"],["merlion-park",30,"The waterfront is at its best once the office towers light up"],["the-helix-bridge",30,"Cross to Marina Bay on the double-helix walkway"],["spectra-a-light-and-water-show",30,"Ends your evening at the Event Plaza, no ticket needed"]]},"glam-india":{"t":"Kampong Glam and Little India","bl":"Two historic quarters in one day, both of them easy on foot and strong on food.","icon":"🕌","start":600,"mins":405,"hrs":6.8,"on":true,"w":8,"who":["couple","friends","solo"],"cover":"sultan-mosque","s":[["sultan-mosque",45,"The gold dome that anchors the whole quarter"],["haji-lane",60,"The narrowest shophouse street in the city, and the most photographed"],["kampong-glam",60,"Textile shops and cafés along Arab Street and Bussorah Street"],["tekka-centre",60,"Lunch downstairs, fabric and gold upstairs"],["indian-heritage-centre",60,"Five galleries on the community's history in the region"],["former-house-of-tan-teng-niah",20,"The last Chinese villa in Little India, repainted in eight colours"]]},"chinatown":{"t":"Chinatown and Its Temples","bl":"A mosque, a Hindu temple and a Buddhist temple within three streets of each other.","icon":"🏮","start":600,"mins":400,"hrs":6.7,"on":true,"w":7,"who":["solo","couple","friends"],"cover":"chinatown-heritage-centre","s":[["chinatown-heritage-centre",75,"Restored shophouse interiors showing how families actually lived"],["masjid-jamae",30,"One of the earliest mosques in Singapore, built by Chulia merchants"],["sri-mariamman-temple",30,"The oldest Hindu temple in the country, on the same street"],["maxwell-food-centre",60,"Lunch at one of the best-known hawker centres in the city"],["buddha-tooth-relic-temple-and-museum",60,"Five storeys, with a roof garden and prayer wheel at the top"],["smith-street",45,"Finish along the old opera street, now lined with food"]]},"rainy-day":{"t":"A Rainy Day Indoors","bl":"Built for a wet afternoon: every stop is indoors and three are linked by covered walkways.","icon":"☔","start":600,"mins":375,"hrs":6.2,"on":true,"w":7,"who":["family","couple","solo"],"rainy":1,"cover":"national-museum-of-singapore","s":[["national-museum-of-singapore",90,"Start indoors and stay there"],["raffles-city-shopping-centre",60,"Lunch four minutes from the hotel, under cover the whole way"],["funan",75,"Shops, a cinema and food halls on six levels"],["artscience-museum",90,"The lotus-shaped museum at Marina Bay Sands"]]},"night-city":{"t":"Night in the City","bl":"Starts 259 metres from the lobby, so the evening begins before you have hailed anything.","icon":"🌙","start":1080,"mins":315,"hrs":5.2,"on":true,"w":8,"who":["couple","friends"],"cover":"big-bus-singapore-night-city-tour","s":[["big-bus-singapore-night-city-tour",90,"The open-top night route departs a four-minute walk away"],["clarke-quay",60,"Riverside bars in the restored godowns"],["singapore-river-cruise",45,"The quays look entirely different lit up"],["zouk",60,"The club that has outlasted every other name on this river"]]},"shop-city":{"t":"Shop the City","bl":"Four of the five malls are inside 700 metres — this is the one Carlton wins on.","icon":"🛍","start":660,"mins":440,"hrs":7.3,"on":true,"w":7,"who":["friends","solo","family"],"cover":"raffles-city-shopping-centre","s":[["raffles-city-shopping-centre",75,"Four minutes from the lobby, and connected to City Hall MRT"],["bugis-junction",75,"Singapore's first glass-covered shopping street"],["bugis-street-market",60,"Several hundred stalls, and the place to bargain"],["funan",60,"Electronics, bicycles and a rooftop urban farm"],["the-shoppes-at-marina-bay-sands",90,"Finish at the luxury end, with the sampan canal downstairs"]]},"before-checkout":{"t":"Two Hours Before Check-out","bl":"Two hours, nothing further than ten minutes away, and back in time for your bags.","icon":"🧳","start":600,"mins":150,"hrs":2.5,"on":true,"w":6,"who":["solo","couple","family","friends","business"],"cover":"chijmes","s":[["chijmes",40,"The courtyard is two minutes from the lobby and open to walk through"],["bugis-street-market",40,"Last-minute gifts at the price you negotiate"],["raffles-city-shopping-centre",30,"Coffee on the way back, four minutes from the door"]]},"river-dinner":{"t":"Dinner by the River","bl":"For the evening you are taking someone else to — waterfront, then satay under the arches.","icon":"🍽","start":1080,"mins":240,"hrs":4.0,"on":true,"w":7,"who":["business","couple","friends"],"cover":"merlion-park","s":[["merlion-park",30,"Meet at the waterfront while it is still light"],["singapore-river-cruise",40,"Forty minutes on the water is an easy first hour with a guest"],["boat-quay",60,"The restored shophouse row, with the skyline opposite"],["lau-pa-sat",50,"Satay Street opens in the evening when the road closes to traffic"]]},"morning-walk":{"t":"A Morning Walk at Fort Canning","bl":"Out before breakfast, up the hill, and back through the chapel courtyard.","icon":"🌳","start":450,"mins":120,"hrs":2.0,"on":true,"w":6,"who":["solo","couple"],"cover":"fort-canning-park","s":[["fort-canning-park",70,"Nine hectares of hilltop park, quietest before nine"],["chijmes",30,"Come back down through the courtyard for coffee"]]}}}</script>
+<script id="arc-stops" type="application/json">{"singapore-botanic-gardens":{"n":"Singapore Botanic Gardens","c":"Outdoors","d":"A tranquil green sanctuary set within a UNESCO World Heritage Site, home to a scenic suspension bridge with elevated views over the rainforest canopy, and Jacob Ballas Children's Garden, a…","far":"a short taxi or MRT ride","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336998861_osnp2u.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.314632%2C103.815615&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.314632%2C103.815615&travelmode=walking","dst":"1.314632,103.815615"},"marina-bay-sands-skypark-observation-deck":{"n":"Marina Bay Sands SkyPark Observation Deck","c":"Outdoors","d":"Experience Singapore's iconic skyline from one of the city's most breathtaking vantage points.","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336998104_88l61q.jpg"},"national-museum-of-singapore":{"n":"National Museum of Singapore","c":"Museum","d":"With a history dating back to 1887, the National Museum of Singapore is the nation's oldest museum, showcasing the story of Singapore's development over more than 700 years, featuring…","far":"9 min walk","h":"Daily, 10:00am - 7:00pm","img":"https://image-tc.galaxy.tf/wijpeg-cw35s0nxr424q47ssixhmb5wi/national-museum-of-singapore_standard.jpg","qr":"https://www.nhb.gov.sg/nationalmuseum/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.296548%2C103.848317&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.296548%2C103.848317&travelmode=walking","dst":"1.296548,103.848317"},"fort-canning-park":{"n":"Fort Canning Park","c":"Outdoors","d":"Reconnect with nature by taking a short walk to the historic Fort Canning Park that is nestled in a hill rich with history, flora and fauna.","far":"14 min walk","img":"https://image-tc.galaxy.tf/wijpeg-frc8ez4pkjsqjzk61a84yogz/fort-canning_standard.jpg","qr":"https://www.nparks.gov.sg/visit/parks/park-detail/fort-canning-park","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.294016%2C103.846008&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.294016%2C103.846008&travelmode=walking","dst":"1.294016,103.846008"},"little-india-cultural-district":{"n":"Little India Cultural District","c":"Attraction","d":"Little India is one of Singapore's most vibrant neighborhoods, characterized by bustling streets, busy markets, and vivid murals.","far":"22 min walk","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996261_8uoc38.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/little-india/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.306783%2C103.854052&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.306783%2C103.854052&travelmode=walking","dst":"1.306783,103.854052"},"indian-heritage-centre":{"n":"Indian Heritage Centre","c":"Museum","d":"Broaden your understanding of this facet of Singaporean culture with the Indian Heritage Centre's range of events, exhibitions and guided tours.","far":"19 min walk","h":"Tuesday - Sunday 10:00am - 6:00pm","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996339_vuucj5.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/little-india/indian-heritage-centre/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.305625%2C103.852322&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.305625%2C103.852322&travelmode=walking","dst":"1.305625,103.852322"},"clarke-quay":{"n":"Clarke Quay","c":"Nightlife","d":"Head down to Clarke Quay and Boat Quay, a dynamic entertainment, dining, and nightlife hub.","far":"19 min walk","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://image-tc.galaxy.tf/wijpeg-e216kf71u1x2gg86arx05plad/clarke-quay_standard.jpg","qr":"https://www.capitaland.com/sg/malls/clarkequay/en.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.288799%2C103.846567&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.288799%2C103.846567&travelmode=walking","dst":"1.288799,103.846567"},"sri-veeramakaliamman-temple":{"n":"Sri Veeramakaliamman Temple","c":"Temple","d":"The Sri Veeramakaliamman Temple, located in Little India, Singapore, is a spectacular sanctuary known for its majestic gopuram (grand tower entrance) adorned with figures of Hindu deities…","far":"24 min walk","h":"Daily, 5:30am - 9:00pm","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996382_67bceo.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/little-india/sri-veeramakaliamman-temple/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.307946%2C103.852396&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.307946%2C103.852396&travelmode=walking","dst":"1.307946,103.852396"},"funan":{"n":"Funan","c":"Shopping","d":"This comprehensive shopping mall in Singapore's city center offers a wide range of products, including technology and fashion, alongside exciting activities like indoor rock climbing and an…","far":"11 min walk","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996473_x6kbeg.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/civic-district/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.291313%2C103.849947&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.291313%2C103.849947&travelmode=walking","dst":"1.291313,103.849947"},"national-gallery-singapore":{"n":"National Gallery Singapore","c":"Museum","d":"Located in the heart of the Civic District and housed in two national monuments, City Hall and the former Supreme Court, the National Gallery Singapore is a leading arts institution…","far":"12 min walk","h":"Daily, 10:00am - 7:00pm","img":"https://image-tc.galaxy.tf/wijpeg-bo9pj4qhzwdw6rcv7vbwidd49/national-gallery_standard.jpg","qr":"https://www.nationalgallery.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.290256%2C103.851471&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.290256%2C103.851471&travelmode=walking","dst":"1.290256,103.851471"},"bugis-street-market":{"n":"Bugis Street Market","c":"Shopping","d":"Bugis Street is one of Singapore's most famous street markets, operating as a covered, air-conditioned shopping bazaar with hundreds of stalls.","far":"9 min walk","h":"11:00 AM - 10:00 PM daily","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996499_s5l57m.png","qr":"https://www.capitaland.com/sg/malls/bugis-street/en.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.299631%2C103.855565&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.299631%2C103.855565&travelmode=walking","dst":"1.299631,103.855565"},"bugis-junction":{"n":"Bugis Junction","c":"Shopping","d":"Bugis Junction is a prominent mixed-use development and integrated shopping mall located at 200 Victoria Street in the heart of Singapore's Civic and Cultural District.","far":"8 min walk","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996463_8xciud.jpg","qr":"https://www.capitaland.com/sg/malls/bugisjunction/en.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.298899%2C103.855183&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.298899%2C103.855183&travelmode=walking","dst":"1.298899,103.855183"},"boat-quay":{"n":"Boat Quay","c":"Dining","d":"Boat Quay is an energetic happy hour hub located downstream closest to the mouth of the river and the Central Business District (CBD) in Singapore.","far":"20 min walk","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996559_hef6iz.jpg","qr":"https://www.introducingsingapore.com/boat-quay","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.287355%2C103.848189&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.287355%2C103.848189&travelmode=walking","dst":"1.287355,103.848189"},"asian-civilisations-museum":{"n":"Asian Civilisations Museum","c":"Museum","d":"The Asian Civilisation Museum emphasises the many meaningful connections between cultures and civilisations in Asia, and between Asia and the world.","far":"17 min walk","h":"Daily, 10:00am - 7:00pm; Friday until 9:00pm","img":"https://image-tc.galaxy.tf/wijpeg-egiod2wgp3iu3yaca1nxssin5/asian-civilisation-museum_standard.jpg","qr":"https://www.nhb.gov.sg/acm/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.287446%2C103.851486&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.287446%2C103.851486&travelmode=walking","dst":"1.287446,103.851486"},"sri-mariamman-temple":{"n":"Sri Mariamman Temple","c":"Temple","d":"The Sri Mariamman Temple is an ornate Hindu temple located in Chinatown, Singapore.","far":"31 min walk","h":"Daily, 6:00am - 12:00pm and 6:00pm - 9:00pm","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996583_sfuuck.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/chinatown/sri-mariamman-temple/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.282684%2C103.845194&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.282684%2C103.845194&travelmode=walking","dst":"1.282684,103.845194"},"buddha-tooth-relic-temple-and-museum":{"n":"Buddha Tooth Relic Temple and Museum","c":"Temple","d":"Home to a sacred relic, this majestic Tang-styled Chinese Buddhist temple, built in 2007, houses what Buddhists believe to be the left canine tooth of Buddha.","far":"34 min walk","h":"Temple daily 7:00 AM - 5:00 PM. Buddhas of the World Museum daily 9:00 AM - 5:00 PM","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996685_h4v0mv.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/chinatown/buddha-tooth-relic-temple/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.281509%2C103.844189&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.281509%2C103.844189&travelmode=walking","dst":"1.281509,103.844189"},"kampong-glam":{"n":"Kampong Glam","c":"Culture","d":"Kampong Glam is a cultural and heritage attraction in Singapore, part of the 'Singapore Culture and Heritage: Sites and Trails' category.","far":"19 min walk","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996641_h2rws4.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/kampong-gelam/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.302263%2C103.859691&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.302263%2C103.859691&travelmode=walking","dst":"1.302263,103.859691"},"sultan-mosque":{"n":"Sultan Mosque","c":"Temple","d":"An iconic architectural landmark and a focal point for Singapore's Muslim community, the Sultan Mosque features distinctive golden domes adorned with glass bottle ends.","far":"18 min walk","h":"Saturday to Thursday 10:00am - 12:00pm and 2:00pm - 4:00pm","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996704_m6o79r.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/kampong-gelam/sultan-mosque/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.302221%2C103.859004&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.302221%2C103.859004&travelmode=walking","dst":"1.302221,103.859004"},"thian-hock-keng-temple":{"n":"Thian Hock Keng Temple","c":"Temple","d":"Singapore's oldest Chinese temple, steeped in heritage and a must-visit for history aficionados.","far":"32 min walk","h":"Daily 7:30 AM - 5:00 PM","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996724_7g8014.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/chinatown/thian-hock-keng-temple/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.281005%2C103.847496&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.281005%2C103.847496&travelmode=walking","dst":"1.281005,103.847496"},"merlion-park":{"n":"Merlion Park","c":"Outdoors","d":"Meet Singapore’s mascot — the mythical Merlion.","far":"21 min walk","h":"Daily, 24 hours","img":"https://image-tc.galaxy.tf/wijpeg-3kh990tskpukd6ft4eyz8qir0/merlion-park_standard.jpg","qr":"https://www.visitsingapore.com/see-do-singapore/recreation-leisure/viewpoints/merlion-park/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.285685%2C103.854159&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.285685%2C103.854159&travelmode=walking","dst":"1.285685,103.854159"},"hajjah-fatimah-mosque":{"n":"Hajjah Fatimah Mosque","c":"Temple","d":"Also known as Masjid Hajjah Fatimah, the Hajjah Fatimah Mosque will captivate you with its blend of cross-cultural architectural influences.","far":"24 min walk","h":"Daily 9:00am - 9:00pm","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996839_w50ovz.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/kampong-gelam/hajjah-fatimah-mosque/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.302828%2C103.862914&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.302828%2C103.862914&travelmode=walking","dst":"1.302828,103.862914"},"artscience-museum":{"n":"ArtScience Museum","c":"Museum","d":"The Artscience Museum has hosted many world-class exhibitions and is continuously changing its line-up.","far":"24 min walk","h":"Daily, 10:00am - 7:00pm","img":"https://image-tc.galaxy.tf/wijpeg-680oz4xma3gt7yddww72st959/art-science-museum_standard.jpg","qr":"https://www.marinabaysands.com/museum.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.286138%2C103.859230&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.286138%2C103.859230&travelmode=walking","dst":"1.286138,103.859230"},"the-helix-bridge":{"n":"The Helix Bridge","c":"Outdoors","d":"The Helix Bridge is a world-famous 280-meter pedestrian footbridge located in Marina Bay, Singapore.","far":"23 min walk","h":"24 hours a day 7 days a week","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336996861_n28sbl.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/marina-bay/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.287522%2C103.860618&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.287522%2C103.860618&travelmode=walking","dst":"1.287522,103.860618"},"the-shoppes-at-marina-bay-sands":{"n":"The Shoppes at Marina Bay Sands","c":"Shopping","d":"The Shoppes at Marina Bay Sands is a luxury shopping destination featuring over 170 international and local brands across multiple levels.","far":"27 min walk","h":"Daily 10:30am to 11pm (dining extends later)","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997029_tpvak4.jpg","qr":"https://www.marinabaysands.com/shopping.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.284021%2C103.858868&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.284021%2C103.858868&travelmode=walking","dst":"1.284021,103.858868"},"marina-bay-sands":{"n":"Marina Bay Sands","c":"Outdoors","d":"Marina Bay Sands is a premier integrated resort featuring diverse dining, shopping, and entertainment options, along with year-round signature events.","far":"29 min walk","h":"The Shoppes daily, 10:30am - 10:00pm. ArtScience Museum daily, 10:00am - 7:00pm.","img":"https://image-tc.galaxy.tf/wijpeg-a8i0gt9hweaaro4cnr2wfea94/mbs-skyline_standard.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/marina-bay/marina-bay-sands/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.283697%2C103.860723&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.283697%2C103.860723&travelmode=walking","dst":"1.283697,103.860723"},"east-coast-park":{"n":"East Coast Park","c":"Outdoors","d":"Singapore's largest and most popular beach park, stretching 15 kilometers along the southeastern coast.","far":"a taxi or MRT ride across town","h":"24 hours","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997558_n93q36.png","qr":"https://www.nparks.gov.sg/visit/parks/park-detail/east-coast-park","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.304972%2C103.927078&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.304972%2C103.927078&travelmode=walking","dst":"1.304972,103.927078"},"night-safari":{"n":"Night Safari","c":"Nightlife","d":"The world's first nocturnal wildlife park, Night Safari offers a unique after-dark experience featuring over 2,500 animals from 130 species across 7 geographical zones including Himalayan…","far":"a taxi or MRT ride across town","h":"Daily 6:15 PM - 12:00 AM","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997740_9tul69.jpg","qr":"https://www.mandai.com/en/night-safari.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.401353%2C103.789002&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.401353%2C103.789002&travelmode=walking","dst":"1.401353,103.789002"},"singapore-zoo":{"n":"Singapore Zoo","c":"Attraction","d":"Singapore Zoo is a top wildlife attraction in Singapore, located within the Mandai Wildlife Reserve in northern Singapore.","far":"a taxi or MRT ride across town","h":"Daily 8:30 AM - 6:00 PM (last entry 5:00 PM)","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997744_djk6ue.jpg","qr":"https://www.mandai.com/en/singapore-zoo.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.403708%2C103.794037&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.403708%2C103.794037&travelmode=walking","dst":"1.403708,103.794037"},"bird-paradise":{"n":"Bird Paradise","c":"Attraction","d":"Asia's largest bird park, home to over 3,500 birds from 400 species.","far":"a taxi or MRT ride across town","h":"Daily 9:00 AM - 6:00 PM","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997641_fasfkw.jpg","qr":"https://www.mandai.com/en/bird-paradise.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.405456%2C103.780986&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.405456%2C103.780986&travelmode=walking","dst":"1.405456,103.780986"},"changi-chapel-and-museum":{"n":"Changi Chapel and Museum","c":"Museum","d":"The Changi Chapel and Museum (CCM) is a deeply moving World War II memorial in Singapore dedicated to the history of the Japanese Occupation.","far":"a taxi or MRT ride across town","h":"Tuesday to Sunday 9:30 AM to 5:30 PM (last admission at 5:00 PM). Closed on Mondays except for Public Holidays.","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997605_3kyfei.jpg","qr":"https://www.heritage.sg/changichapelmuseum","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.362275%2C103.973266&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.362275%2C103.973266&travelmode=walking","dst":"1.362275,103.973266"},"jewel-changi-airport":{"n":"Jewel Changi Airport","c":"Attraction","d":"A world-renowned mixed-use development opened in 2019, featuring a stunning indoor waterfall, lush forest gardens, extensive shopping and dining options, and seamless connections to…","far":"a taxi or MRT ride across town","h":"24-hour retail and dining options available in Terminal sections.","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997700_yjdlsw.png","qr":"https://www.jewelchangiairport.com/en.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.360224%2C103.989675&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.360224%2C103.989675&travelmode=walking","dst":"1.360224,103.989675"},"singapore-cable-car-sky-network":{"n":"Singapore Cable Car Sky Network","c":"Attraction","d":"Start your Sentosa experience on a high by riding the Singapore Cable Car Sky Network from Mount Faber Peak into the island.","far":"a short taxi or MRT ride","h":"Daily 8:45 AM - 10:00 PM. Last boarding 9:30 PM","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997027_738x21.jpg","qr":"https://www.sentosa.com.sg/en/things-to-do/attractions/singapore-cable-car/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.263372%2C103.818541&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.263372%2C103.818541&travelmode=walking","dst":"1.263372,103.818541"},"universal-studios-singapore":{"n":"Universal Studios Singapore","c":"Attraction","d":"Southeast Asia's only Universal Studios, located on Sentosa Island, features seven themed zones, dozens of rides, and live shows.","far":"a short taxi or MRT ride","h":"Daily 10:00 AM - 8:00 PM (default)","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997100_8314rj.jpg","qr":"https://www.sentosa.com.sg/en/things-to-do/attractions/universal-studios-singapore/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.254201%2C103.822667&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.254201%2C103.822667&travelmode=walking","dst":"1.254201,103.822667"},"sentosa-express-monorail":{"n":"Sentosa Express Monorail","c":"Attraction","d":"The Sentosa Express is a scenic monorail train that connects VivoCity (HarbourFront) to key stops across Sentosa Island, offering a seamless and affordable way to explore.","far":"a short taxi or MRT ride","h":"First train 07:00 AM. Last train 12:00 AM","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/ddf3708a-0628-4000-a472-569942213b4b/images/image_1788336997248_de9ixm.jpg","qr":"https://www.sentosa.com.sg/en/things-to-do/attractions/sentosa-express/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.251254%2C103.817804&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.251254%2C103.817804&travelmode=walking","dst":"1.251254,103.817804"},"gardens-by-the-bay":{"n":"Gardens by the Bay","c":"Outdoors","d":"A national garden and premier horticultural attraction for local and international visitors.","far":"a short taxi or MRT ride","h":"Outdoor gardens daily, 5:00am - 2:00am. Flower Dome and Cloud Forest daily, 9:00am - 9:00pm, last admission 8:00pm. Closed once a month for maintenance.","img":"https://image-tc.galaxy.tf/wijpeg-de9et7uvy39u9yy292mn351kc/gardens-by-the-bay-night_standard.jpg","qr":"https://www.gardensbythebay.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.281149%2C103.864960&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.281149%2C103.864960&travelmode=walking","dst":"1.281149,103.864960"},"singapore-flyer":{"n":"Singapore Flyer","c":"Attraction","d":"Standing 165 meters above ground, The Singapore Flyer is Asia's largest observation wheel, offering stunning views of Marina Bay and the city's breathtaking skyline.","far":"25 min walk","h":"Daily, 10:00am - 9:30pm","img":"https://image-tc.galaxy.tf/wijpeg-dcls09cvo4bqjy011f4uoxchv/singapore-flyer_standard.jpg","qr":"https://www.singaporeflyer.com/en","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.289438%2C103.863260&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.289438%2C103.863260&travelmode=walking","dst":"1.289438,103.863260"},"esplanade-theatres-on-the-bay":{"n":"Esplanade - Theatres on the Bay","c":"Culture","d":"The iconic Esplanade – Theatres on the Bay features many prominent international and local performances and exhibitions as well as Singapore’s only public library dedicated to the arts.","far":"14 min walk","h":"Daily, 8:00am - 10:30pm","img":"https://image-tc.galaxy.tf/wijpeg-45vhdhs53dsmgo0g0q7mobo38/esplanade_standard.jpg","qr":"https://www.esplanade.com/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.289644%2C103.855954&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.289644%2C103.855954&travelmode=walking","dst":"1.289644,103.855954"},"haji-lane":{"n":"Haji Lane","c":"Shopping","d":"Haji Lane is a vibrant narrow street in the historic Kampong Glam district known for its colorful street art, independent boutiques, and eclectic cafes.","far":"16 min walk","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-378-1778834968168.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.301227%2C103.858734&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.301227%2C103.858734&travelmode=walking","dst":"1.301227,103.858734"},"mustafa-centre":{"n":"Mustafa Centre","c":"Shopping","d":"Mustafa Centre is a legendary 24-hour shopping complex located in Little India offering an overwhelming variety of products at competitive prices.","far":"29 min walk","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-379-1778834885065.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.310117%2C103.855323&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.310117%2C103.855323&travelmode=walking","dst":"1.310117,103.855323"},"vivocity":{"n":"VivoCity","c":"Shopping","d":"VivoCity is Singapore's largest shopping mall located at HarbourFront, serving as a retail and entertainment hub with stunning waterfront views.","far":"a short taxi or MRT ride","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-381-1778834639514.jpg","qr":"https://www.vivocity.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.264371%2C103.822954&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.264371%2C103.822954&travelmode=walking","dst":"1.264371,103.822954"},"chinatown":{"n":"Chinatown","c":"Attraction","d":"Chinatown is an exciting mix of new and old, filled with traditional shops and night markets.","far":"a short taxi or MRT ride","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://image-tc.galaxy.tf/wijpeg-ctkjyaanr8r8vgz4oioulhycg/chinatown_standard.jpg","qr":"https://chinatown.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.279969%2C103.843688&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.279969%2C103.843688&travelmode=walking","dst":"1.279969,103.843688"},"chijmes":{"n":"Chijmes","c":"Dining","d":"Convent of the Holy Infant Jesus Middle Education School (CHIJMES) is one of the top dining, entertainment and lifestyle destinations located in the heart of Singapore's civic and cultural…","far":"2 min walk","img":"https://image-tc.galaxy.tf/wijpeg-87hftppkiikisuylkfzx11g9e/chijmes_standard.jpg","qr":"https://www.chijmes.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.295187%2C103.851857&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.295187%2C103.851857&travelmode=walking","dst":"1.295187,103.851857"},"chinatown-complex-food-centre":{"n":"Chinatown Complex Food Centre","c":"Dining","d":"The largest food center in Singapore, offering a wide variety of delicious food.","far":"34 min walk","h":"Daily, 7:00am - 10:00pm. Individual stalls keep their own hours and many close earlier.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-405-1779314188599.jpg","qr":"https://chinatown.sg/dine/chinatown-complex-food-centre/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.282269%2C103.843149&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.282269%2C103.843149&travelmode=walking","dst":"1.282269,103.843149"},"maxwell-food-centre":{"n":"Maxwell Food Centre","c":"Dining","d":"A popular food center among Singaporean foodies, known for its delicious dishes, including Hainanese chicken rice.","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/doc-406-1779314214783.jpg","qr":"https://maxwellfoodcentre.com/"},"tekka-centre":{"n":"Tekka Centre","c":"Dining","d":"Tekka Centre is Singapore's largest indoor 'wet' market, offering an incredible array of fresh produce, aromatic spices, and dried goods.","far":"19 min walk","img":"https://amity-merlin-downloadable.s3.ap-southeast-1.amazonaws.com/scraper-jobs/903d1cb9-5595-4998-b491-0d87b54137fa/images/image_1779253034444_9vrnlx.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.305589%2C103.851124&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.305589%2C103.851124&travelmode=walking","dst":"1.305589,103.851124"},"national-library-building":{"n":"National Library Building","c":"Attraction","d":"The National Library Building is Singapore's flagship public library and a major cultural and information center located in the civic district at 100 Victoria Street, Bugis.","far":"5 min walk","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/entry-414-1782714201864.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.297667%2C103.854292&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.297667%2C103.854292&travelmode=walking","dst":"1.297667,103.854292"},"changi-airport":{"n":"Changi Airport","c":"Attraction","d":"Singapore Changi Airport is Singapore's main international airport and one of the world's best airports, famous for shopping, gardens, and entertainment.","far":"a taxi or MRT ride across town","img":"https://amity-merlin-downloadable.s3.amazonaws.com/images/a5579ac4afb72a6290e4afcb4ab00f0c/entry-269-1778513450888.jpg","qr":"https://www.changiairport.com/id/id.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.351092%2C103.994982&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.351092%2C103.994982&travelmode=walking","dst":"1.351092,103.994982"},"hop-on-hop-off-bus-tour":{"n":"Hop-on Hop-off Bus Tour","c":"Tour","d":"Hop on the Big Bus Tour to discover the sights, landmarks and attractions that define Singapore.","h":"Departures 9:30am - 5:20pm, every 25 to 40 minutes","img":"https://image-tc.galaxy.tf/wijpeg-8ry2kaf0mpqfs2r55gueo7p38/hop-on-off-bus-tour_standard.jpg","qr":"https://www.bigbustours.com/en/singapore/singapore-routes-and-tour-maps"},"raffles-city-shopping-centre":{"n":"Raffles City Shopping Centre","c":"Shopping","d":"Located just across the hotel, Raffles City Shopping Centre is a five-story premier shopping mall with over 200 speciality shops, including worldwide fashion labels, premium watch and…","far":"4 min walk","img":"https://image-tc.galaxy.tf/wijpeg-cx7tbbvou8ktqftp5zyf6i5vh/raffles-city_standard.jpg","qr":"https://www.capitaland.com/sg/malls/rafflescity/en.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.293896%2C103.853343&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.293896%2C103.853343&travelmode=walking","dst":"1.293896,103.853343"},"bugis-town":{"n":"Bugis Town","c":"Attraction","d":"Bugis Junction and Bugis+ are prominent shopping malls located in the culturally vibrant Bugis precinct, a short 7-minute walk from one another.","far":"8 min walk","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://image-tc.galaxy.tf/wijpeg-46ydcdx4bwjjv7d87rtxfnu67/bugis-town_standard.jpg","qr":"https://www.capitaland.com/sg/malls/bugisjunction/en.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.298899%2C103.855183&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.298899%2C103.855183&travelmode=walking","dst":"1.298899,103.855183"},"peranakan-museum":{"n":"Peranakan Museum","c":"Museum","d":"Discover the vibrant tapestry of Peranakan heritage at the Peranakan Museum, where the rich history of diverse influences of the Straits-born people of Chinese, Malay, and Indonesian roots…","far":"8 min walk","h":"Daily, 10:00am - 7:00pm","img":"https://image-tc.galaxy.tf/wijpeg-5us5tlenp0qwfmaox4eb4hmxq/peranakan-museum_standard.jpg","qr":"https://www.nhb.gov.sg/peranakanmuseum/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.294291%2C103.849109&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.294291%2C103.849109&travelmode=walking","dst":"1.294291,103.849109"},"marina-square":{"n":"Marina Square","c":"Attraction","d":"Located in the core of Marina Centre, Marina Square is easily accessible through Citylink Mall.","far":"13 min walk","h":"Daily, 10:00am - 10:00pm","img":"https://image-tc.galaxy.tf/wijpeg-7g8f1k0tak70ejqval68r5cx2/marina-square_standard.jpg","qr":"https://www.marinasquare.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.291274%2C103.857184&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.291274%2C103.857184&travelmode=walking","dst":"1.291274,103.857184"},"suntec-city-and-suntec-singapore-convention-and-exhibition-centre":{"n":"Suntec City & Suntec Singapore Convention & Exhibition Centre","c":"Shopping","d":"Suntec City is one of Singapore’s largest malls in the heart of Marina Central district.","far":"13 min walk","h":"Daily, 10:00am - 10:00pm","img":"https://image-tc.galaxy.tf/wijpeg-9r345mo046ohi6yk8ncz1ke6m/suntec_standard.jpg","qr":"https://sunteccity.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.294265%2C103.859188&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.294265%2C103.859188&travelmode=walking","dst":"1.294265,103.859188"},"millenia-walk":{"n":"Millenia Walk","c":"Shopping","d":"Millenia Walk is a retail paradise for those who value inspirational lifestyle products, exceptional craftsmanship, bespoke offerings and culinary delights.","far":"16 min walk","h":"Daily, 10:00am - 10:00pm","img":"https://image-tc.galaxy.tf/wijpeg-2kv093hw3ynzhbm4sd46wv7qf/millenia-walk_standard.jpg","qr":"https://www.milleniawalk.com/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.292471%2C103.85964&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.292471%2C103.85964&travelmode=walking","dst":"1.292471,103.85964"},"orchard-road":{"n":"Orchard Road","c":"Attraction","d":"Orchard Road’s humble beginnings date back to the early 1830s, when it was an unnamed road home to fruit orchards, nutmeg plantations and pepper farms.","far":"a short taxi or MRT ride","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://image-tc.galaxy.tf/wijpeg-5x5tga0370fe1pt0xuua2fp34/orchard-night_standard.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/orchard-road/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.306419%2C103.829286&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.306419%2C103.829286&travelmode=walking","dst":"1.306419,103.829286"},"national-stadium":{"n":"National Stadium","c":"Attraction","d":"The National Stadium is Singapore’s largest sports and entertainment venue with a capacity of 55,000 spectators.","far":"a short taxi or MRT ride","img":"https://image-tc.galaxy.tf/wijpeg-9r9ezlc6g6gdlorbpg71d727c/national-stadium_standard.jpg","qr":"https://www.sportshub.com.sg/venues-facilities/national-stadium","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.304491%2C103.874344&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.304491%2C103.874344&travelmode=walking","dst":"1.304491,103.874344"},"singapore-indoor-stadium":{"n":"Singapore Indoor Stadium","c":"Attraction","d":"Singapore Indoor Stadium is an air-conditioned and multi-purpose, pillar-less sports and entertainment venue.","far":"a short taxi or MRT ride","img":"https://image-tc.galaxy.tf/wijpeg-81vcby9h4erphzegidwgj9qa1/singapore-indoor-statdium_standard.jpg","qr":"https://www.sportshub.com.sg/venues-facilities/singapore-indoor-stadium","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.300868%2C103.874351&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.300868%2C103.874351&travelmode=walking","dst":"1.300868,103.874351"},"sentosa-island":{"n":"Sentosa Island","c":"Outdoors","d":"Over the course of its remarkable history, Sentosa has transformed into Asia's premium lifestyle destination.","far":"a short taxi or MRT ride","img":"https://image-tc.galaxy.tf/wijpeg-763h13dho2ncl0ufsuk0ns3l6/sentosa-island_standard.jpg","qr":"https://www.sentosa.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.248946%2C103.834306&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.248946%2C103.834306&travelmode=walking","dst":"1.248946,103.834306"},"lazarus-island":{"n":"Lazarus Island","c":"Outdoors","d":"Lazarus Island, also known as Pulau Sekijang Pelepah is part of Singapore’s cluster of Southern Islands and is connected to St John’s island through a causeway.","img":"https://image-tc.galaxy.tf/wijpeg-devn7h1u9r30xwzim98l7fv05/lazarus-island_standard.jpg","qr":"https://islandcruise.com.sg/places-of-interest/lazarus-island/"},"mint-museum-of-toys":{"n":"MINT Museum of Toys","c":"Family","d":"Home to Asia’s largest collection of vintage toys and collectibles, this museum showcases childhood treasures from over 50 countries.","far":"4 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911191196_8m2e1c.jpg","qr":"https://emint.com/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2962505%2C103.8545669&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2962505%2C103.8545669&travelmode=walking","dst":"1.2962505,103.8545669"},"victoria-concert-hall":{"n":"Victoria Concert Hall","c":"Attraction","d":"The magnificent Victoria Concert Hall dates back to the 19th century and plays host to a range of theatre productions, concerts and performances.","far":"16 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911193981_pr0dhv.jpg","qr":"https://www.artshousegroup.sg/vtvch","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2883628%2C103.8514119&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2883628%2C103.8514119&travelmode=walking","dst":"1.2883628,103.8514119"},"old-hill-street-police-station":{"n":"Old Hill Street Police Station","c":"Attraction","d":"Admire the vibrant rainbow hues which add a touch of charm to this historic building, now home to various government agencies.","far":"14 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911196716_x789s4.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2908517%2C103.8482775&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2908517%2C103.8482775&travelmode=walking","dst":"1.2908517,103.8482775"},"former-house-of-tan-teng-niah":{"n":"Former House of Tan Teng Niah","c":"Culture","d":"Built in 1900, the former house of Tan Teng Niah is a 2-storey villa with rainbow-hued exteriors that make for the perfect photo opportunity.","far":"22 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911199546_46jwx8.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.3070591%2C103.8509305&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.3070591%2C103.8509305&travelmode=walking","dst":"1.3070591,103.8509305"},"the-istana":{"n":"The Istana","c":"Attraction","d":"Get a glimpse of the official residence of the President of the Republic of Singapore through guided tours of its majestic architecture and history.","far":"20 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911201889_ojoks0.jpg","qr":"https://www.istana.gov.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2994492%2C103.8433681&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2994492%2C103.8433681&travelmode=walking","dst":"1.2994492,103.8433681"},"chinatown-heritage-centre":{"n":"Chinatown Heritage Centre","c":"Museum","d":"Step back in time at Chinatown Heritage Centre, rebuilt from memories of early residents who lived in these shophouses.","far":"30 min walk","h":"Daily, 10:00am - 8:00pm, last entry 7:15pm","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911204677_dwh4q2.jpg","qr":"https://www.chinatownheritagecentre.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2834963%2C103.8443296&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2834963%2C103.8443296&travelmode=walking","dst":"1.2834963,103.8443296"},"masjid-jamae":{"n":"Masjid Jamae","c":"Temple","d":"What to Do Chinatown Heritage Centre Step back in time at Chinatown Heritage Centre, rebuilt from memories of early residents who lived in these shophouses.","far":"30 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911207336_up2yy4.jpg","qr":"https://www.muis.gov.sg/community/mosque/mosque-directory/jamae-chulia/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2831657%2C103.8454089&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2831657%2C103.8454089&travelmode=walking","dst":"1.2831657,103.8454089"},"chinatown-street-market":{"n":"Chinatown Street Market","c":"Shopping","d":"More than just a shopping stretch, this iconic street is home to a wide range of offerings, from lacquered fans to charming souvenirs.","far":"30 min walk","h":"Daily, 9:30am - 10:00pm","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911212648_034ozy.jpg","qr":"https://chinatown.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2830552%2C103.8449570&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2830552%2C103.8449570&travelmode=walking","dst":"1.2830552,103.8449570"},"smith-street":{"n":"Smith Street","c":"Dining","d":"Experience Smith Street, where Chinatown's heritage meets modern energy through traditional shops, eateries, creative spaces, and cultural activities that bring traditions to life.","far":"32 min walk","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911215188_xy8tve.jpg","qr":"https://chinatown.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2821324%2C103.8444774&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2821324%2C103.8444774&travelmode=walking","dst":"1.2821324,103.8444774"},"yue-hwa-building":{"n":"Yue Hwa Building","c":"Attraction","d":"Go treasure hunting in Yue Hwa building – this charming department store is chock full of anything you'd desire, from traditional herbs and calligraphy brushes to tasty snacks.","far":"29 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911217826_t02bse.jpg","qr":"https://yuehwa.com.sg/pages/stores","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2849200%2C103.8435193&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2849200%2C103.8435193&travelmode=walking","dst":"1.2849200,103.8435193"},"clarke-quay-central":{"n":"Clarke Quay Central","c":"Outdoors","d":"You'll find fashion boutiques and stores selling a range of gifts, accessories and gadgets at this conveniently-located mall.","far":"19 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911220273_1tjqnj.jpg","qr":"https://www.clarkequaycentral.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2889570%2C103.8464936&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2889570%2C103.8464936&travelmode=walking","dst":"1.2889570,103.8464936"},"riverside-point":{"n":"Riverside Point","c":"Outdoors","d":"Shop for gifts and soak in the bustle along the riverside at this charming locale.","far":"22 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911223386_5ubof5.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2893139%2C103.8440888&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2893139%2C103.8440888&travelmode=walking","dst":"1.2893139,103.8440888"},"clarke-quay-street-stalls":{"n":"Clarke Quay Street Stalls","c":"Outdoors","d":"With its bustling vibes and ever-changing lineup of trinkets, this is a great place to pick up a souvenir.","far":"18 min walk","h":"Not a single opening time — this is a public street area. Shops, cafes and bars along it set their own hours, and most are open from late morning until late evening.","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911226297_4zzkar.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2899859%2C103.8459497&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2899859%2C103.8459497&travelmode=walking","dst":"1.2899859,103.8459497"},"zouk":{"n":"Zouk","c":"Nightlife","d":"Home to world-class DJs and nonstop party vibes, this legendary venue is a stalwart of Singapore's nightlife scene.","far":"17 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911228966_drsw0g.jpg","qr":"https://zoukgroup.com/singapore/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2906724%2C103.8460179&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2906724%2C103.8460179&travelmode=walking","dst":"1.2906724,103.8460179"},"level-up":{"n":"Level Up","c":"Nightlife","d":"Bring your friends or your date to Singapore’s first-ever arcade-bar.","far":"20 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911286851_jvo1yj.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2897046%2C103.8450895&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2897046%2C103.8450895&travelmode=walking","dst":"1.2897046,103.8450895"},"future-world":{"n":"Future World","c":"Attraction","d":"Step into teamLab Future World at ArtScience Museum, a world of immersive artworks.","far":"24 min walk","h":"Daily, 10:00am - 7:00pm, inside ArtScience Museum","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911233945_cglfcf.jpg","qr":"https://www.marinabaysands.com/museum/exhibitions/future-world.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2861382%2C103.8592297&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2861382%2C103.8592297&travelmode=walking","dst":"1.2861382,103.8592297"},"artscience-laboratory":{"n":"ArtScience Laboratory","c":"Attraction","d":"ArtScience Laboratory is a learning space where art, science and technology converge.","far":"24 min walk","h":"Daily, 10:00am - 7:00pm, inside ArtScience Museum","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911236545_27ku5y.jpg","qr":"https://www.marinabaysands.com/museum/experiences/artscience-laboratory.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2861382%2C103.8592297&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2861382%2C103.8592297&travelmode=walking","dst":"1.2861382,103.8592297"},"little-india-arcade":{"n":"Little India Arcade","c":"Attraction","d":"A bustling area filled with an array of boutique shops and eateries.","far":"19 min walk","h":"Daily, 9:00am - 10:00pm","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911239073_d90rok.jpg","qr":"https://littleindiaarcade.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.3055403%2C103.8517796&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.3055403%2C103.8517796&travelmode=walking","dst":"1.3055403,103.8517796"},"esplanade-mall":{"n":"Esplanade Mall","c":"Shopping","d":"Discover the Esplanade Mall's diverse retail scene, offering a variety of stores from music to boutiques to suit your taste.","far":"14 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911241855_dtmo8n.jpg","qr":"https://www.esplanade.com/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2896876%2C103.8556145&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2896876%2C103.8556145&travelmode=walking","dst":"1.2896876,103.8556145"},"spectra-a-light-and-water-show":{"n":"Spectra - A Light & Water Show","c":"Attraction","d":"Be mesmerized by the captivating light and water show taking place daily at Marina Bay Sands.","far":"29 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911244484_vsiw5o.jpg","qr":"https://www.marinabaysands.com/attractions/spectra.html","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2837000%2C103.8607000&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2837000%2C103.8607000&travelmode=walking","dst":"1.2837000,103.8607000"},"instawalk-bugis-waterloo-kampong-gelam":{"n":"#instawalk: Bugis, Waterloo, Kampong Gelam","c":"Shopping","d":"Take a jaunt around Bugis, Waterloo Street and Kampong Gelam, explore hidden gems and snap a trove of Instagram-worthy shots for your social media feeds.","far":"6 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911247328_g6kyyt.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2984910%2C103.8513080&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2984910%2C103.8513080&travelmode=walking","dst":"1.2984910,103.8513080"},"tea-and-tiffin-cultural-and-food-tour-of-little-india":{"n":"Tea & Tiffin: Cultural & Food Tour of Little India","c":"Tour","d":"Discover the tale of our country's Indian pioneers, tastes of tradition and our evolving cityscape on this vibrant and colourful tour with the masterful guides from Culture Curious.","far":"19 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911250331_5ffk0f.jpg","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.3055403%2C103.8517796&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.3055403%2C103.8517796&travelmode=walking","dst":"1.3055403,103.8517796"},"chinatown-murders":{"n":"Chinatown Murders","c":"Attraction","d":"This murder mystery tour through Chinatown is filled with intriguing clues and untold stories.","far":"a short taxi or MRT ride","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911252998_c19i44.jpg","qr":"https://tribe-tours.com/product/chinatown-murders-outdoor-escape-room-game-tour/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2799695%2C103.8436879&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2799695%2C103.8436879&travelmode=walking","dst":"1.2799695,103.8436879"},"trails-of-tan-ah-huat":{"n":"Trails of Tan Ah Huat","c":"Tour","d":"Hop on a bicycle and let Tan Ah Huat – a fictitious coolie – bring the streets of Chinatown to life.","far":"a short taxi or MRT ride","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911255525_a85gzg.jpg","qr":"https://tribe-tours.com/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2799695%2C103.8436879&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2799695%2C103.8436879&travelmode=walking","dst":"1.2799695,103.8436879"},"growing-up-a-mural-walk-in-chinatown":{"n":"Growing Up - A Mural Walk in Chinatown","c":"Shopping","d":"Discover Chinatown's past with an art walk featuring murals by Yip Yew Chong.","far":"a short taxi or MRT ride","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911258185_pj8alh.jpg","qr":"https://chinatown.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2799695%2C103.8436879&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2799695%2C103.8436879&travelmode=walking","dst":"1.2799695,103.8436879"},"kulnari-mystery-golf":{"n":"Kulnari Mystery Golf","c":"Attraction","d":"Hole in ones meets mysterious historical intrigue at Kulnari Mystery Golf, a charming blend of mini-golf course and escape room shenanigans.","far":"18 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911260884_noxo0y.jpg","qr":"https://www.kulnari.com/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2899859%2C103.8459497&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2899859%2C103.8459497&travelmode=walking","dst":"1.2899859,103.8459497"},"slingshot":{"n":"Slingshot","c":"Attraction","d":"You don't even have to look to find this ride – Just listen for the screams of exhilaration.","far":"19 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911263822_vxx9y5.jpg","qr":"https://slingshot.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2904866%2C103.8450000&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2904866%2C103.8450000&travelmode=walking","dst":"1.2904866,103.8450000"},"gx-5-extreme-swing":{"n":"Gx-5 Extreme Swing","c":"Attraction","d":"Brave the Gx-5 Extreme Swing for an adrenaline-pumping thrill amidst the city's nighttime glow.","far":"17 min walk","h":"Daily, 4:30pm - 11:30pm","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911266256_j3k0rp.jpg","qr":"https://slingshot.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2902536%2C103.8464595&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2902536%2C103.8464595&travelmode=walking","dst":"1.2902536,103.8464595"},"a-painted-sip":{"n":"A Painted Sip","c":"Attraction","d":"A beginner-friendly immersive painting workshop where participants can paint and customise their own reusable tumblers and choose from a range of Singapore-inspired designs.","far":"19 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911271650_4atzzp.jpg","qr":"https://apaintedsip.com/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.3025488%2C103.8596693&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.3025488%2C103.8596693&travelmode=walking","dst":"1.3025488,103.8596693"},"singapore-sidecar-tour":{"n":"Singapore Sidecar Tour","c":"Tour","d":"Uncover Singapore's heritage in a vintage Vespa sidecar and feel the wind in your face while exploring cultural landmarks.","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911274291_7kymws.jpg","qr":"https://singaporesidecars.com/"},"big-bus-singapore-night-city-tour":{"n":"Big Bus Singapore Night City Tour","c":"Tour","d":"Zip through Singapore's streets at night on an open-top double decker bus on Big Bus' Night City Tour.","far":"5 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911276766_n13r15.jpg","qr":"https://www.bigbustours.com/en/singapore/singapore-bus-tours","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2946815%2C103.8546412&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2946815%2C103.8546412&travelmode=walking","dst":"1.2946815,103.8546412"},"singapore-river-cruise":{"n":"Singapore River Cruise","c":"Tour","d":"Cruise down the Singapore River, learn about our city's rich history and take in the gorgeous sights of our skyline.","far":"18 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794911279548_2nc72a.jpg","qr":"https://rivercruise.com.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2899859%2C103.8459497&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2899859%2C103.8459497&travelmode=walking","dst":"1.2899859,103.8459497"},"singapore-art-museum":{"n":"Singapore Art Museum","c":"Museum","d":"Singapore Art Museum (SAM) is Singapore's pioneering contemporary art museum, home to an evolving display of contemporary artwork that offers thought-provoking perspectives on a wide range…","h":"Daily, 10:00 am to 7:00 pm","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794910481949_lmnuzl.jpg","qr":"https://www.visitsingapore.com/neighbourhood/featured-neighbourhood/chinatown/singapore-art-museum/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2718818%2C103.8365546&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2718818%2C103.8365546&travelmode=walking","dst":"1.2718818,103.8365546"},"childrens-museum-singapore":{"n":"Children’s Museum Singapore","c":"Family","d":"Children's Museum Singapore (CMSG) is the nation's first museum dedicated to young children, housed in a historic double-storey colonial building more than 100 years old on Coleman Street.","far":"10 min walk","h":"Tuesday - Sunday, 9:00am - 5:45pm. Closed on Mondays. Entry is by timed ticket, booked in advance.","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794910568995_arkr83.jpg","qr":"https://www.heritage.sg/childrensmuseum","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2928274%2C103.8487738&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2928274%2C103.8487738&travelmode=walking","dst":"1.2928274,103.8487738"},"lau-pa-sat":{"n":"Lau Pa Sat","c":"Dining","d":"Lau Pa Sat, also known as Telok Ayer Market, is Singapore's only hawker market housed within a gazetted national monument, and marked its 130th anniversary in recent years.","far":"31 min walk","img":"https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794910571994_zoyduo.jpg","qr":"https://www.laupasat.sg/","map":"https://static.amityrobotics.com/maps?start=1.2960301%2C103.8527419&end=1.2806167%2C103.8504802&region=sg","mapg":"https://www.google.com/maps/dir/?api=1&origin=Carlton%20Hotel%20Singapore%2C%2076%20Bras%20Basah%20Road&destination=1.2806167%2C103.8504802&travelmode=walking","dst":"1.2806167,103.8504802"}}</script>
+
+<script>
+/* arc-plans.js ditanam — satu berkas, supaya bisa dibuka dari file:// */
+/* ============================================================
+   ARC Smart Itinerary — shared plan catalogue, demo popularity
+   and recommendation ranking.
+
+   Loaded by BOTH the kiosk (index.html) and the guest phone page
+   (mobile.html) so the two never drift apart.
+
+   There is no backend. Selection counts live in this browser's
+   localStorage only: a phone and a kiosk do not share them, and
+   they are NOT hotel-wide analytics. See README notes.
+   ============================================================ */
+(function (root) {
+  "use strict";
+
+  var CFG_KEY = "arcPlanCfg.v1";   /* per-plan on / weight / label override */
+  var HIT_KEY = "arcPlanHits.v1";  /* explicit selections, by plan id        */
+
+  var CAT = { plans: {}, stops: {}, ids: [], loaded: false };
+
+  /* ---------- storage (never throws) ---------------------- */
+  function get(k, fb) {
+    try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; }
+    catch (e) { return fb; }
+  }
+  function set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  /* ---------- catalogue ----------------------------------- */
+  function adopt(j) {
+    CAT.plans = (j && j.plans) || {};
+    CAT.stops = (j && j.stops) || {};
+    CAT.ids = Object.keys(CAT.plans);
+    CAT.loaded = CAT.ids.length > 0;
+    return CAT;
+  }
+  function load(url) {
+    return fetch(url || "catalog.json")
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(adopt);
+  }
+  function plan(id) { return CAT.plans[id] || null; }
+  function stop(id) { return CAT.stops[id] || null; }
+  function exists(id) { return !!CAT.plans[id]; }
+
+  /* ---------- demo configuration -------------------------- */
+  /* Catalogue ships the defaults. Saved config may override
+     `on`, `w` and the display label — nothing else, so a catalogue
+     update can never be silently overwritten by stale localStorage. */
+  function cfg() {
+    var saved = get(CFG_KEY, null), by = {};
+    if (saved && typeof saved === "object" && !Array.isArray(saved)) by = saved;
+    return CAT.ids.map(function (id) {
+      var p = CAT.plans[id], o = by[id] || {};
+      return {
+        id: id,
+        label: typeof o.label === "string" && o.label.trim() ? o.label.trim() : p.t,
+        title: p.t,
+        on: typeof o.on === "boolean" ? o.on : !!p.on,
+        w: Number.isFinite(+o.w) ? Math.max(1, Math.min(20, +o.w)) : (+p.w || 1)
+      };
+    });
+  }
+  function cfgSave(list) {
+    var o = {};
+    (list || []).forEach(function (s) {
+      if (!s || !s.id || !CAT.plans[s.id]) return;
+      o[s.id] = { on: !!s.on, w: Math.max(1, Math.min(20, +s.w || 1)) };
+      if (s.label && s.label !== CAT.plans[s.id].t) o[s.id].label = String(s.label).slice(0, 60);
+    });
+    set(CFG_KEY, o);
+  }
+  function cfgReset() { try { localStorage.removeItem(CFG_KEY); } catch (e) {} }
+
+  /* ---------- demo popularity ----------------------------- */
+  /* Incremented ONLY on an explicit guest choice:
+       - tapping a named itinerary shortcut on the kiosk
+       - choosing a plan from "Change plan" on the phone
+     Never on page open, reload, restore or share.            */
+  function hits() { var h = get(HIT_KEY, {}); return (h && typeof h === "object") ? h : {}; }
+  function hit(id) {
+    if (!exists(id)) return 0;
+    var h = hits(); h[id] = (h[id] || 0) + 1; set(HIT_KEY, h); return h[id];
+  }
+  function hitsReset() { set(HIT_KEY, {}); }
+
+  /* ---------- ranking + rotation --------------------------- */
+  /* 1. eligible  = enabled, present in the catalogue, not the active plan
+     2. pop slots = highest selection count; ties by weight, then random
+     3. rest      = weighted random draw, no duplicates
+     4. no counts = weight order, i.e. the configured default ranking   */
+  function pick(opt) {
+    opt = opt || {};
+    var n = opt.n || 4,
+        pop = (opt.pop == null ? 2 : opt.pop),
+        skip = opt.exclude,
+        rnd = opt.rnd || Math.random,
+        only = opt.filter;
+
+    var poolAll = cfg().filter(function (s) {
+      return s.on && exists(s.id) && s.id !== skip && (!only || only(CAT.plans[s.id], s.id));
+    });
+    if (!poolAll.length) return [];
+
+    var H = hits(), out = [], used = {};
+    var seeded = poolAll.some(function (s) { return (H[s.id] || 0) > 0; });
+
+    var head = poolAll.slice().sort(seeded
+      ? function (a, b) { return (H[b.id] || 0) - (H[a.id] || 0) || b.w - a.w || (rnd() - 0.5); }
+      : function (a, b) { return b.w - a.w || (a.id < b.id ? -1 : 1); });
+
+    head.slice(0, Math.min(pop, n)).forEach(function (s) { out.push(s); used[s.id] = 1; });
+
+    var rest = poolAll.filter(function (s) { return !used[s.id]; });
+    while (out.length < n && rest.length) {
+      var tot = 0, i = 0;
+      rest.forEach(function (s) { tot += Math.max(1, s.w); });
+      var r = rnd() * tot;
+      for (; i < rest.length; i++) { r -= Math.max(1, rest[i].w); if (r <= 0) break; }
+      if (i >= rest.length) i = rest.length - 1;
+      var p = rest.splice(i, 1)[0];
+      if (!used[p.id]) { out.push(p); used[p.id] = 1; }
+    }
+    return out;
+  }
+
+  /* which of the returned entries earned their slot from counts */
+  function isPopular(id) { return (hits()[id] || 0) > 0; }
+
+  root.ARC = {
+    CFG_KEY: CFG_KEY, HIT_KEY: HIT_KEY,
+    catalogue: CAT, load: load, adopt: adopt,
+    plan: plan, stop: stop, exists: exists,
+    cfg: cfg, cfgSave: cfgSave, cfgReset: cfgReset,
+    hits: hits, hit: hit, hitsReset: hitsReset,
+    pick: pick, isPopular: isPopular
+  };
+})(typeof window !== "undefined" ? window : this);
+
+</script>
+<script>
+(function () {
+  "use strict";
+
+  var WHITE_MARK = "https://arc-internal.s3.ap-southeast-1.amazonaws.com/generated_images/upload_1794917149814_bxer6q.png";
+  var TRANSFER = 20;            /* minutes allowed between stops, as Tanglin does */
+
+  var $ = function (s) { return document.querySelector(s); };
+  function el(tag, cls, txt) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+
+  /* ---------- mode: ?view= forces it, otherwise width decides ---------- */
+  var VIEW_PARAM = (new URLSearchParams(location.search).get("view") || "").toLowerCase();
+  function applyMode() {
+    var k = VIEW_PARAM === "kiosk" || VIEW_PARAM === "k";
+    var m = VIEW_PARAM === "m" || VIEW_PARAM === "mobile" || VIEW_PARAM === "phone";
+    if (!k && !m) { m = window.innerWidth < 760; k = !m; }
+    document.documentElement.classList.toggle("k", k);
+    document.documentElement.classList.toggle("m", m);
+    return { kiosk: k, mobile: m };
+  }
+  var MODE = applyMode();
+  /* di 390px "All ideas" membelah dua baris begitu Undo dan Share ikut muncul */
+  if (MODE.mobile) document.getElementById("backBtn").textContent = "Ideas";
+  if (!VIEW_PARAM) window.addEventListener("resize", function () { MODE = applyMode(); render(); });
+
+  var STATE = { plan: null, stops: null, undo: false };
+  var EDIT_KEY = "arcCarltonEdits.v1";
+
+  /* Suntingan tamu hidup di HP-nya sendiri. Kios tidak pernah menyimpannya —
+     layar lobi dipakai bergantian, jadi rencana tamu sebelumnya tidak boleh
+     menempel di sana. */
+  function loadEdits() {
+    if (!MODE.mobile) return {};
+    try { return JSON.parse(localStorage.getItem(EDIT_KEY) || "{}") || {}; }
+    catch (e) { return {}; }
+  }
+  function saveEdits() {
+    if (!MODE.mobile) return;
+    try {
+      var all = loadEdits();
+      if (STATE.stops) all[STATE.plan] = STATE.stops; else delete all[STATE.plan];
+      localStorage.setItem(EDIT_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
+  function baseStops(p) { return p.s.map(function (r) { return r.slice(); }); }
+  function curStops() {
+    var p = ARC.plan(STATE.plan);
+    return STATE.stops ? STATE.stops : (p ? baseStops(p) : []);
+  }
+  function setStops(rows) {
+    /* false = belum ada yang bisa dibatalkan; null = batalkan ke rencana asli */
+    STATE.undo = STATE.stops ? STATE.stops.map(function (r) { return r.slice(); }) : null;
+    STATE.stops = rows;
+    saveEdits();
+    renderPlan();
+    syncUrl();
+  }
+
+  /* ---------- time ---------- */
+  function hhmm(mins) {
+    mins = ((mins % 1440) + 1440) % 1440;
+    var h = Math.floor(mins / 60), m = mins % 60;
+    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+  }
+  function dur(mins) {
+    var h = Math.floor(mins / 60), m = mins % 60;
+    return (h ? h + "h" : "") + (h && m ? " " : "") + (m ? m + "m" : (h ? "" : "0m"));
+  }
+  function schedule(p, rows) {
+    var t = p.start, out = [];
+    (rows || p.s).forEach(function (row, i) {
+      out.push({ id: row[0], mins: row[1], why: row[2], from: t, to: t + row[1], i: i + 1 });
+      t += row[1] + TRANSFER;
+    });
+    return out;
+  }
+  function totalMins(p) { return minsOf(p.s); }
+  function minsOf(rows) {
+    var sum = 0;
+    rows.forEach(function (r) { sum += r[1]; });
+    return sum + TRANSFER * Math.max(0, rows.length - 1);
+  }
+
+  /* ---------- stage 1 ---------- */
+  function renderIdeas() {
+    var host = $("#screen-ideas");
+    host.innerHTML = "";
+
+    var lede = el("div", "lede");
+    lede.appendChild(el("h1", null, "Ideas for your day"));
+    lede.appendChild(el("p", null,
+      "Pick one and we will lay the whole day out from the front door, with the walking time to every stop."));
+    host.appendChild(lede);
+
+    var grid = el("div", "ideas");
+    /* every plan is shown; the order is the ranking, so the itineraries guests
+       actually choose rise to the top on their own. */
+    ARC.pick({ n: 99, pop: 2 }).forEach(function (row) {
+      var p = ARC.plan(row.id), cover = ARC.stop(p.cover);
+      var b = el("button", "idea");
+      b.type = "button";
+      b.setAttribute("data-plan", row.id);
+
+      if (cover && cover.img) {
+        var img = el("img", "idea-img");
+        img.src = cover.img; img.alt = ""; img.loading = "lazy";
+        b.appendChild(img);
+      }
+      var ic = el("span", "idea-icon", p.icon || "•");
+      ic.setAttribute("aria-hidden", "true");
+      b.appendChild(ic);
+
+      var body = el("div", "idea-body");
+      body.appendChild(el("div", "idea-t", row.label));
+      body.appendChild(el("div", "idea-bl", p.bl));
+
+      var meta = el("div", "idea-meta");
+      meta.appendChild(el("span", null, p.s.length + " stops"));
+      meta.appendChild(el("span", "dot"));
+      /* same arithmetic as the stat bar on stage 2, so the two can never disagree */
+      meta.appendChild(el("span", null, dur(totalMins(p))));
+      if (p.who && p.who.length) {
+        meta.appendChild(el("span", "dot"));
+        meta.appendChild(el("span", "who", p.who.join(" · ")));
+      }
+      if (ARC.isPopular(row.id)) meta.appendChild(el("span", "tag-pop", "Popular"));
+      body.appendChild(meta);
+
+      b.appendChild(body);
+      b.addEventListener("click", function () { choose(row.id); });
+      grid.appendChild(b);
+    });
+    host.appendChild(grid);
+  }
+
+  /* ---------- stage 2 ---------- */
+  function renderPlan() {
+    var host = $("#screen-plan");
+    host.innerHTML = "";
+    var p = ARC.plan(STATE.plan);
+    if (!p) return go("ideas");
+    var cover = ARC.stop(p.cover);
+
+    var hero = el("div", "phero");
+    if (cover && cover.img) {
+      var hi = el("img"); hi.src = cover.img; hi.alt = ""; hero.appendChild(hi);
+    }
+    hero.appendChild(el("div", "scrim"));
+    var mark = el("div", "pmark");
+    var mi = el("img"); mi.src = WHITE_MARK; mi.alt = "Carlton Hotel Singapore";
+    mark.appendChild(mi); hero.appendChild(mark);
+    var txt = el("div", "ptxt");
+    txt.appendChild(el("p", "eyebrow", "Your day, planned"));
+    txt.appendChild(el("h1", null, p.t));
+    hero.appendChild(txt);
+    host.appendChild(hero);
+
+    var now = curStops();
+    var rows = schedule(p, now);
+    var stats = el("div", "pstats");
+    [[dur(minsOf(now)), "in total"],
+     [now.length + (now.length === 1 ? " stop" : " stops"),
+      STATE.stops ? "in your plan" : "chosen for you"],
+     [hhmm(p.start), "suggested start"]].forEach(function (c) {
+      var cell = el("div", "pstat");
+      cell.appendChild(el("b", null, c[0]));
+      cell.appendChild(el("span", null, c[1]));
+      stats.appendChild(cell);
+    });
+    host.appendChild(stats);
+
+    var list = el("ol", "tl");
+    rows.forEach(function (r) {
+      var s = ARC.stop(r.id);
+      if (!s) return;
+      var li = el("li", "stop");
+
+      var when = el("div", "stop-when");
+      when.appendChild(el("b", null, hhmm(r.from)));
+      when.appendChild(el("span", null, String(r.i).padStart(2, "0")));
+      li.appendChild(when);
+
+      /* a stop whose photo is missing drops the column rather than leaving a
+         grey rectangle — the same guard Tanglin uses for Tanglin Mall. */
+      if (s.img) {
+        var im = el("img", "stop-img");
+        im.src = s.img; im.alt = ""; im.loading = "lazy";
+        li.appendChild(im);
+      } else {
+        li.className += " nopic";
+      }
+
+      var body = el("div", "stop-body");
+      body.appendChild(el("h3", null, s.n));
+      body.appendChild(el("p", "stop-why", r.why || s.d || ""));
+
+      var sub = el("div", "stop-sub");
+      sub.appendChild(el("span", null, r.mins + " min"));
+      if (s.c) { sub.appendChild(el("span", "dot")); sub.appendChild(el("span", null, s.c)); }
+      /* far is measured FROM THE HOTEL, not from the previous stop, so it is
+         labelled as such — read bare inside a sequence it says the wrong thing.
+         It is blank for six entries whose distance was never measured, and
+         nothing is invented in its place. */
+      if (s.far) {
+        sub.appendChild(el("span", "dot"));
+        sub.appendChild(el("span", null, s.far + " from the hotel"));
+      }
+      body.appendChild(sub);
+
+      /* Opening hours, where KM has them. Shown because a plan can otherwise
+         send a guest to a place that is shut — Children's Museum closes on
+         Mondays, and the plan that includes it starts at 10:00. */
+      if (s.h) {
+        var hrow = el("p", "stop-hrs");
+        hrow.appendChild(el("b", null, "Hours"));
+        hrow.appendChild(el("span", null, " " + s.h));
+        body.appendChild(hrow);
+      }
+
+      /* Di kios tamu sedang berdiri di lobi, jadi rute dari hotel itu benar dan
+         peta Amity merender di dalam aplikasi kios.
+         Di HP tamu bisa sudah berada di perhentian mana pun — memberi rute dari
+         hotel justru menyesatkan. Jadi kirim TUJUAN saja, tanpa origin, supaya
+         aplikasi peta memakai lokasi tamu saat itu. */
+      var href;
+      if (MODE.mobile) {
+        href = s.dst
+          ? ("https://www.google.com/maps/dir/?api=1&destination="
+             + encodeURIComponent(s.dst)
+             + "&travelmode=" + (/min walk/.test(s.far || "") ? "walking" : "transit"))
+          : (s.mapg || s.map);
+      } else {
+        href = s.map || s.mapg;
+      }
+      if (href) {
+        /* Di kios tidak ada tab baru untuk dibuka, jadi target="_blank"
+           membuat tapnya ditelan tanpa apa-apa. Peta Amity dibuka sebagai
+           lapisan di dalam halaman, dengan tombol Close untuk kembali ke
+           rencana. Di HP tautan biasa tetap dipakai. */
+        if (MODE.kiosk) {
+          var b = el("button", "btn", "Directions");
+          b.type = "button";
+          b.addEventListener("click", function () { openMap(href, s.n || ""); });
+          body.appendChild(b);
+        } else {
+          var a = el("a", "btn", "Directions");
+          a.href = href; a.target = "_blank"; a.rel = "noopener";
+          body.appendChild(a);
+        }
+      }
+
+      /* Menyunting hanya ditawarkan di HP. Di kios layarnya dipakai bergantian,
+         jadi perubahan satu tamu tidak boleh menempel untuk tamu berikutnya. */
+      if (MODE.mobile) {
+        var act = el("button", "stop-act", "Change this stop");
+        act.type = "button";
+        act.addEventListener("click", function () { openSheet("menu", r.i - 1); });
+        body.appendChild(act);
+      }
+
+      li.appendChild(body);
+      list.appendChild(li);
+    });
+    host.appendChild(list);
+
+    if (MODE.mobile) {
+      var aw = el("div", "addwrap");
+      var ab = el("button", "addbtn", "+  Add a stop");
+      ab.type = "button";
+      ab.addEventListener("click", function () { openSheet("pool", -1); });
+      aw.appendChild(ab);
+      host.appendChild(aw);
+
+      if (STATE.stops) {
+        var note = el("div", "edited-note");
+        note.appendChild(el("span", null,
+          "You have changed this plan. The times update as you go. "
+          + "Tap Undo to step back, or Change plan to start from a fresh one."));
+        host.appendChild(note);
+      }
+    }
+
+    $("#undoBtn").classList.toggle("hide", !(MODE.mobile && STATE.undo !== false));
+
+    if (!MODE.mobile) host.appendChild(qrBlock());
+  }
+
+  /* base64url, aman untuk judul ber-aksen */
+  function packEdits(rows) {
+    var s = JSON.stringify(rows.map(function (r) { return [r[0], r[1]]; }));
+    return btoa(unescape(encodeURIComponent(s)))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function unpackEdits(v) {
+    try {
+      var b = v.replace(/-/g, "+").replace(/_/g, "/");
+      var rows = JSON.parse(decodeURIComponent(escape(atob(b))));
+      if (!Array.isArray(rows) || !rows.length) return null;
+      var out = [];
+      for (var i = 0; i < rows.length; i++) {
+        var id = rows[i][0], mins = +rows[i][1];
+        if (!ARC.stop(id) || !(mins > 0)) return null;   /* satu saja cacat, tolak semua */
+        out.push([id, mins, (ARC.stop(id).d || "")]);
+      }
+      return out;
+    } catch (e) { return null; }
+  }
+  function syncUrl() {
+    var u = new URL(location.href);
+    u.searchParams.set("plan", STATE.plan);
+    if (STATE.stops) u.searchParams.set("e", packEdits(STATE.stops));
+    else u.searchParams.delete("e");
+    history.replaceState(null, "", u);
+  }
+  function shareUrl() {
+    var u = new URL(location.href);
+    u.searchParams.set("plan", STATE.plan);
+    u.searchParams.set("view", "m");
+    if (STATE.stops) u.searchParams.set("e", packEdits(STATE.stops));
+    else u.searchParams.delete("e");
+    return u.toString();
+  }
+  function qrBlock() {
+    var wrap = el("div", "qrblock");
+    var box = el("div", "qrbox");
+    wrap.appendChild(box);
+    try {
+      new QRCode(box, { text: shareUrl(), width: 190, height: 190,
+                        colorDark: "#372B4F", colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M });
+    } catch (e) { box.remove(); }
+    var t = el("div");
+    t.appendChild(el("p", "qr-e", "Take it with you"));
+    t.appendChild(el("p", "qr-t", "Scan to open this plan on your phone"));
+    t.appendChild(el("p", "qr-p",
+      "Directions for every stop. No app and no sign-in needed."));
+    wrap.appendChild(t);
+    return wrap;
+  }
+
+  /* ---------- lapisan peta (kios) ----------
+     Dipasang sekali, dipakai ulang. iframe-nya dikosongkan saat ditutup
+     supaya peta berikutnya tidak membuka rute tamu sebelumnya, dan supaya
+     tidak ada halaman luar yang terus berjalan di layar lobi. */
+  var MAPOV = null;
+  function openMap(url, title) {
+    if (!MAPOV) {
+      MAPOV = el("div", "mapov");
+      var box = el("div", "mapbox");
+      var hd = el("div", "maphd");
+      var t = el("b", "", "");
+      var cl = el("button", "mapcl", "Close");
+      cl.type = "button";
+      cl.addEventListener("click", closeMap);
+      hd.appendChild(t); hd.appendChild(cl);
+      var fr = document.createElement("iframe");
+      fr.className = "mapfr";
+      fr.setAttribute("referrerpolicy", "no-referrer");
+      box.appendChild(hd); box.appendChild(fr);
+      MAPOV.appendChild(box);
+      MAPOV.addEventListener("click", function (e) {
+        if (e.target === MAPOV) closeMap();
+      });
+      document.body.appendChild(MAPOV);
+      MAPOV._t = t; MAPOV._fr = fr;
+    }
+    MAPOV._t.textContent = title ? ("Directions to " + title) : "Directions";
+    MAPOV._fr.src = url;
+    MAPOV.classList.add("on");
+  }
+  function closeMap() {
+    if (!MAPOV) return;
+    MAPOV.classList.remove("on");
+    MAPOV._fr.src = "about:blank";
+  }
+
+  /* ---------- sheet: ganti rencana ---------- */
+  /* Buckets dipilih supaya tidak ada rencana yang jatuh di celah: durasi nyata
+     kita 2.0 2.5 3.2 4.0 5.2 6.0 6.2 6.2 6.7 6.8 6.8 7.3 jam. */
+  var FILTERS = [
+    ["all",      "All plans",    null],
+    ["short",    "Under 3h",     function (p) { return totalMins(p) < 180; }],
+    ["mid",      "3-6 hours",    function (p) { return totalMins(p) >= 180 && totalMins(p) <= 360; }],
+    ["long",     "6 hours +",    function (p) { return totalMins(p) > 360; }],
+    ["family",   "Family",       function (p) { return who(p, "family"); }],
+    ["couple",   "Couples",      function (p) { return who(p, "couple"); }],
+    ["friends",  "Friends",      function (p) { return who(p, "friends"); }],
+    ["solo",     "Solo",         function (p) { return who(p, "solo"); }],
+    ["business", "Business",     function (p) { return who(p, "business"); }]
+  ];
+  function who(p, k) { return !!(p.who && p.who.indexOf(k) >= 0); }
+  var FILTER = "all";
+
+  function drawChips() {
+    var host = $("#chips");
+    host.innerHTML = "";
+    FILTERS.forEach(function (f) {
+      /* a chip that would show nothing is not offered at all */
+      if (f[2] && !ARC.cfg().some(function (s) {
+            return s.on && ARC.exists(s.id) && f[2](ARC.plan(s.id)); })) return;
+      var b = el("button", "chip", f[1]);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(FILTER === f[0]));
+      b.addEventListener("click", function () { FILTER = f[0]; drawChips(); drawSheet(); });
+      host.appendChild(b);
+      /* di HP barisnya menggulung ke samping, jadi chip terpilih dibawa ke tampak */
+      if (FILTER === f[0] && f[0] !== "all" && b.scrollIntoView) {
+        try { b.scrollIntoView({ block: "nearest", inline: "center" }); } catch (e) {}
+      }
+    });
+  }
+
+  function planCard(id) {
+    var p = ARC.plan(id), cover = ARC.stop(p.cover), current = id === STATE.plan;
+    var b = el("button", "pc" + (current ? " cur" : ""));
+    b.type = "button";
+    if (current) b.disabled = true;
+    if (cover && cover.img) {
+      var im = el("img"); im.src = cover.img; im.alt = ""; im.loading = "lazy";
+      b.appendChild(im);
+    }
+    var body = el("div", "pc-b");
+    body.appendChild(el("div", "pc-t", p.t));
+    body.appendChild(el("div", "pc-bl", p.bl));
+    var m = el("div", "pc-m");
+    m.appendChild(el("span", null, dur(totalMins(p))));
+    m.appendChild(el("span", "dot"));
+    m.appendChild(el("span", null, p.s.length + " stops"));
+    if (p.who && p.who.length) {
+      m.appendChild(el("span", "dot"));
+      m.appendChild(el("span", "who", p.who.join(" · ")));
+    }
+    if (ARC.isPopular(id)) { m.appendChild(el("span", "dot")); m.appendChild(el("span", "tag-pop", "Popular")); }
+    body.appendChild(m);
+    if (current) body.appendChild(el("div", "pc-now", "Your current plan"));
+    b.appendChild(body);
+    if (!current) b.addEventListener("click", function () { closeSheet(); choose(id); });
+    return b;
+  }
+
+  function drawSheet() {
+    var host = $("#sheetBody");
+    host.innerHTML = "";
+    var f = FILTERS.filter(function (x) { return x[0] === FILTER; })[0];
+    var list = ARC.pick({ n: 99, pop: 2, filter: f && f[2] ? function (p) { return f[2](p); } : null });
+    if (!list.length) {
+      host.appendChild(el("p", "sheet-none", "No plans match that filter."));
+      return;
+    }
+    list.forEach(function (row) { host.appendChild(planCard(row.id)); });
+  }
+
+  var SHEET = { kind: "plans", idx: -1 };
+  var POOLCAT = "All";
+
+  function openSheet(kind, idx) {
+    SHEET = { kind: kind || "plans", idx: (idx == null ? -1 : idx) };
+    if (SHEET.kind === "plans") { FILTER = "all"; }
+    if (SHEET.kind === "pool")  { POOLCAT = "All"; }
+    drawAll();
+    $("#sheet").classList.remove("hide");
+    document.body.style.overflow = "hidden";
+  }
+  function drawAll() {
+    var titles = { plans: "Explore other plans", menu: "Change this stop",
+                   pool: SHEET.idx >= 0 ? "Replace this stop" : "Add a stop" };
+    $("#sheet h2").textContent = titles[SHEET.kind] || "";
+    $("#chips").classList.toggle("hide", SHEET.kind === "menu");
+    if (SHEET.kind === "plans") { drawChips(); drawSheet(); }
+    else if (SHEET.kind === "pool") { drawPoolChips(); drawPool(); }
+    else { drawMenu(); }
+  }
+
+  /* ---------- menu satu perhentian ---------- */
+  function drawMenu() {
+    var host = $("#sheetBody"), rows = curStops(), i = SHEET.idx;
+    host.innerHTML = "";
+    var s = ARC.stop(rows[i] && rows[i][0]);
+    if (!s) return closeSheet();
+    host.appendChild(el("div", "menu-head", s.n));
+
+    function row(icon, label, on, disabled, danger) {
+      var b = el("button", "menu-row" + (danger ? " danger" : ""));
+      b.type = "button";
+      if (disabled) b.disabled = true;
+      b.appendChild(el("span", "mi", icon));
+      b.appendChild(el("span", null, label));
+      if (!disabled) b.addEventListener("click", on);
+      host.appendChild(b);
+    }
+    row("⇄", "Replace with somewhere else", function () { openSheet("pool", i); });
+    row("↑", "Move earlier", function () {
+      var n = rows.map(function (r) { return r.slice(); });
+      var tmp = n[i - 1]; n[i - 1] = n[i]; n[i] = tmp;
+      setStops(n); closeSheet(); toast("Moved earlier");
+    }, i === 0);
+    row("↓", "Move later", function () {
+      var n = rows.map(function (r) { return r.slice(); });
+      var tmp = n[i + 1]; n[i + 1] = n[i]; n[i] = tmp;
+      setStops(n); closeSheet(); toast("Moved later");
+    }, i >= rows.length - 1);
+    row("✕", "Remove from my day", function () {
+      var n = rows.map(function (r) { return r.slice(); });
+      n.splice(i, 1);
+      setStops(n); closeSheet(); toast("Stop removed");
+    }, rows.length <= 1, true);
+  }
+
+  /* ---------- kolam 94 perhentian ---------- */
+  function poolList() {
+    var inplan = {};
+    curStops().forEach(function (r) { inplan[r[0]] = 1; });
+    var all = ARC.catalogue.stops, out = [];
+    Object.keys(all).forEach(function (id) {
+      if (inplan[id] && !(SHEET.idx >= 0 && curStops()[SHEET.idx][0] === id)) return;
+      var s = all[id];
+      if (POOLCAT !== "All" && s.c !== POOLCAT) return;
+      out.push({ id: id, s: s, far: farMins(s) });
+    });
+    /* terdekat dulu; yang jaraknya tidak pernah diukur ditaruh di belakang */
+    out.sort(function (a, b) { return a.far - b.far; });
+    return out;
+  }
+  function farMins(s) {
+    var m = /(\d+)\s*min walk/.exec(s.far || "");
+    if (m) return +m[1];
+    return s.far ? 900 : 9000;
+  }
+  function drawPoolChips() {
+    var host = $("#chips");
+    host.innerHTML = "";
+    var counts = {}, all = ARC.catalogue.stops;
+    Object.keys(all).forEach(function (id) {
+      counts[all[id].c] = (counts[all[id].c] || 0) + 1;
+    });
+    var cats = ["All"].concat(Object.keys(counts).sort());
+    cats.forEach(function (c) {
+      var b = el("button", "chip", c);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(POOLCAT === c));
+      b.addEventListener("click", function () { POOLCAT = c; drawPoolChips(); drawPool(); });
+      host.appendChild(b);
+      if (POOLCAT === c && c !== "All" && b.scrollIntoView) {
+        try { b.scrollIntoView({ block: "nearest", inline: "center" }); } catch (e) {}
+      }
+    });
+  }
+  function drawPool() {
+    var host = $("#sheetBody"), list = poolList();
+    host.innerHTML = "";
+    if (!list.length) {
+      host.appendChild(el("p", "sheet-none", "Nothing left in that category."));
+      return;
+    }
+    list.forEach(function (row) {
+      var s = row.s, b = el("button", "pc");
+      b.type = "button";
+      if (s.img) { var im = el("img"); im.src = s.img; im.alt = ""; im.loading = "lazy"; b.appendChild(im); }
+      var body = el("div", "pc-b");
+      body.appendChild(el("div", "pc-t", s.n));
+      if (s.d) body.appendChild(el("div", "pc-bl", s.d));
+      var m = el("div", "pc-m");
+      if (s.c) m.appendChild(el("span", null, s.c));
+      if (s.far) { if (s.c) m.appendChild(el("span", "dot")); m.appendChild(el("span", "who", s.far)); }
+      body.appendChild(m);
+      b.appendChild(body);
+      b.addEventListener("click", function () {
+        var rows = curStops().map(function (r) { return r.slice(); });
+        /* perhentian baru mewarisi lama kunjungan yang digantikannya; kalau
+           ditambahkan, 60 menit sebagai titik awal yang bisa tamu geser sendiri */
+        if (SHEET.idx >= 0) rows[SHEET.idx] = [row.id, rows[SHEET.idx][1], s.d || ""];
+        else rows.push([row.id, 60, s.d || ""]);
+        setStops(rows); closeSheet();
+        toast(SHEET.idx >= 0 ? "Stop replaced" : "Stop added");
+      });
+      host.appendChild(b);
+    });
+  }
+
+  /* ---------- toast ---------- */
+  var toastT = null;
+  function toast(msg) {
+    var n = $("#toast");
+    n.textContent = msg;
+    n.classList.remove("hide");
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { n.classList.add("hide"); }, 2200);
+  }
+  function closeSheet() {
+    $("#sheet").classList.add("hide");
+    document.body.style.overflow = "";
+  }
+  $("#swapBtn").addEventListener("click", function () { openSheet("plans"); });
+
+  $("#undoBtn").addEventListener("click", function () {
+    if (STATE.undo === false) return;
+    STATE.stops = STATE.undo;          /* null berarti kembali ke rencana asli */
+    STATE.undo = false;
+    saveEdits(); renderPlan(); syncUrl();
+    toast("Change undone");
+  });
+
+  /* Share membawa rencana APA ADANYA di layar tamu, suntingan ikut — kalau
+     tidak, teman yang menerima tautan membuka hari yang berbeda dari yang
+     sedang dibicarakan. */
+  $("#shareBtn").addEventListener("click", function () {
+    var url = shareUrl(), p = ARC.plan(STATE.plan);
+    var title = "Carlton Hotel Singapore — " + (p ? p.t : "Smart Itinerary");
+    if (navigator.share) {
+      navigator.share({ title: title, text: title, url: url })
+        .catch(function () {});
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url)
+        .then(function () { toast("Link copied"); })
+        .catch(function () { toast("Could not copy the link"); });
+      return;
+    }
+    toast("Copy the link from your browser's address bar");
+  });
+  $("#sheetX").addEventListener("click", closeSheet);
+  $("#sheetBack").addEventListener("click", closeSheet);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeSheet();
+  });
+
+  /* ---------- navigation ---------- */
+  function go(screen) {
+    var ideas = screen === "ideas";
+    $("#screen-ideas").classList.toggle("hide", !ideas);
+    $("#screen-plan").classList.toggle("hide", ideas);
+    $("#bar").classList.toggle("hide", ideas);
+    window.scrollTo(0, 0);
+  }
+  function choose(id, count, rows) {
+    if (!ARC.exists(id)) return;
+    STATE.plan = id;
+    STATE.undo = false;
+    /* tautan yang dibagikan menang atas apa pun yang tersimpan di HP ini */
+    STATE.stops = rows || loadEdits()[id] || null;
+    /* popularity moves only on a real choice, never on open, reload or share */
+    if (count !== false) ARC.hit(id);
+    renderPlan();
+    go("plan");
+    syncUrl();
+  }
+  function render() {
+    renderIdeas();
+    if (STATE.plan) renderPlan();
+  }
+
+  $("#backBtn").addEventListener("click", function () {
+    STATE.plan = null; STATE.stops = null; STATE.undo = false;
+    var u = new URL(location.href);
+    u.searchParams.delete("plan"); u.searchParams.delete("e");
+    history.replaceState(null, "", u);
+    go("ideas");
+  });
+
+  /* ---------- boot ---------- */
+  function embedded(id) {
+    var n = document.getElementById(id);
+    if (!n) throw new Error("blok data " + id + " tidak ada");
+    return JSON.parse(n.textContent);
+  }
+  try {
+    var cat = embedded("arc-catalog"), stp = embedded("arc-stops");
+    ARC.adopt({ plans: cat.plans, stops: stp });
+    renderIdeas();
+    var qs = new URLSearchParams(location.search);
+    var want = qs.get("plan"), ed = qs.get("e");
+    /* arriving by QR or a shared link is not a choice, so it must not count */
+    if (want && ARC.exists(want)) choose(want, false, ed ? unpackEdits(ed) : null);
+    else go("ideas");
+  } catch (e) {
+    $("#screen-ideas").innerHTML =
+      '<div class="lede"><h1>Itinerary unavailable</h1><p>The plan list could not be loaded. '
+      + 'Please ask at the front desk.</p></div>';
+    if (window.console) console.error("[carlton-itinerary]", e);
+  }
+})();
+</script>
+</body>
+</html>
