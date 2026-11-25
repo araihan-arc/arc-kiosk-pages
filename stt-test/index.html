@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Speech-to-text probe</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:500 22px/1.45 Montserrat,"Helvetica Neue",Arial,sans-serif;color:#141414;background:#f4f4f4}
+.wrap{padding:28px}
+h1{font-size:30px;margin:0 0 6px}
+.sub{color:#6b7280;font-size:19px;margin:0 0 22px}
+.card{background:#fff;border-radius:18px;padding:20px 22px;margin-bottom:14px}
+.k{display:flex;gap:12px;padding:9px 0;border-top:1px solid #f0f0f0}
+.k:first-child{border-top:0}
+.k b{flex:none;width:230px;font-weight:700}
+.k span{flex:1;word-break:break-word}
+.yes{color:#0e7a4f;font-weight:800}.no{color:#c02626;font-weight:800}.wait{color:#9a6b00;font-weight:800}
+button{appearance:none;border:0;border-radius:14px;background:#2a4eef;color:#fff;
+ font:800 22px/1 Montserrat,Arial,sans-serif;padding:22px 26px;cursor:pointer;width:100%;margin-bottom:12px}
+button.alt{background:#fff;color:#141414;border:2px solid #141414}
+#heard{min-height:120px;background:#fff;border-radius:18px;padding:20px 22px;font-size:26px;font-weight:700}
+#heard i{color:#9aa0a8;font-weight:500;font-style:normal}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Speech-to-text probe</h1>
+<p class="sub">Menguji apakah card bisa mendengar sendiri, tanpa bantuan shell.</p>
+
+<div class="card">
+  <div class="k"><b>SpeechRecognition ada</b><span id="has"></span></div>
+  <div class="k"><b>Nama yang dipakai</b><span id="which"></span></div>
+  <div class="k"><b>Status</b><span id="st"></span></div>
+  <div class="k"><b>Kesalahan</b><span id="er"></span></div>
+  <div class="k"><b>Bahasa diminta</b><span id="lg"></span></div>
+  <div class="k"><b>Online?</b><span id="net"></span></div>
+</div>
+
+<button id="en">Dengarkan &mdash; bahasa Inggris</button>
+<button id="hu" class="alt">Dengarkan &mdash; bahasa Hungaria</button>
+
+<div id="heard"><i>Yang terdengar akan muncul di sini.</i></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+function set(id,t,c){var e=document.getElementById(id);e.textContent=t;if(c)e.className=c;}
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+set("has", SR ? "ya" : "tidak", SR ? "yes" : "no");
+set("which", window.SpeechRecognition ? "SpeechRecognition"
+          : (window.webkitSpeechRecognition ? "webkitSpeechRecognition" : "—"));
+set("st","belum diuji","wait");
+set("er","—");
+set("lg","—");
+set("net", navigator.onLine ? "ya" : "tidak", navigator.onLine ? "yes" : "no");
+
+function dengar(lang){
+  if(!SR){ set("st","tidak bisa — API tidak ada","no"); return; }
+  set("lg",lang);
+  set("er","—");
+  set("st","meminta izin…","wait");
+  document.getElementById("heard").innerHTML = "<i>mendengarkan…</i>";
+  var r = new SR();
+  r.lang = lang;
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+  r.continuous = false;
+  r.onstart = function(){ set("st","mendengarkan — bicaralah","wait"); };
+  r.onresult = function(e){
+    var t = "";
+    for (var i=0;i<e.results.length;i++) t += e.results[i][0].transcript;
+    document.getElementById("heard").textContent = t || "—";
+    if (e.results[e.results.length-1].isFinal) set("st","dapat teks","yes");
+  };
+  r.onerror = function(e){
+    set("st","gagal","no");
+    set("er", e.error || "?");
+  };
+  r.onend = function(){
+    if (document.getElementById("st").textContent === "mendengarkan — bicaralah")
+      set("st","berhenti tanpa hasil","no");
+  };
+  try { r.start(); } catch(e){ set("st","start() melempar","no"); set("er", e.name+" — "+e.message); }
+}
+
+document.getElementById("en").onclick = function(){ dengar("en-US"); };
+document.getElementById("hu").onclick = function(){ dengar("hu-HU"); };
+})();
+</script>
+</body>
+</html>
