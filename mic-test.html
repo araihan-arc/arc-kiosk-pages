@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kiosk capability probe</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:500 22px/1.45 Montserrat,"Helvetica Neue",Arial,sans-serif;color:#141414;background:#f4f4f4}
+.wrap{padding:28px}
+h1{font-size:30px;margin:0 0 6px}
+.sub{color:#6b7280;font-size:19px;margin:0 0 22px}
+.card{background:#fff;border-radius:18px;padding:20px 22px;margin-bottom:14px}
+.card h2{margin:0 0 12px;font-size:17px;letter-spacing:.09em;text-transform:uppercase;color:#6b7280}
+.k{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-top:1px solid #f0f0f0}
+.k:first-of-type{border-top:0}
+.k b{flex:none;width:260px;font-weight:700}
+.k span{flex:1;word-break:break-word}
+.yes{color:#0e7a4f;font-weight:800}
+.no{color:#c02626;font-weight:800}
+.wait{color:#9a6b00;font-weight:800}
+button{appearance:none;border:0;border-radius:14px;background:#2a4eef;color:#fff;
+  font:800 22px/1 Montserrat,Arial,sans-serif;padding:22px 26px;cursor:pointer;width:100%;margin-bottom:14px}
+button.alt{background:#fff;color:#141414;border:2px solid #141414}
+#meter{height:26px;background:#e9eaed;border-radius:999px;overflow:hidden}
+#meter i{display:block;height:100%;width:0;background:#0e7a4f}
+pre{white-space:pre-wrap;font:500 16px/1.4 ui-monospace,Menlo,Consolas,monospace;
+  background:#f7f7f8;border-radius:12px;padding:14px;margin:10px 0 0;max-height:280px;overflow:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kiosk capability probe</h1>
+  <p class="sub">Alat ukur, bukan fitur. Buka di kiosk, foto layarnya, kirim balik.</p>
+
+  <div class="card">
+    <h2>1 &middot; Lingkungan</h2>
+    <div class="k"><b>Secure context</b><span id="sec"></span></div>
+    <div class="k"><b>Protokol &amp; asal</b><span id="org"></span></div>
+    <div class="k"><b>Ukuran layar</b><span id="dim"></span></div>
+    <div class="k"><b>Versi Chrome / WebView</b><span id="chr"></span></div>
+    <div class="k"><b>User agent</b><span id="ua"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>2 &middot; Dukungan CSS yang pernah menggigit</h2>
+    <div class="k"><b>100dvh didukung</b><span id="dvh"></span></div>
+    <div class="k"><b>100svh didukung</b><span id="svh"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>3 &middot; Jembatan ke shell</h2>
+    <div class="k"><b>Objek asing di window</b><span id="brg"></span></div>
+    <div class="k"><b>Balasan postMessage</b><span id="pm"></span></div>
+    <div class="k"><b>Di dalam iframe?</b><span id="ifr"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>4 &middot; Mikrofon</h2>
+    <div class="k"><b>mediaDevices ada</b><span id="md"></span></div>
+    <div class="k"><b>getUserMedia ada</b><span id="gum"></span></div>
+    <div class="k"><b>Izin diberikan</b><span id="perm"></span></div>
+    <div class="k"><b>Nama kesalahan</b><span id="err"></span></div>
+    <div class="k"><b>Suara benar-benar masuk</b><span id="lvl"></span></div>
+    <div id="meter"><i id="bar"></i></div>
+  </div>
+
+  <button id="go">Uji mikrofon &mdash; tekan lalu bicara</button>
+  <button id="cp" class="alt">Salin semua hasil</button>
+  <pre id="out"></pre>
+</div>
+
+<script>
+(function(){
+"use strict";
+var H = {};
+function set(id, teks, kelas){
+  var el = document.getElementById(id);
+  el.textContent = teks;
+  if (kelas) el.className = kelas;
+  H[id] = teks;
+}
+function ya(v){ return v ? "ya" : "tidak"; }
+function kelas(v){ return v ? "yes" : "no"; }
+
+set("sec", ya(window.isSecureContext), kelas(window.isSecureContext));
+set("org", location.protocol + " // " + (location.origin || "(null)"));
+set("dim", window.innerWidth + " x " + window.innerHeight
+         + "  (dpr " + (window.devicePixelRatio || 1) + ")");
+var m = navigator.userAgent.match(/Chrome\/(\d+)/);
+var ver = m ? parseInt(m[1], 10) : 0;
+set("chr", ver ? ("Chrome " + ver + (ver < 108 ? "  \u2014 lebih tua dari 108" : "")) : "tidak terbaca",
+    ver && ver >= 108 ? "yes" : "no");
+set("ua", navigator.userAgent);
+
+var dvh = window.CSS && CSS.supports && CSS.supports("height", "100dvh");
+var svh = window.CSS && CSS.supports && CSS.supports("height", "100svh");
+set("dvh", ya(dvh), kelas(dvh));
+set("svh", ya(svh), kelas(svh));
+
+var baku = {};
+["window","self","document","name","location","customElements","history","navigation","locationbar",
+ "menubar","personalbar","scrollbars","statusbar","toolbar","status","closed","frames","length","top",
+ "opener","parent","frameElement","navigator","origin","external","screen","innerWidth","innerHeight",
+ "scrollX","pageXOffset","scrollY","pageYOffset","visualViewport","screenX","screenY","outerWidth",
+ "outerHeight","devicePixelRatio","clientInformation","screenLeft","screenTop","defaultStatus",
+ "defaultstatus","styleMedia","onsearch","isSecureContext","trustedTypes","performance","onappinstalled",
+ "onbeforeinstallprompt","crypto","indexedDB","sessionStorage","localStorage","onbeforexrselect",
+ "onabort","speechSynthesis","webkitStorageInfo","caches","cookieStore","ondevicemotion",
+ "ondeviceorientation","ondeviceorientationabsolute","launchQueue","sharedStorage","documentPictureInPicture",
+ "fence","onbeforematch","onbeforetoggle","onscrollend","CSS","chrome"].forEach(function(k){ baku[k]=1; });
+var asing = [];
+for (var k in window){
+  if (baku[k]) continue;
+  if (/^(on|webkit|moz|ms)[A-Z]/.test(k)) continue;
+  if (/^[A-Z]/.test(k)) continue;
+  var t = typeof window[k];
+  if (t === "object" || t === "function") asing.push(k + " (" + t + ")");
+}
+set("brg", asing.length ? asing.slice(0, 25).join(", ") : "tidak ada",
+    asing.length ? "yes" : "no");
+
+set("ifr", ya(window.top !== window.self), window.top !== window.self ? "yes" : "no");
+
+var balas = false;
+window.addEventListener("message", function(e){
+  balas = true;
+  set("pm", "ada \u2014 dari " + (e.origin || "(kosong)") + " : "
+          + String(typeof e.data === "object" ? JSON.stringify(e.data) : e.data).slice(0, 160), "yes");
+});
+try {
+  (window.top !== window.self ? window.parent : window)
+    .postMessage({ probe: "arc-kiosk", ask: "capabilities" }, "*");
+} catch (e) {}
+set("pm", "menunggu\u2026", "wait");
+setTimeout(function(){ if (!balas) set("pm", "tidak ada balasan dalam 4 detik", "no"); }, 4000);
+
+var md = !!navigator.mediaDevices;
+var gum = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+set("md", ya(md), kelas(md));
+set("gum", ya(gum), kelas(gum));
+set("perm", "belum diuji", "wait");
+set("err", "\u2014");
+set("lvl", "belum diuji", "wait");
+
+document.getElementById("go").onclick = function(){
+  set("perm", "meminta izin\u2026", "wait");
+  if (!gum) { set("perm", "getUserMedia tidak ada", "no"); return; }
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function(stream){
+    set("perm", "ya", "yes");
+    set("err", "\u2014");
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { set("lvl", "AudioContext tidak ada", "no"); return; }
+    var ctx = new AC();
+    var src = ctx.createMediaStreamSource(stream);
+    var an = ctx.createAnalyser(); an.fftSize = 512;
+    src.connect(an);
+    var buf = new Uint8Array(an.frequencyBinCount);
+    var puncak = 0, mulai = Date.now();
+    set("lvl", "mendengarkan 10 detik, bicaralah\u2026", "wait");
+    (function loop(){
+      an.getByteFrequencyData(buf);
+      var s = 0; for (var i = 0; i < buf.length; i++) s += buf[i];
+      var rata = s / buf.length;
+      puncak = Math.max(puncak, rata);
+      document.getElementById("bar").style.width = Math.min(100, rata * 2.2) + "%";
+      if (Date.now() - mulai < 10000) requestAnimationFrame(loop);
+      else {
+        stream.getTracks().forEach(function(t){ t.stop(); });
+        ctx.close();
+        var ada = puncak > 3;
+        set("lvl", (ada ? "ya \u2014 puncak " : "tidak \u2014 puncak ") + puncak.toFixed(1),
+            ada ? "yes" : "no");
+      }
+    })();
+  }).catch(function(e){
+    set("perm", "ditolak", "no");
+    set("err", (e && e.name ? e.name : "?") + " \u2014 " + (e && e.message ? e.message : ""));
+  });
+};
+
+document.getElementById("cp").onclick = function(){
+  var teks = Object.keys(H).map(function(k){ return k + ": " + H[k]; }).join("\n");
+  document.getElementById("out").textContent = teks;
+  try { navigator.clipboard.writeText(teks); } catch (e) {}
+};
+})();
+</script>
+</body>
+</html>
