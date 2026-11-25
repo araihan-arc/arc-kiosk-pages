@@ -37,6 +37,8 @@ pre{white-space:pre-wrap;font:500 16px/1.4 ui-monospace,Menlo,Consolas,monospace
     <h2>1 · Lingkungan</h2>
     <div class="k"><b>Secure context</b><span id="sec"></span></div>
     <div class="k"><b>Protokol &amp; asal</b><span id="org"></span></div>
+    <div class="k"><b>URL penuh</b><span id="href"></span></div>
+    <div class="k"><b>Query string</b><span id="qs"></span></div>
     <div class="k"><b>Ukuran layar</b><span id="dim"></span></div>
     <div class="k"><b>Versi Chrome / WebView</b><span id="chr"></span></div>
     <div class="k"><b>User agent</b><span id="ua"></span></div>
@@ -86,6 +88,12 @@ function kelas(v){ return v ? "yes" : "no"; }
 /* 1 — lingkungan */
 set("sec", ya(window.isSecureContext), kelas(window.isSecureContext));
 set("org", location.protocol + " // " + (location.origin || "(null)"));
+set("href", location.href);
+/* Inti pertanyaannya: apakah parameter selamat melewati proxy arcwrap.
+   Kalau kosong padahal alamatnya dibuka dengan ?cat=…&q=…, berarti shell
+   membuangnya, dan rencana membuka card dalam keadaan tersaring batal. */
+set("qs", location.search || "(kosong — parameter dibuang)",
+    location.search ? "yes" : "no");
 set("dim", window.innerWidth + " x " + window.innerHeight
          + "  (dpr " + (window.devicePixelRatio || 1) + ")");
 var m = navigator.userAgent.match(/Chrome\/(\d+)/);
