@@ -68,6 +68,32 @@ pre{white-space:pre-wrap;font:500 16px/1.4 ui-monospace,Menlo,Consolas,monospace
   </div>
 
   <button id="go">Uji mikrofon — tekan lalu bicara</button>
+
+  <div class="card">
+    <h2>5 · Papan ketik &amp; voice typing</h2>
+    <p style="margin:0 0 14px;font-size:19px;color:#6b7280">
+      Sentuh kotak di bawah. Lihat papan ketik apa yang naik, dan apakah ada
+      ikon mikrofon di papan ketik itu. Kalau ada, tekan lalu bicara.
+    </p>
+    <input id="ket" type="search" placeholder="Sentuh di sini lalu bicara"
+      autocomplete="off" spellcheck="false"
+      style="width:100%;font:600 26px/1.3 Montserrat,Arial,sans-serif;padding:22px 20px;
+             border:2px solid #d6d6d6;border-radius:16px;outline:0;color:#141414">
+    <div class="k" style="margin-top:16px"><b>Yang masuk</b><span id="val">—</span></div>
+    <div class="k"><b>Jumlah peristiwa input</b><span id="cnt">0</span></div>
+    <div class="k"><b>Cara teks masuk</b><span id="typ">—</span></div>
+    <div class="k"><b>Papan ketik mengubah tinggi?</b><span id="vp">belum</span></div>
+  </div>
+
+  <div class="card">
+    <h2>6 · Suara keluar</h2>
+    <div class="k"><b>speechSynthesis ada</b><span id="ss"></span></div>
+    <div class="k"><b>Jumlah suara tersedia</b><span id="sv">—</span></div>
+    <div class="k"><b>Hasil mencoba bicara</b><span id="sr">belum diuji</span></div>
+  </div>
+
+  <button id="say">Coba bersuara — "Zara ada di lantai nol"</button>
+
   <button id="cp" class="alt">Salin semua hasil</button>
   <pre id="out"></pre>
 </div>
@@ -192,6 +218,64 @@ document.getElementById("go").onclick = function(){
     set("err", (e && e.name ? e.name : "?") + " — " + (e && e.message ? e.message : ""));
   });
 };
+
+/* 5 — papan ketik & voice typing.
+   Jalur ini tidak menyentuh getUserMedia sama sekali. Kalau papan ketik yang
+   naik punya tombol mikrofon, teksnya masuk ke input seperti orang mengetik,
+   dan halaman tidak perlu izin apa pun. */
+(function(){
+  var inp = document.getElementById("ket");
+  var n = 0;
+  var tinggiAwal = window.innerHeight;
+
+  inp.addEventListener("input", function(e){
+    n++;
+    set("val", inp.value || "—", inp.value ? "yes" : "");
+    set("cnt", String(n));
+    set("typ", e.inputType || "(tidak dilaporkan)");
+  });
+
+  inp.addEventListener("focus", function(){
+    setTimeout(function(){
+      var beda = tinggiAwal - window.innerHeight;
+      set("vp", beda > 60 ? ("ya — berkurang " + beda + " px") : "tidak berubah",
+          beda > 60 ? "yes" : "no");
+    }, 900);
+  });
+})();
+
+/* 6 — suara keluar. Kalau ini hidup, card bisa menjawab dengan suara tanpa
+   menyentuh pipeline TTS kiosk sama sekali. */
+(function(){
+  var ada = !!window.speechSynthesis;
+  set("ss", ya(ada), kelas(ada));
+  if (!ada){ set("sr", "tidak bisa — API tidak ada", "no"); return; }
+
+  function hitung(){
+    var v = window.speechSynthesis.getVoices() || [];
+    set("sv", v.length ? String(v.length) : "0 (mungkin belum dimuat)",
+        v.length ? "yes" : "no");
+  }
+  hitung();
+  window.speechSynthesis.onvoiceschanged = hitung;
+
+  document.getElementById("say").onclick = function(){
+    try {
+      var u = new SpeechSynthesisUtterance("Zara ada di lantai nol, unit dua tiga empat.");
+      u.lang = "id-ID";
+      u.onstart = function(){ set("sr", "mulai bicara", "wait"); };
+      u.onend   = function(){ set("sr", "selesai — terdengar?", "yes"); };
+      u.onerror = function(e){ set("sr", "gagal: " + (e.error || "?"), "no"); };
+      window.speechSynthesis.speak(u);
+      setTimeout(function(){
+        if (document.getElementById("sr").textContent === "belum diuji")
+          set("sr", "dipanggil tapi tidak ada tanda jalan", "no");
+      }, 2500);
+    } catch (e) {
+      set("sr", "melempar: " + e.name, "no");
+    }
+  };
+})();
 
 document.getElementById("cp").onclick = function(){
   var teks = Object.keys(H).map(function(k){ return k + ": " + H[k]; }).join("\n");
